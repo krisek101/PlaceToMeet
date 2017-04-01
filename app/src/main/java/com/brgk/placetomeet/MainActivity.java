@@ -6,11 +6,13 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.GridView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import static com.brgk.placetomeet.Constants.places;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +22,31 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         requestPermissions();
+
+        final GridView gridPlaces = (GridView) findViewById(R.id.gridOfPlaces);
+        gridPlaces.setAdapter(new PlaceAdapter(this));
+
+        EditText placeField = (EditText) findViewById(R.id.placeField);
+        placeField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                for(String place : places){
+                    if(!place.contains(charSequence)){
+                        // TODO: Delete others
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
     }
 
     void requestPermissions() {
@@ -32,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
                 } else {
 //TODO: Permissions: aa above :D
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constans.REQUEST_PERMISSIONS_CODE);
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
                 }
             }
         }
@@ -44,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
         PERMISSIONS_SWITCH:
         switch( requestCode ) {
-            case Constans.REQUEST_PERMISSIONS_CODE:
+            case Constants.REQUEST_PERMISSIONS_CODE:
                 if( grantResults.length > 0 ) {
                     for( int i = 0; i < grantResults.length; i++ ) {
                         Log.d("DEBUG", "Permission: " + permissions[i]);

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PlaceToMeet</string>
+    <string name="placeField">Wpisz miejsce spotkania…</string>
 </resources>

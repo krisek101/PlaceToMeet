@@ -1,16 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.brgk.placetomeet.MainActivity">
+    tools:context="com.brgk.placetomeet.MainActivity"
+    android:background="@color/place_autocomplete_prediction_primary_text">
 
-    <TextView
-        android:id="@+id/tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello world!"
-        tools:layout_editor_absoluteX="162dp"
-        tools:layout_editor_absoluteY="246dp"/>
-</android.support.constraint.ConstraintLayout>
+    <EditText
+        android:id="@+id/placeField"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:textAlignment="center"
+        android:textSize="22sp"
+        android:ems="10"
+        android:hint="@string/placeField"
+        android:textColorHint="#fff"
+        android:textColor="#fff"/>
+
+    <GridView
+        android:id="@+id/gridOfPlaces"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/placeField"
+        android:columnWidth="170dp"
+        android:numColumns="auto_fit"
+        android:verticalSpacing="10dp"
+        android:horizontalSpacing="10dp"
+        android:stretchMode="columnWidth"
+        android:gravity="center"
+        android:textAlignment="center"
+        />
+
+</RelativeLayout>
