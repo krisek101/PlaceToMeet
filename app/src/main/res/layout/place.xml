@@ -2,13 +2,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="5dp" >
+        android:padding="5dp">
 
         <ImageView
             android:id="@+id/place_image"
             android:layout_width="170dp"
-            android:layout_height="170dp"
-            android:src="@drawable/gym" >
+            android:layout_height="170dp">
         </ImageView>
 
         <TextView

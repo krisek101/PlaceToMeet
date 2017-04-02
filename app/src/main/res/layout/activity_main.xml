@@ -7,22 +7,34 @@
     tools:context="com.brgk.placetomeet.MainActivity"
     android:background="@color/place_autocomplete_prediction_primary_text">
 
-    <EditText
-        android:id="@+id/placeField"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:textAlignment="center"
-        android:textSize="22sp"
-        android:ems="10"
-        android:hint="@string/placeField"
-        android:textColorHint="#fff"
-        android:textColor="#fff"/>
+        android:layout_height="60dp"
+        android:id="@+id/framePlaceField">
+        <EditText
+            android:id="@+id/placeField"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:textSize="22sp"
+            android:ems="10"
+            android:hint="@string/placeField"
+            android:textColorHint="#fff"
+            android:textColor="#fff"/>
+        <Button
+            android:id="@+id/clearPlaceField"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginRight="20dp"
+            android:layout_gravity="right|center_vertical"
+            android:background="@drawable/clear"
+            android:visibility="invisible"/>
+    </FrameLayout>
 
     <GridView
         android:id="@+id/gridOfPlaces"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/placeField"
+        android:layout_below="@+id/framePlaceField"
         android:columnWidth="170dp"
         android:numColumns="auto_fit"
         android:verticalSpacing="10dp"

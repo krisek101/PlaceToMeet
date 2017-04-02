@@ -9,33 +9,41 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    Map<String, Integer> places = new HashMap<>();
-    Map<String, Integer> filteredPlaces = new HashMap<>();
+    // Collections
+    private Map<String, Integer> places = new HashMap<>();
+    private Map<String, Integer> filteredPlaces = new HashMap<>();
+
+    // UI
+    private GridView gridPlaces;
+    private EditText placeField;
+    private Button clearPlaceField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // UI
+        placeField = (EditText) findViewById(R.id.placeField);
+        gridPlaces = (GridView) findViewById(R.id.gridOfPlaces);
+        clearPlaceField = (Button) findViewById(R.id.clearPlaceField);
+
+        // init functions
         requestPermissions();
+        setPlaces();
 
-        places.put("Restauracja", R.drawable.restaurant);
-        places.put("Park", R.drawable.park);
-        places.put("Siłownia", R.drawable.gym);
-        places.put("Basen", R.drawable.pool);
-
-        final GridView gridPlaces = (GridView) findViewById(R.id.gridOfPlaces);
-        gridPlaces.setAdapter(new PlaceAdapter(this, places));
-
-        EditText placeField = (EditText) findViewById(R.id.placeField);
+        // listeners
         placeField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -43,13 +51,14 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 Log.v("PLACES", places.toString());
 
                 if (charSequence.toString().isEmpty()) {
                     gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, places));
+                    clearPlaceField.setVisibility(View.INVISIBLE);
                     Log.v("puste pole", "brak");
                 } else {
+                    clearPlaceField.setVisibility(View.VISIBLE);
                     for (Map.Entry<String, Integer> place : places.entrySet()) {
                         String placeName = place.getKey();
                         Integer placeImage = place.getValue();
@@ -71,6 +80,17 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
             }
         });
+        clearPlaceField.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                placeField.setText("");
+            }
+        });
+
+        // TODO: onClickListener for every place
+//        for (int i=0; i<gridPlaces.getAdapter().getCount(); i++) {
+//            gridPlaces.getAdapter().getItem(i);
+//        }
 
     }
 
@@ -89,6 +109,18 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void setPlaces(){
+        places.put("Restauracja", R.drawable.restaurant);
+        places.put("Park", R.drawable.park);
+        places.put("Siłownia", R.drawable.gym);
+        places.put("Basen", R.drawable.pool);
+        places.put("Kręgle", R.drawable.restaurant);
+        places.put("Kebab", R.drawable.park);
+        places.put("Lodowisko", R.drawable.gym);
+        places.put("Kawiarnia", R.drawable.pool);
+        gridPlaces.setAdapter(new PlaceAdapter(this, places));
     }
 
     @Override

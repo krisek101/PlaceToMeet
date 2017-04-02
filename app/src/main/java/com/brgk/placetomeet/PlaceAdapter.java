@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -13,8 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.brgk.placetomeet.Constants.*;
 
 public class PlaceAdapter extends BaseAdapter {
     private Context mContext;
@@ -46,20 +43,19 @@ public class PlaceAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View gridView;
+        String placeName = placesNames.get(position);
+        Integer placeImage = placesImages.get(position);
 
         if (convertView == null) {
             gridView = inflater.inflate(R.layout.place, null);
-
-            String placeName = placesNames.get(position);
-            Integer placeImage = placesImages.get(position);
-            TextView textView = (TextView) gridView.findViewById(R.id.place_label);
-            textView.setText(placeName);
             ImageView imageView = (ImageView) gridView.findViewById(R.id.place_image);
             imageView.setImageResource(placeImage);
         } else {
             gridView = convertView;
         }
 
+        TextView textView = (TextView) gridView.findViewById(R.id.place_label);
+        textView.setText(placeName);
         return gridView;
     }
 }
