@@ -9,21 +9,30 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static com.brgk.placetomeet.Constants.*;
 
 public class PlaceAdapter extends BaseAdapter {
     private Context mContext;
-    private Integer[] placesIds = {
-            R.drawable.park, R.drawable.gym,
-            R.drawable.restaurant, R.drawable.pool
-    };
+    private Map<String, Integer> places = new HashMap<>();
+    private List<String> placesNames;
+    private List<Integer> placesImages;
 
-    public PlaceAdapter(Context c) {
+    public PlaceAdapter(Context c, Map<String, Integer> places) {
         mContext = c;
+        this.places = places;
+        placesNames = new ArrayList<>();
+        placesNames.addAll(this.places.keySet());
+        placesImages = new ArrayList<>();
+        placesImages.addAll(this.places.values());
     }
 
     public int getCount() {
-        return placesIds.length;
+        return places.size();
     }
 
     public Object getItem(int position) {
@@ -41,21 +50,12 @@ public class PlaceAdapter extends BaseAdapter {
         if (convertView == null) {
             gridView = inflater.inflate(R.layout.place, null);
 
+            String placeName = placesNames.get(position);
+            Integer placeImage = placesImages.get(position);
             TextView textView = (TextView) gridView.findViewById(R.id.place_label);
-            textView.setText(places[position]);
+            textView.setText(placeName);
             ImageView imageView = (ImageView) gridView.findViewById(R.id.place_image);
-            String place = places[position];
-
-            if (place.equals("Park")) {
-                imageView.setImageResource(R.drawable.park);
-            } else if (place.equals("Basen")) {
-                imageView.setImageResource(R.drawable.pool);
-            } else if (place.equals("Siłownia")) {
-                imageView.setImageResource(R.drawable.gym);
-            } else {
-                imageView.setImageResource(R.drawable.restaurant);
-            }
-
+            imageView.setImageResource(placeImage);
         } else {
             gridView = convertView;
         }

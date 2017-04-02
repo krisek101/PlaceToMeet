@@ -12,9 +12,13 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.GridView;
 
-import static com.brgk.placetomeet.Constants.places;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+
+    Map<String, Integer> places = new HashMap<>();
+    Map<String, Integer> filteredPlaces = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,28 +27,47 @@ public class MainActivity extends AppCompatActivity {
 
         requestPermissions();
 
+        places.put("Restauracja", R.drawable.restaurant);
+        places.put("Park", R.drawable.park);
+        places.put("Siłownia", R.drawable.gym);
+        places.put("Basen", R.drawable.pool);
+
         final GridView gridPlaces = (GridView) findViewById(R.id.gridOfPlaces);
-        gridPlaces.setAdapter(new PlaceAdapter(this));
+        gridPlaces.setAdapter(new PlaceAdapter(this, places));
 
         EditText placeField = (EditText) findViewById(R.id.placeField);
         placeField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                for(String place : places){
-                    if(!place.contains(charSequence)){
-                        // TODO: Delete others
+                Log.v("PLACES", places.toString());
+
+                if(charSequence.toString().isEmpty()) {
+                    gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, places));
+                    Log.v("puste pole", "brak");
+                } else {
+                    for (Map.Entry<String, Integer> place : places.entrySet()) {
+                        String placeName = place.getKey();
+                        Integer placeImage = place.getValue();
+                        Log.v("JESTEM W FOR EACH", "wohoo");
+                        if (!placeName.toLowerCase().startsWith(charSequence.toString().toLowerCase())) {
+                            filteredPlaces.remove(placeName);
+                            Log.v("Usuwamy element", placeName);
+                        } else if (!filteredPlaces.containsValue(placeName)) {
+                            filteredPlaces.put(placeName, placeImage);
+                            Log.v("dodajemy element", placeName);
+                        }
                     }
+                    gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, filteredPlaces));
                 }
+                Log.v("FILTERED PLACES", filteredPlaces.toString());
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
-
             }
         });
     }

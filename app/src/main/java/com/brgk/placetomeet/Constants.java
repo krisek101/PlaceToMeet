@@ -9,5 +9,4 @@ public class Constants {
 
     //Permissions request codes
     public static final int REQUEST_PERMISSIONS_CODE = 2;
-    public static final String[] places = {"Restauracja", "Park", "Siłownia", "Basen"};
 }
