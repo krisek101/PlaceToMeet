@@ -43,9 +43,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
                 Log.v("PLACES", places.toString());
 
-                if(charSequence.toString().isEmpty()) {
+                if (charSequence.toString().isEmpty()) {
                     gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, places));
                     Log.v("puste pole", "brak");
                 } else {
@@ -60,16 +61,17 @@ public class MainActivity extends AppCompatActivity {
                             filteredPlaces.put(placeName, placeImage);
                             Log.v("dodajemy element", placeName);
                         }
+                        gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, filteredPlaces));
                     }
-                    gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, filteredPlaces));
+                    Log.v("FILTERED PLACES", filteredPlaces.toString());
                 }
-                Log.v("FILTERED PLACES", filteredPlaces.toString());
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
             }
         });
+
     }
 
     void requestPermissions() {
@@ -79,9 +81,10 @@ public class MainActivity extends AppCompatActivity {
                 checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED ) {
                 if( shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
                     shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
-
+//TODO: Show ratinoale
+                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
                 } else {
-//TODO: Permissions: aa above :D
+//TODO: Permissions: as above :D
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
                 }
             }
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("DEBUG", "Permission: " + permissions[i]);
                         if( grantResults[i] == PackageManager.PERMISSION_DENIED ) {
                             Log.d("DEBUG", "Any permission denied!");
+                            requestPermissions();
                             break PERMISSIONS_SWITCH;
                         }
                     }
