@@ -35,13 +35,38 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/framePlaceField"
-        android:columnWidth="170dp"
+        android:columnWidth="100dp"
         android:numColumns="auto_fit"
-        android:verticalSpacing="10dp"
         android:horizontalSpacing="10dp"
+        android:verticalSpacing="10dp"
         android:stretchMode="columnWidth"
-        android:gravity="center"
         android:textAlignment="center"
-        />
+        android:animateLayoutChanges="true" />
+
+    <RelativeLayout
+        android:id="@+id/footer"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:textAlignment="center"
+        android:background="#EEEEEE"
+        android:visibility="invisible">
+
+        <TextView
+            android:id="@+id/counter_of_checked"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="20dp" />
+
+        <!--<Button-->
+            <!--android:id="@+id/next"-->
+            <!--android:layout_width="60dp"-->
+            <!--android:layout_height="60dp"-->
+            <!--android:text="dalej"-->
+            <!--android:layout_gravity="right|center_vertical" />-->
+
+    </RelativeLayout>
 
 </RelativeLayout>

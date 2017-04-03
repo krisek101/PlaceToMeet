@@ -2,6 +2,8 @@ package com.brgk.placetomeet;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,10 +12,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.Toast;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,11 +27,13 @@ public class MainActivity extends AppCompatActivity {
     // Collections
     private Map<String, Integer> places = new HashMap<>();
     private Map<String, Integer> filteredPlaces = new HashMap<>();
+    private Map<String, Integer> checkedPlaces = new HashMap<>();
 
     // UI
     private GridView gridPlaces;
     private EditText placeField;
     private Button clearPlaceField;
+    private PlaceAdapter pa;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,54 +50,7 @@ public class MainActivity extends AppCompatActivity {
         setPlaces();
 
         // listeners
-        placeField.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.v("PLACES", places.toString());
-
-                if (charSequence.toString().isEmpty()) {
-                    gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, places));
-                    clearPlaceField.setVisibility(View.INVISIBLE);
-                    Log.v("puste pole", "brak");
-                } else {
-                    clearPlaceField.setVisibility(View.VISIBLE);
-                    for (Map.Entry<String, Integer> place : places.entrySet()) {
-                        String placeName = place.getKey();
-                        Integer placeImage = place.getValue();
-                        Log.v("JESTEM W FOR EACH", "wohoo");
-                        if (!placeName.toLowerCase().startsWith(charSequence.toString().toLowerCase())) {
-                            filteredPlaces.remove(placeName);
-                            Log.v("Usuwamy element", placeName);
-                        } else if (!filteredPlaces.containsValue(placeName)) {
-                            filteredPlaces.put(placeName, placeImage);
-                            Log.v("dodajemy element", placeName);
-                        }
-                        gridPlaces.setAdapter(new PlaceAdapter(MainActivity.this, filteredPlaces));
-                    }
-                    Log.v("FILTERED PLACES", filteredPlaces.toString());
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-        clearPlaceField.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                placeField.setText("");
-            }
-        });
-
-        // TODO: onClickListener for every place
-//        for (int i=0; i<gridPlaces.getAdapter().getCount(); i++) {
-//            gridPlaces.getAdapter().getItem(i);
-//        }
-
+        setListeners();
     }
 
     void requestPermissions() {
@@ -120,7 +79,84 @@ public class MainActivity extends AppCompatActivity {
         places.put("Kebab", R.drawable.park);
         places.put("Lodowisko", R.drawable.gym);
         places.put("Kawiarnia", R.drawable.pool);
-        gridPlaces.setAdapter(new PlaceAdapter(this, places));
+        pa = new PlaceAdapter(this, places, null);
+        gridPlaces.setAdapter(pa);
+    }
+
+    private void setListeners(){
+        placeField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.v("PLACES", places.toString());
+
+                if (charSequence.toString().isEmpty()) {
+                    pa = new PlaceAdapter(MainActivity.this, places, checkedPlaces);
+                    gridPlaces.setAdapter(pa);
+                    clearPlaceField.setVisibility(View.INVISIBLE);
+                    Log.v("puste pole", "brak");
+                } else {
+                    clearPlaceField.setVisibility(View.VISIBLE);
+                    for (Map.Entry<String, Integer> place : places.entrySet()) {
+                        String placeName = place.getKey();
+                        Integer placeImage = place.getValue();
+                        Log.v("JESTEM W FOR EACH", "wohoo");
+                        if (!placeName.toLowerCase().startsWith(charSequence.toString().toLowerCase())) {
+                            filteredPlaces.remove(placeName);
+                            Log.v("Usuwamy element", placeName);
+                        } else if (!filteredPlaces.containsValue(placeName)) {
+                            filteredPlaces.put(placeName, placeImage);
+                            Log.v("dodajemy element", placeName);
+                        }
+                        pa = new PlaceAdapter(MainActivity.this, filteredPlaces, checkedPlaces);
+                        gridPlaces.setAdapter(pa);
+                    }
+                    Log.v("FILTERED PLACES", filteredPlaces.toString());
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+
+        clearPlaceField.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                placeField.setText("");
+            }
+        });
+
+        gridPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                if(((ColorDrawable)view.getBackground()).getColor() != Constants.CHECKED_COLOR){
+                    // checked
+                    adapterView.getChildAt(position).setBackgroundColor(Constants.CHECKED_COLOR);
+                    checkedPlaces.put(pa.placesNames.get(position), pa.placesImages.get(position));
+                }else{
+                    // unchecked
+                    checkedPlaces.remove(pa.placesNames.get(position));
+                    adapterView.getChildAt(position).setBackgroundColor(Constants.UNCHECKED_COLOR);
+                }
+                updateFooter(checkedPlaces.size());
+                Log.v("CheckedPlaces", checkedPlaces.toString());
+            }
+        });
+    }
+
+    private void updateFooter(int count){
+        TextView counter = (TextView) findViewById(R.id.counter_of_checked);
+        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.footer);
+        if(count>0){
+            relativeLayout.setVisibility(View.VISIBLE);
+            counter.setText(count + " zaznaczonych elementów");
+        }else{
+            relativeLayout.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
