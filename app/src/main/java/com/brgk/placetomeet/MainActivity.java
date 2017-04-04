@@ -2,14 +2,21 @@ package com.brgk.placetomeet;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -24,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -57,23 +65,6 @@ public class MainActivity extends AppCompatActivity {
 
         // listeners
         setListeners();
-    }
-
-    void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//TODO: Permissions: any dangerous permissions here! :D
-            if( checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED ) {
-                if( shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
-                    shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
-//TODO: Show ratinoale
-                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
-                } else {
-//TODO: Permissions: as above :D
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
-                }
-            }
-        }
     }
 
     private void setPlaces(){
@@ -141,6 +132,24 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("CheckedPlaces", checkedPlaces.toString());
             }
         });
+
+        findViewById(R.id.submitBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+
+                Set<String> l = checkedPlaces.keySet();
+                String[] strings = new String[l.size()];
+                l.toArray(strings);
+
+//                for( String s : strings )
+//                    Log.d("MACIEK_DEBUG", s);
+
+                intent.putExtra(Constants.EXTRA_CHECKED_PLACES, strings);
+                startActivity(intent);
+
+            }
+        });
     }
 
     private void updateFooter(int count){
@@ -156,6 +165,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // PERMISSIONS
+    void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//TODO: Permissions: any dangerous permissions here! :D
+            if( checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED ) {
+                if( shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                        shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
+//TODO: Show ratinoale
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
+                } else {
+//TODO: Permissions: as above :D
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
+                }
+            }
+        }
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -181,5 +207,17 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("DEBUG", "unhandled permission");
                 break;
         }
+    }
+
+    //MENU
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_activity_menu, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d("MACIEK-DEBUG", item.getItemId() + "");
+        return true;
     }
 }

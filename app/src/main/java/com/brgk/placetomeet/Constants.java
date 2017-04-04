@@ -19,4 +19,7 @@ public class Constants {
     //Others
     private static final String[] categories = {"Rozrywka", "Jedzenie i picie", "Impreza", "Sport", "Relaks"};
 
+    //Extras
+    public static final String EXTRA_CHECKED_PLACES = "EXTRA_PLACES";
+
 }
