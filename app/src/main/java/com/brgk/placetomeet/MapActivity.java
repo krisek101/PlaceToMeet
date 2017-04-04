@@ -59,7 +59,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                 }
             }
         });
-
     }
 
     //PLACES
@@ -70,9 +69,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
-                Place place = PlacePicker.getPlace(this, data);
-                mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ!"));
-                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
+                if( mGoogleMap != null ) {
+                    Place place = PlacePicker.getPlace(this, data);
+                    mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ!"));
+                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 16));
+                }
             }
         }
     }
@@ -84,6 +85,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         mGoogleMap = googleMap;
         LatLng here = new LatLng(52.754255, 21.892705);
         mGoogleMap.addMarker(new MarkerOptions().position(here).title("DUDY"));
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(here));
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 16));
     }
 }
