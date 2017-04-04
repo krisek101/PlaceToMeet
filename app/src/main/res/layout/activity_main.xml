@@ -7,66 +7,84 @@
     tools:context="com.brgk.placetomeet.MainActivity"
     android:background="@color/place_autocomplete_prediction_primary_text">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:id="@+id/framePlaceField">
-        <EditText
-            android:id="@+id/placeField"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:textSize="22sp"
-            android:ems="10"
-            android:hint="@string/placeField"
-            android:textColorHint="#fff"
-            android:textColor="#fff"/>
-        <Button
-            android:id="@+id/clearPlaceField"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:layout_marginRight="20dp"
-            android:layout_gravity="right|center_vertical"
-            android:background="@drawable/clear"
-            android:visibility="invisible"/>
-    </FrameLayout>
+    <!--<GridView-->
+        <!--android:id="@+id/gridOfPlaces"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:columnWidth="100dp"-->
+        <!--android:numColumns="auto_fit"-->
+        <!--android:horizontalSpacing="4dp"-->
+        <!--android:verticalSpacing="4dp"-->
+        <!--android:stretchMode="columnWidth"-->
+        <!--android:textAlignment="center"-->
+        <!--android:animateLayoutChanges="true" />-->
 
-    <GridView
-        android:id="@+id/gridOfPlaces"
+    <TextView
+        android:id="@+id/entertainment_text_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/framePlaceField"
-        android:columnWidth="100dp"
-        android:numColumns="auto_fit"
-        android:horizontalSpacing="4dp"
-        android:verticalSpacing="4dp"
-        android:stretchMode="columnWidth"
-        android:textAlignment="center"
-        android:animateLayoutChanges="true" />
+        android:layout_height="wrap_content"
+        android:text="Rozrywka"
+        android:textSize="20sp"
+        android:textColor="#EEE" />
 
-    <RelativeLayout
-        android:id="@+id/footer"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_alignParentBottom="true"
-        android:textAlignment="center"
-        android:background="#EEEEEE"
-        android:visibility="invisible">
+    <View
+        android:id="@+id/line_up"
+        android:layout_width="fill_parent"
+        android:layout_height="5dp"
+        android:background="#ffffff"
+        android:layout_below="@+id/entertainment_text_view"/>
 
-        <TextView
-            android:id="@+id/counter_of_checked"
+    <HorizontalScrollView
+        android:id="@+id/category_entertainment"
+        android:layout_below="@+id/line_up"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/container_entertainment"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="20dp" />
+            android:orientation="horizontal">
 
-        <!--<Button-->
-            <!--android:id="@+id/next"-->
-            <!--android:layout_width="60dp"-->
-            <!--android:layout_height="60dp"-->
-            <!--android:text="dalej"-->
-            <!--android:layout_gravity="right|center_vertical" />-->
+        </LinearLayout>
 
+    </HorizontalScrollView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        >
+
+        <LinearLayout
+            android:id="@+id/footer"
+            android:layout_width="fill_parent"
+            android:layout_height="50dp"
+            android:textAlignment="center"
+            android:visibility="invisible"
+            android:layout_marginTop="30dp"
+            android:background="#EEE">
+
+            <TextView
+                android:id="@+id/counter_of_checked"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textSize="20sp"
+                android:layout_marginStart="20dp" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/next"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/blue_arrow"
+            android:layout_marginBottom="20dp"
+            android:visibility="invisible"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"/>
     </RelativeLayout>
 
 </RelativeLayout>

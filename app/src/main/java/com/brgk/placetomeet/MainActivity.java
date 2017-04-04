@@ -1,39 +1,45 @@
 package com.brgk.placetomeet;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     // Collections
     private Map<String, Integer> places = new HashMap<>();
-    private Map<String, Integer> filteredPlaces = new HashMap<>();
     private Map<String, Integer> checkedPlaces = new HashMap<>();
+    public List<String> placesNames = new ArrayList<>();
+    public List<Integer> placesImages = new ArrayList<>();
 
     // UI
-    private GridView gridPlaces;
-    private EditText placeField;
-    private Button clearPlaceField;
-    private PlaceAdapter pa;
+    private PlaceAdapter placeAdapter;
+    private Button nextButton;
+    private LinearLayout entertainmentContainer;
+    String placeName;
+    Integer placeImage;
+    View gridView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +47,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // UI
-        placeField = (EditText) findViewById(R.id.placeField);
-        gridPlaces = (GridView) findViewById(R.id.gridOfPlaces);
-        clearPlaceField = (Button) findViewById(R.id.clearPlaceField);
+        //gridPlaces = (GridView) findViewById(R.id.gridOfPlaces);
+        nextButton = (Button) findViewById(R.id.next);
+        entertainmentContainer = (LinearLayout) findViewById(R.id.container_entertainment);
 
         // init functions
         requestPermissions();
@@ -71,82 +77,65 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setPlaces(){
+        // food and drinks
         places.put("Restauracja", R.drawable.place_restaurant);
-        places.put("Park", R.drawable.place_park);
-        places.put("Basen", R.drawable.place_pool);
-        places.put("Kręgielnia", R.drawable.place_bowling);
         places.put("Kebab", R.drawable.place_kebab);
-        places.put("Lodowisko", R.drawable.place_rink);
-        places.put("Kawiarnia", R.drawable.place_cafe);
-        places.put("Bar", R.drawable.place_bar);
-        places.put("Kino", R.drawable.place_cinema);
-        places.put("Kort Tenisowy", R.drawable.place_tenis);
-        places.put("Bilard", R.drawable.place_billiards);
         places.put("Pizza", R.drawable.place_pizza);
-        places.put("Centrum handlowe", R.drawable.place_shopping_centre);
+        places.put("Bar", R.drawable.place_bar);
+        places.put("Kawiarnia", R.drawable.place_cafe);
+
+        // entertainment
+        places.put("Kręgielnia", R.drawable.place_bowling);
+        places.put("Lodowisko", R.drawable.place_rink);
+        places.put("Bilard", R.drawable.place_billiards);
+
+        // sport
+        places.put("Basen", R.drawable.place_pool);
+        places.put("Kort Tenisowy", R.drawable.place_tenis);
         places.put("Hala sportowa", R.drawable.place_sports_hall);
-        pa = new PlaceAdapter(this, places, null);
-        gridPlaces.setAdapter(pa);
+
+        // relax
+        places.put("Park", R.drawable.place_park);
+        places.put("Kino", R.drawable.place_cinema);
+        places.put("Centrum handlowe", R.drawable.place_shopping_centre);
+
+        //placeAdapter = new PlaceAdapter(this, places, null);
+        //gridPlaces.setAdapter(placeAdapter);
+
+        placesNames.addAll(places.keySet());
+        placesImages.addAll(places.values());
+
+        for (int i = 0; i < places.size(); i++) {
+            LayoutInflater inflater = LayoutInflater.from(this);
+            gridView = inflater.inflate(R.layout.place, null);
+            placeImage = placesImages.get(i);
+            placeName = placesNames.get(i);
+            ImageView imageView = (ImageView) gridView.findViewById(R.id.place_image);
+            imageView.setImageResource(placeImage);
+            imageView.setTag(placeImage);
+            TextView textView = (TextView) gridView.findViewById(R.id.place_label);
+            textView.setText(placeName);
+            textView.setTag(placeName);
+            entertainmentContainer.addView(gridView);
+        }
+
     }
 
     private void setListeners(){
-        placeField.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.v("PLACES", places.toString());
-
-                if (charSequence.toString().isEmpty()) {
-                    pa = new PlaceAdapter(MainActivity.this, places, checkedPlaces);
-                    gridPlaces.setAdapter(pa);
-                    clearPlaceField.setVisibility(View.INVISIBLE);
-                    Log.v("puste pole", "brak");
-                } else {
-                    clearPlaceField.setVisibility(View.VISIBLE);
-                    for (Map.Entry<String, Integer> place : places.entrySet()) {
-                        String placeName = place.getKey();
-                        Integer placeImage = place.getValue();
-                        Log.v("JESTEM W FOR EACH", "wohoo");
-                        if (!placeName.toLowerCase().startsWith(charSequence.toString().toLowerCase())) {
-                            filteredPlaces.remove(placeName);
-                            Log.v("Usuwamy element", placeName);
-                        } else if (!filteredPlaces.containsValue(placeName)) {
-                            filteredPlaces.put(placeName, placeImage);
-                            Log.v("dodajemy element", placeName);
-                        }
-                        pa = new PlaceAdapter(MainActivity.this, filteredPlaces, checkedPlaces);
-                        gridPlaces.setAdapter(pa);
-                    }
-                    Log.v("FILTERED PLACES", filteredPlaces.toString());
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-
-        clearPlaceField.setOnClickListener(new View.OnClickListener() {
+        entertainmentContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                placeField.setText("");
-            }
-        });
-
-        gridPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                if(((ColorDrawable)view.getBackground()).getColor() != Constants.CHECKED_COLOR){
+                placeName = (String) view.findViewById(R.id.place_label).getTag();
+                placeImage = (Integer) view.findViewById(R.id.place_image).getTag();
+                Log.v("Place name", placeName);
+                if(((ColorDrawable)view.findViewById(R.id.place_element).getBackground()).getColor() != Constants.CHECKED_COLOR){
                     // checked
-                    adapterView.getChildAt(position).setBackgroundColor(Constants.CHECKED_COLOR);
-                    checkedPlaces.put(pa.placesNames.get(position), pa.placesImages.get(position));
+                    view.setBackgroundColor(Constants.CHECKED_COLOR);
+                    checkedPlaces.put(placeName, placeImage);
                 }else{
                     // unchecked
-                    checkedPlaces.remove(pa.placesNames.get(position));
-                    adapterView.getChildAt(position).setBackgroundColor(Constants.UNCHECKED_COLOR);
+                    checkedPlaces.remove(placeName);
+                    view.setBackgroundColor(Constants.UNCHECKED_COLOR);
                 }
                 updateFooter(checkedPlaces.size());
                 Log.v("CheckedPlaces", checkedPlaces.toString());
@@ -156,12 +145,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateFooter(int count){
         TextView counter = (TextView) findViewById(R.id.counter_of_checked);
-        RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.footer);
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.footer);
         if(count>0){
-            relativeLayout.setVisibility(View.VISIBLE);
+            linearLayout.setVisibility(View.VISIBLE);
+            nextButton.setVisibility(View.VISIBLE);
             counter.setText(count + " zaznaczonych elementów");
         }else{
-            relativeLayout.setVisibility(View.INVISIBLE);
+            nextButton.setVisibility(View.INVISIBLE);
+            linearLayout.setVisibility(View.INVISIBLE);
         }
     }
 

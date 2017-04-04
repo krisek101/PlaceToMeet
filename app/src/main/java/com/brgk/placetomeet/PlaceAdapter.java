@@ -64,7 +64,6 @@ public class PlaceAdapter extends BaseAdapter {
             for (Map.Entry<String, Integer> place : checkedPlaces.entrySet()) {
                 if(place.getKey().equals(placeName)){
                     gridView.setBackgroundColor(Constants.CHECKED_COLOR);
-                    Log.v("ZOSTAl zmieniony kolor", placeName);
                 }
             }
         }
