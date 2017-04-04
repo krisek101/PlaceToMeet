@@ -48,15 +48,17 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewH
         Log.d("MACIEK-DEBUG2", ((TextView) view.findViewById(R.id.place_label)).getText().toString());
 
         String placeName = (String) view.findViewById(R.id.place_label).getTag();
-        Log.v("Place name", mainActivity.placeName);
+        Log.v("Place name", placeName);
         if(((ColorDrawable)view.findViewById(R.id.place_element).getBackground()).getColor() != Constants.CHECKED_COLOR){
             // checked
             view.setBackgroundColor(Constants.CHECKED_COLOR);
-            mainActivity.checkedPlaces.put(placeName, mainActivity.placeImage);
+            mainActivity.checkedPlaces.add(placeName);
+            Log.v("CheckedPlaces", mainActivity.checkedPlaces.toString());
         }else{
             // unchecked
             mainActivity.checkedPlaces.remove(placeName);
             view.setBackgroundColor(Constants.UNCHECKED_COLOR);
+            Log.v("CheckedPlaces", mainActivity.checkedPlaces.toString());
         }
         mainActivity.updateFooter(mainActivity.checkedPlaces.size());
         Log.v("CheckedPlaces", mainActivity.checkedPlaces.toString());
