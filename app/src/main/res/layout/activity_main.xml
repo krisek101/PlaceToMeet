@@ -37,8 +37,8 @@
         android:layout_below="@+id/framePlaceField"
         android:columnWidth="100dp"
         android:numColumns="auto_fit"
-        android:horizontalSpacing="10dp"
-        android:verticalSpacing="10dp"
+        android:horizontalSpacing="4dp"
+        android:verticalSpacing="4dp"
         android:stretchMode="columnWidth"
         android:textAlignment="center"
         android:animateLayoutChanges="true" />

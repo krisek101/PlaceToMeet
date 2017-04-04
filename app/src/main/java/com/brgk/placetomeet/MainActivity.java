@@ -71,14 +71,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setPlaces(){
-        places.put("Restauracja", R.drawable.restaurant);
-        places.put("Park", R.drawable.park);
-        places.put("Siłownia", R.drawable.gym);
-        places.put("Basen", R.drawable.pool);
-        places.put("Kręgle", R.drawable.restaurant);
-        places.put("Kebab", R.drawable.park);
-        places.put("Lodowisko", R.drawable.gym);
-        places.put("Kawiarnia", R.drawable.pool);
+        places.put("Restauracja", R.drawable.place_restaurant);
+        places.put("Park", R.drawable.place_park);
+        places.put("Basen", R.drawable.place_pool);
+        places.put("Kręgielnia", R.drawable.place_bowling);
+        places.put("Kebab", R.drawable.place_kebab);
+        places.put("Lodowisko", R.drawable.place_rink);
+        places.put("Kawiarnia", R.drawable.place_cafe);
+        places.put("Bar", R.drawable.place_bar);
+        places.put("Kino", R.drawable.place_cinema);
+        places.put("Kort Tenisowy", R.drawable.place_tenis);
+        places.put("Bilard", R.drawable.place_billiards);
+        places.put("Pizza", R.drawable.place_pizza);
+        places.put("Centrum handlowe", R.drawable.place_shopping_centre);
+        places.put("Hala sportowa", R.drawable.place_sports_hall);
         pa = new PlaceAdapter(this, places, null);
         gridPlaces.setAdapter(pa);
     }
