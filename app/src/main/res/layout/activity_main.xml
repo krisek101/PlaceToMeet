@@ -7,41 +7,64 @@
     tools:context="com.brgk.placetomeet.MainActivity"
     android:background="@color/place_autocomplete_prediction_primary_text">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:id="@+id/framePlaceField">
-        <EditText
-            android:id="@+id/placeField"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:textSize="22sp"
-            android:ems="10"
-            android:hint="@string/placeField"
-            android:textColorHint="#fff"
-            android:textColor="#fff"/>
+        android:orientation="horizontal"
+        android:weightSum="5"
+        android:id="@+id/linearLayout">
+
+        <FrameLayout
+            android:id="@+id/framePlaceField"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_weight="4">
+
+            <EditText
+                android:id="@+id/placeField"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:ems="10"
+                android:hint="@string/placeField"
+                android:textColor="#fff"
+                android:textColorHint="#fff"
+                android:textSize="22sp" />
+
+            <Button
+                android:id="@+id/clearPlaceField"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="right|center_vertical"
+                android:layout_marginRight="20dp"
+                android:background="@drawable/clear"
+                android:visibility="invisible" />
+
+        </FrameLayout>
+
         <Button
-            android:id="@+id/clearPlaceField"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:layout_marginRight="20dp"
-            android:layout_gravity="right|center_vertical"
-            android:background="@drawable/clear"
-            android:visibility="invisible"/>
-    </FrameLayout>
+            android:id="@+id/submitBtn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="GO!" />
+
+    </LinearLayout>
 
     <GridView
         android:id="@+id/gridOfPlaces"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/framePlaceField"
         android:columnWidth="100dp"
         android:numColumns="auto_fit"
         android:horizontalSpacing="4dp"
         android:verticalSpacing="4dp"
         android:stretchMode="columnWidth"
         android:textAlignment="center"
-        android:animateLayoutChanges="true" />
+        android:animateLayoutChanges="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/linearLayout" />
 
     <RelativeLayout
         android:id="@+id/footer"
