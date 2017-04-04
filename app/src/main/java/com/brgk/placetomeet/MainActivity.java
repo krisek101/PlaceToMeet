@@ -10,6 +10,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.text.Editable;
@@ -48,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     String placeName;
     Integer placeImage;
     View gridView;
+    RecyclerView rv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +63,15 @@ public class MainActivity extends AppCompatActivity {
         nextButton = (Button) findViewById(R.id.next);
         entertainmentContainer = (LinearLayout) findViewById(R.id.container_entertainment);
 
+
         // init functions
         requestPermissions();
         setPlaces();
+
+        //TEST
+        rv = (RecyclerView) findViewById(R.id.recycler_view);
+        rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rv.setAdapter(new RecyclerViewAdapter(this, places));
 
         // listeners
         setListeners();
@@ -133,6 +143,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        rv.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener());
+
         findViewById(R.id.submitBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -142,12 +154,8 @@ public class MainActivity extends AppCompatActivity {
                 String[] strings = new String[l.size()];
                 l.toArray(strings);
 
-//                for( String s : strings )
-//                    Log.d("MACIEK_DEBUG", s);
-
                 intent.putExtra(Constants.EXTRA_CHECKED_PLACES, strings);
                 startActivity(intent);
-
             }
         });
     }

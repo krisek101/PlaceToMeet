@@ -4,27 +4,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.brgk.placetomeet.MainActivity"
-    android:background="@color/place_autocomplete_prediction_primary_text">
+    android:background="@color/place_autocomplete_prediction_primary_text"
+    tools:context="com.brgk.placetomeet.MainActivity">
 
     <!--<GridView-->
-        <!--android:id="@+id/gridOfPlaces"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:columnWidth="100dp"-->
-        <!--android:numColumns="auto_fit"-->
-        <!--android:horizontalSpacing="4dp"-->
-        <!--android:verticalSpacing="4dp"-->
-        <!--android:stretchMode="columnWidth"-->
-        <!--android:textAlignment="center"-->
-        <!--android:animateLayoutChanges="true" />-->
+    <!--android:id="@+id/gridOfPlaces"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent"-->
+    <!--android:columnWidth="100dp"-->
+    <!--android:numColumns="auto_fit"-->
+    <!--android:horizontalSpacing="4dp"-->
+    <!--android:verticalSpacing="4dp"-->
+    <!--android:stretchMode="columnWidth"-->
+    <!--android:textAlignment="center"-->
+    <!--android:animateLayoutChanges="true" />-->
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:orientation="horizontal"
-        android:weightSum="5"
-        android:id="@+id/linearLayout">
+        android:weightSum="5">
 
         <Button
             android:id="@+id/submitBtn"
@@ -34,26 +34,39 @@
             android:text="GO!" />
 
     </LinearLayout>
+
     <TextView
         android:id="@+id/entertainment_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/linearLayout"
         android:text="Rozrywka"
-        android:textSize="20sp"
-        android:textColor="#EEE" />
+        android:textColor="#EEE"
+        android:textSize="20sp" />
 
     <View
         android:id="@+id/line_up"
         android:layout_width="fill_parent"
         android:layout_height="5dp"
-        android:background="#ffffff"
-        android:layout_below="@+id/entertainment_text_view"/>
+        android:layout_below="@+id/entertainment_text_view"
+        android:background="#ffffff" />
+
+    <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/recycler_view"
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:layout_above="@+id/relativeLayout"
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical"
+        android:scrollbars="none" />
 
     <HorizontalScrollView
         android:id="@+id/category_entertainment"
-        android:layout_below="@+id/line_up"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/line_up"
+        android:layout_alignParentStart="true">
 
         <LinearLayout
             android:id="@+id/container_entertainment"
@@ -64,29 +77,29 @@
         </LinearLayout>
 
     </HorizontalScrollView>
-    
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_alignParentBottom="true"
-        >
+        android:id="@+id/relativeLayout">
 
         <LinearLayout
             android:id="@+id/footer"
             android:layout_width="fill_parent"
             android:layout_height="50dp"
-            android:textAlignment="center"
-            android:visibility="invisible"
             android:layout_marginTop="30dp"
-            android:background="#EEE">
+            android:background="#EEE"
+            android:textAlignment="center"
+            android:visibility="invisible">
 
             <TextView
                 android:id="@+id/counter_of_checked"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
                 android:layout_marginTop="12dp"
-                android:textSize="20sp"
-                android:layout_marginStart="20dp" />
+                android:textSize="20sp" />
 
         </LinearLayout>
 
@@ -94,12 +107,12 @@
             android:id="@+id/next"
             android:layout_width="60dp"
             android:layout_height="60dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginBottom="20dp"
             android:layout_marginEnd="20dp"
             android:background="@drawable/blue_arrow"
-            android:layout_marginBottom="20dp"
-            android:visibility="invisible"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"/>
+            android:visibility="invisible" />
     </RelativeLayout>
 
 </RelativeLayout>
