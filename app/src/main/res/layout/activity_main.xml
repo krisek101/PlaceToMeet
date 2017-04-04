@@ -19,28 +19,28 @@
     <!--android:textAlignment="center"-->
     <!--android:animateLayoutChanges="true" />-->
 
-    <LinearLayout
-        android:id="@+id/linearLayout"
+    <TextView
+        android:id="@+id/textView3"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:orientation="horizontal"
-        android:weightSum="5">
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/recycler_view"
+        android:text="wyżej jest recycleView"
+        android:textColor="#EEE"
+        android:textSize="20sp" />
 
-        <Button
-            android:id="@+id/submitBtn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="GO!" />
-
-    </LinearLayout>
+    <View
+        android:id="@+id/line_test"
+        android:layout_width="fill_parent"
+        android:layout_height="5dp"
+        android:layout_below="@+id/textView3"
+        android:background="#ffffff" />
 
     <TextView
         android:id="@+id/entertainment_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/linearLayout"
         android:text="Rozrywka"
         android:textColor="#EEE"
         android:textSize="20sp" />
@@ -52,21 +52,22 @@
         android:layout_below="@+id/entertainment_text_view"
         android:background="#ffffff" />
 
-    <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="fill_parent"
         android:layout_height="100dp"
         android:orientation="vertical"
         android:scrollbars="none"
-        android:layout_above="@+id/relativeLayout"
-        android:layout_toEndOf="@+id/category_entertainment" />
+        android:layout_below="@+id/line_up"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="39dp" />
 
     <HorizontalScrollView
         android:id="@+id/category_entertainment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/line_up">
+        android:layout_below="@id/line_test"
+        android:layout_alignParentStart="true">
 
         <LinearLayout
             android:id="@+id/container_entertainment"
@@ -79,10 +80,10 @@
     </HorizontalScrollView>
 
     <RelativeLayout
-        android:id="@+id/relativeLayout"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:id="@+id/relativeLayout2">
 
         <LinearLayout
             android:id="@+id/footer"

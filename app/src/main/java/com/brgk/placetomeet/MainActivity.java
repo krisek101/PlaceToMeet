@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Collections
     private Map<String, Integer> places = new HashMap<>();
-    private Map<String, Integer> checkedPlaces = new HashMap<>();
+    public Map<String, Integer> checkedPlaces = new HashMap<>();
     public List<String> placesNames = new ArrayList<>();
     public List<Integer> placesImages = new ArrayList<>();
 
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         //TEST
         rv = (RecyclerView) findViewById(R.id.recycler_view);
         rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        rv.setAdapter(new RecyclerViewAdapter(this, places));
+        rv.setAdapter(new RecyclerViewAdapter(this, this, places));
 
         // listeners
         setListeners();
@@ -122,30 +122,33 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void checkSelected(View view) {
+
+        placeName = (String) view.findViewById(R.id.place_label).getTag();
+        placeImage = (Integer) view.findViewById(R.id.place_image).getTag();
+        Log.v("Place name", placeName);
+        if(((ColorDrawable)view.findViewById(R.id.place_element).getBackground()).getColor() != Constants.CHECKED_COLOR){
+            // checked
+            view.setBackgroundColor(Constants.CHECKED_COLOR);
+            checkedPlaces.put(placeName, placeImage);
+        }else{
+            // unchecked
+            checkedPlaces.remove(placeName);
+            view.setBackgroundColor(Constants.UNCHECKED_COLOR);
+        }
+        updateFooter(checkedPlaces.size());
+        Log.v("CheckedPlaces", checkedPlaces.toString());
+    }
+
     private void setListeners(){
         entertainmentContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                placeName = (String) view.findViewById(R.id.place_label).getTag();
-                placeImage = (Integer) view.findViewById(R.id.place_image).getTag();
-                Log.v("Place name", placeName);
-                if(((ColorDrawable)view.findViewById(R.id.place_element).getBackground()).getColor() != Constants.CHECKED_COLOR){
-                    // checked
-                    view.setBackgroundColor(Constants.CHECKED_COLOR);
-                    checkedPlaces.put(placeName, placeImage);
-                }else{
-                    // unchecked
-                    checkedPlaces.remove(placeName);
-                    view.setBackgroundColor(Constants.UNCHECKED_COLOR);
-                }
-                updateFooter(checkedPlaces.size());
-                Log.v("CheckedPlaces", checkedPlaces.toString());
+                checkSelected(view);
             }
         });
 
-        rv.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener());
-
-        findViewById(R.id.submitBtn).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.next).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), MapActivity.class);
@@ -160,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateFooter(int count){
+    public void updateFooter(int count){
         TextView counter = (TextView) findViewById(R.id.counter_of_checked);
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.footer);
         if(count>0){
