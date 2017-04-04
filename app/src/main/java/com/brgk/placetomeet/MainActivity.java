@@ -32,6 +32,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Collections
     private Map<String, Integer> places = new HashMap<>();
-    public Map<String, Integer> checkedPlaces = new HashMap<>();
+    public Set<String> checkedPlaces = new HashSet<>();
     public List<String> placesNames = new ArrayList<>();
     public List<Integer> placesImages = new ArrayList<>();
 
@@ -130,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
         if(((ColorDrawable)view.findViewById(R.id.place_element).getBackground()).getColor() != Constants.CHECKED_COLOR){
             // checked
             view.setBackgroundColor(Constants.CHECKED_COLOR);
-            checkedPlaces.put(placeName, placeImage);
+            checkedPlaces.add(placeName);
         }else{
             // unchecked
             checkedPlaces.remove(placeName);
@@ -153,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), MapActivity.class);
 
-                Set<String> l = checkedPlaces.keySet();
+                Set<String> l = checkedPlaces;
                 String[] strings = new String[l.size()];
                 l.toArray(strings);
 
