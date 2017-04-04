@@ -21,20 +21,28 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
+import java.util.ArrayList;
+import java.util.List;
+
+public class MapActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback{
     //TEMP
     int PLACE_PICKER_REQUEST = 1;
 
     MapActivity activity = this;
     GoogleMap mGoogleMap = null;
+    List<Place> places;
+    List<Marker> markers;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+        markers = new ArrayList<>();
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
@@ -71,7 +79,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
             if (resultCode == RESULT_OK) {
                 if( mGoogleMap != null ) {
                     Place place = PlacePicker.getPlace(this, data);
-                    mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ!"));
+
+                    markers.add(mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + markers.size())));
                     mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 16));
                 }
             }
@@ -84,7 +93,18 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         Log.d("MACIEK-DEBUG", "Map ready!");
         mGoogleMap = googleMap;
         LatLng here = new LatLng(52.754255, 21.892705);
-        mGoogleMap.addMarker(new MarkerOptions().position(here).title("DUDY"));
+        markers.add(mGoogleMap.addMarker(new MarkerOptions().position(here).title("DUDY")));
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 16));
+        mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if(markers.contains(marker)) {
+                    Log.d("MACIEK-DEBUG", marker.getTitle());
+                    markers.remove(marker);
+                    marker.remove();
+                }
+                return false;
+            }
+        });
     }
 }
