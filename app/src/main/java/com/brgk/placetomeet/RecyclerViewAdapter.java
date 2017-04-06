@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -19,73 +20,72 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewH
     MainActivity mainActivity;
     View mView;
     ViewHolder mViewHolder;
-    List<String> names;
-    List<Integer> images;
+    List<Place> places;
 
-    public RecyclerViewAdapter(Context context, MainActivity mainActivity, Map<String, Integer> map) {
+    public RecyclerViewAdapter(Context context, MainActivity mainActivity, List<Place> places) {
         this.context = context;
         this.mainActivity = mainActivity;
-        names = new ArrayList<>(map.keySet());
-        images = new ArrayList<>(map.values());
+        this.places = places;
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        mView = LayoutInflater.from(context).inflate(R.layout.place, parent,false);
+    public ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
+        mView = LayoutInflater.from(context).inflate(R.layout.place, parent, false);
         mViewHolder = new ViewHolder(mView);
-        mView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d("MACIEK-DEBUG1", ((TextView) view.findViewById(R.id.place_label)).getText().toString());
-                checkSelected(view);
-
-            }
-        });
         return mViewHolder;
     }
 
-    public void checkSelected(View view) {
-        Log.d("MACIEK-DEBUG2", ((TextView) view.findViewById(R.id.place_label)).getText().toString());
-
-        String placeName = (String) view.findViewById(R.id.place_label).getTag();
-        Log.v("Place name", placeName);
-        if(((ColorDrawable)view.findViewById(R.id.place_element).getBackground()).getColor() != Constants.CHECKED_COLOR){
-            // checked
-            view.setBackgroundColor(Constants.CHECKED_COLOR);
-            mainActivity.checkedPlaces.add(placeName);
-            Log.v("CheckedPlaces", mainActivity.checkedPlaces.toString());
-        }else{
-            // unchecked
-            mainActivity.checkedPlaces.remove(placeName);
-            view.setBackgroundColor(Constants.UNCHECKED_COLOR);
-            Log.v("CheckedPlaces", mainActivity.checkedPlaces.toString());
-        }
-        mainActivity.updateFooter(mainActivity.checkedPlaces.size());
-        Log.v("CheckedPlaces", mainActivity.checkedPlaces.toString());
-    }
-
-
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.textView.setText(names.get(position));
-        holder.textView.setTag(names.get(position));
+        TextView name = (TextView) holder.textView.findViewById(R.id.place_label);
+        ImageView img = (ImageView) holder.imageView.findViewById(R.id.place_image);
+        RelativeLayout placeContainer = holder.placeContainer;
 
-        holder.imageView.setImageResource(images.get(position));
+
+        final Place place = places.get(position);
+        name.setText(place.getName());
+        img.setImageResource(place.getImg());
+
+        if(place.isChecked()){
+            placeContainer.setBackgroundColor(Constants.CHECKED_COLOR);
+        }else{
+            placeContainer.setBackgroundColor(Constants.UNCHECKED_COLOR);
+
+        }
+
+        placeContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!mainActivity.namesCheckedPlaces.contains(place.getName())) {
+                    place.setChecked(true);
+                    view.findViewById(R.id.place_element).setBackgroundColor(Constants.CHECKED_COLOR);
+                    mainActivity.namesCheckedPlaces.add(place.getName());
+                }else{
+                    place.setChecked(false);
+                    view.findViewById(R.id.place_element).setBackgroundColor(Constants.UNCHECKED_COLOR);
+                    mainActivity.namesCheckedPlaces.remove(place.getName());
+                }
+                mainActivity.updateFooter();
+                Log.v("CheckedPlaces", mainActivity.namesCheckedPlaces.toString());
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return images.size();
+        return places.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
         public TextView textView;
         public ImageView imageView;
+        public RelativeLayout placeContainer;
 
         public ViewHolder(View itemView) {
             super(itemView);
             textView = (TextView) itemView.findViewById(R.id.place_label);
             imageView = (ImageView) itemView.findViewById(R.id.place_image);
+            placeContainer = (RelativeLayout) itemView.findViewById(R.id.place_element);
         }
     }
 
