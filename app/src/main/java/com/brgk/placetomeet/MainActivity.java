@@ -30,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -149,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
     // PERMISSIONS
     void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//TODO: Permissions: any dangerous permissions here! :D
             if( checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                     checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED ) {
                 if( shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
@@ -157,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
 //TODO: Show ratinoale
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
                 } else {
-//TODO: Permissions: as above :D
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
                 }
             }
@@ -200,7 +199,19 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         Log.d("MACIEK-DEBUG", item.getItemId() + "");
+        switch (item.getItemId()) {
+            case R.id.main_menu_help:
+                Toast.makeText(this, "POMOC", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.main_menu_quit:
+                Toast.makeText(this, "WYSCIE", Toast.LENGTH_SHORT).show();
+                finish();
+                break;
+            default:Toast.makeText(this, "NOT IMPLEMENTED YET", Toast.LENGTH_SHORT).show();
+                break;
+        }
         return true;
     }
 }
