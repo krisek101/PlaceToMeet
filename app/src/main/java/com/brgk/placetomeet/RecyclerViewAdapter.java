@@ -41,6 +41,7 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewH
         ImageView img = (ImageView) holder.imageView.findViewById(R.id.place_image);
         RelativeLayout placeContainer = holder.placeContainer;
 
+
         final Place place = places.get(position);
         name.setText(place.getName());
         img.setImageResource(place.getImg());
@@ -49,6 +50,7 @@ class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewH
             placeContainer.setBackgroundColor(Constants.CHECKED_COLOR);
         }else{
             placeContainer.setBackgroundColor(Constants.UNCHECKED_COLOR);
+
         }
 
         placeContainer.setOnClickListener(new View.OnClickListener() {

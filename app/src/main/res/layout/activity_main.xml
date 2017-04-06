@@ -11,10 +11,15 @@
         android:id="@+id/entertainment_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+              
         android:layout_alignParentStart="true"
         android:text="Rozrywka"
+
         android:textColor="#EEE"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        android:layout_below="@+id/recycler_view"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="17dp" />
 
     <View
         android:id="@+id/line_up_entertainment"
@@ -53,7 +58,9 @@
         android:layout_height="100dp"
         android:orientation="vertical"
         android:scrollbars="none"
+
         android:layout_below="@+id/line_up_food" />
+
 
     <TextView
         android:id="@+id/sport_text_view"

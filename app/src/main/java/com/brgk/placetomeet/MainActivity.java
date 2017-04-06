@@ -33,6 +33,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,8 +41,10 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     // Collections
+
     public List<Place> places = new ArrayList<>();
     public List<String> namesCheckedPlaces = new ArrayList<>();
+
 
     // UI
     private Button nextButton;
@@ -105,12 +108,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
     private List<Place> getPlacesByCategory(String category){
         List<Place> placesByCategory = new ArrayList<>();
         for(Place place : places){
             if(place.getCategories().contains(category)){
                 placesByCategory.add(place);
             }
+
         }
         return placesByCategory;
     }
@@ -120,9 +125,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+
                 String[] array = new String[namesCheckedPlaces.size()];
                 namesCheckedPlaces.toArray(array);
                 intent.putExtra(Constants.EXTRA_CHECKED_PLACES, array);
+
                 startActivity(intent);
             }
         });
