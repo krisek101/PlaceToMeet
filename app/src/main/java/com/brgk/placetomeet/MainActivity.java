@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -33,6 +32,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,13 +40,19 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     // Collections
-    public List<Place> places = new ArrayList<>();
-    public List<String> namesCheckedPlaces = new ArrayList<>();
+    private Map<String, Integer> places = new HashMap<>();
+    public Set<String> checkedPlaces = new HashSet<>();
+    public List<String> placesNames = new ArrayList<>();
+    public List<Integer> placesImages = new ArrayList<>();
 
     // UI
+    private PlaceAdapter placeAdapter;
     private Button nextButton;
-    TextView counter;
-    LinearLayout footer;
+    private LinearLayout entertainmentContainer;
+    String placeName;
+    Integer placeImage;
+    View gridView;
+    RecyclerView rv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,88 +60,120 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // UI
+        //gridPlaces = (GridView) findViewById(R.id.gridOfPlaces);
         nextButton = (Button) findViewById(R.id.next);
-        counter = (TextView) findViewById(R.id.counter_of_checked);
-        footer = (LinearLayout) findViewById(R.id.footer);
+        entertainmentContainer = (LinearLayout) findViewById(R.id.container_entertainment);
+
 
         // init functions
         requestPermissions();
         setPlaces();
+
+        //TEST
+        rv = (RecyclerView) findViewById(R.id.recycler_view);
+        rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rv.setAdapter(new RecyclerViewAdapter(this, this, places));
 
         // listeners
         setListeners();
     }
 
     private void setPlaces(){
-        places.add(new Place("Restauracja", 1, R.drawable.place_restaurant, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Kebab", 2, R.drawable.place_kebab, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Pizza", 3, R.drawable.place_pizza, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Bar", 4, R.drawable.place_bar, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Kawiarnia", 5, R.drawable.place_cafe, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Kręgielnia", 6, R.drawable.place_bowling, new String[]{Constants.CATEGORIES[0]}));
-        places.add(new Place("Lodowisko", 7, R.drawable.place_rink, new String[]{Constants.CATEGORIES[0]}));
-        places.add(new Place("Bilard", 8, R.drawable.place_billiards, new String[]{Constants.CATEGORIES[0]}));
-        places.add(new Place("Basen", 9, R.drawable.place_pool, new String[]{Constants.CATEGORIES[3]}));
-        places.add(new Place("Kort Tenisowy", 10, R.drawable.place_tenis, new String[]{Constants.CATEGORIES[3]}));
-        places.add(new Place("Hala sportowa", 11, R.drawable.place_sports_hall, new String[]{Constants.CATEGORIES[3]}));
-        places.add(new Place("Park", 12, R.drawable.place_park, new String[]{Constants.CATEGORIES[4]}));
-        places.add(new Place("Kino", 13, R.drawable.place_cinema, new String[]{Constants.CATEGORIES[4]}));
-        places.add(new Place("Centrum handlowe", 14, R.drawable.place_shopping_centre, new String[]{Constants.CATEGORIES[4]}));
+        // food and drinks
+        places.put("Restauracja", R.drawable.place_restaurant);
+        places.put("Kebab", R.drawable.place_kebab);
+        places.put("Pizza", R.drawable.place_pizza);
+        places.put("Bar", R.drawable.place_bar);
+        places.put("Kawiarnia", R.drawable.place_cafe);
 
-        RecyclerView rv_food = (RecyclerView) findViewById(R.id.recycler_view_food);
-        rv_food.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        rv_food.setAdapter(new RecyclerViewAdapter(this, this, getPlacesByCategory(Constants.CATEGORIES[1])));
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(rv_food.getContext(), LinearLayoutManager.HORIZONTAL);
-        rv_food.addItemDecoration(dividerItemDecoration);
+        // entertainment
+        places.put("Kręgielnia", R.drawable.place_bowling);
+        places.put("Lodowisko", R.drawable.place_rink);
+        places.put("Bilard", R.drawable.place_billiards);
 
-        RecyclerView rv_entertainment = (RecyclerView) findViewById(R.id.recycler_view_entertainment);
-        rv_entertainment.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        rv_entertainment.setAdapter(new RecyclerViewAdapter(this, this, getPlacesByCategory(Constants.CATEGORIES[0])));
-        rv_entertainment.addItemDecoration(dividerItemDecoration);
+        // sport
+        places.put("Basen", R.drawable.place_pool);
+        places.put("Kort Tenisowy", R.drawable.place_tenis);
+        places.put("Hala sportowa", R.drawable.place_sports_hall);
 
-        RecyclerView rv_relax = (RecyclerView) findViewById(R.id.recycler_view_relax);
-        rv_relax.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        rv_relax.setAdapter(new RecyclerViewAdapter(this, this, getPlacesByCategory(Constants.CATEGORIES[4])));
-        rv_relax.addItemDecoration(dividerItemDecoration);
+        // relax
+        places.put("Park", R.drawable.place_park);
+        places.put("Kino", R.drawable.place_cinema);
+        places.put("Centrum handlowe", R.drawable.place_shopping_centre);
 
-        RecyclerView rv_sport = (RecyclerView) findViewById(R.id.recycler_view_sport);
-        rv_sport.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        rv_sport.setAdapter(new RecyclerViewAdapter(this, this, getPlacesByCategory(Constants.CATEGORIES[3])));
-        rv_sport.addItemDecoration(dividerItemDecoration);
+        //placeAdapter = new PlaceAdapter(this, places, null);
+        //gridPlaces.setAdapter(placeAdapter);
+
+        placesNames.addAll(places.keySet());
+        placesImages.addAll(places.values());
+
+        for (int i = 0; i < places.size(); i++) {
+            LayoutInflater inflater = LayoutInflater.from(this);
+            gridView = inflater.inflate(R.layout.place, null);
+            placeImage = placesImages.get(i);
+            placeName = placesNames.get(i);
+            ImageView imageView = (ImageView) gridView.findViewById(R.id.place_image);
+            imageView.setImageResource(placeImage);
+            imageView.setTag(placeImage);
+            TextView textView = (TextView) gridView.findViewById(R.id.place_label);
+            textView.setText(placeName);
+            textView.setTag(placeName);
+            entertainmentContainer.addView(gridView);
+        }
 
     }
 
-    private List<Place> getPlacesByCategory(String category){
-        List<Place> placesByCategory = new ArrayList<>();
-        for(Place place : places){
-            if(place.getCategories().contains(category)){
-                placesByCategory.add(place);
-            }
+    public void checkSelected(View view) {
+
+        placeName = (String) view.findViewById(R.id.place_label).getTag();
+        placeImage = (Integer) view.findViewById(R.id.place_image).getTag();
+        Log.v("Place name", placeName);
+        if(((ColorDrawable)view.findViewById(R.id.place_element).getBackground()).getColor() != Constants.CHECKED_COLOR){
+            // checked
+            view.setBackgroundColor(Constants.CHECKED_COLOR);
+            checkedPlaces.add(placeName);
+        }else{
+            // unchecked
+            checkedPlaces.remove(placeName);
+            view.setBackgroundColor(Constants.UNCHECKED_COLOR);
         }
-        return placesByCategory;
+        updateFooter(checkedPlaces.size());
+        Log.v("CheckedPlaces", checkedPlaces.toString());
     }
 
     private void setListeners(){
-        nextButton.setOnClickListener(new View.OnClickListener() {
+        entertainmentContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                checkSelected(view);
+            }
+        });
+
+        findViewById(R.id.next).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), MapActivity.class);
-                String[] array = new String[namesCheckedPlaces.size()];
-                namesCheckedPlaces.toArray(array);
-                intent.putExtra(Constants.EXTRA_CHECKED_PLACES, array);
+
+                Set<String> l = checkedPlaces;
+                String[] strings = new String[l.size()];
+                l.toArray(strings);
+
+                intent.putExtra(Constants.EXTRA_CHECKED_PLACES, strings);
                 startActivity(intent);
             }
         });
     }
 
-    public void updateFooter(){
-        if(namesCheckedPlaces.size()>0){
-            footer.setVisibility(View.VISIBLE);
+    public void updateFooter(int count){
+        TextView counter = (TextView) findViewById(R.id.counter_of_checked);
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.footer);
+        if(count>0){
+            linearLayout.setVisibility(View.VISIBLE);
             nextButton.setVisibility(View.VISIBLE);
-            counter.setText(namesCheckedPlaces.size() + " zaznaczonych elementów");
+            counter.setText(count + " zaznaczonych elementów");
         }else{
             nextButton.setVisibility(View.INVISIBLE);
-            footer.setVisibility(View.INVISIBLE);
+            linearLayout.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -156,7 +194,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -190,7 +227,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main_activity_menu, menu);
         return true;
     }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d("MACIEK-DEBUG", item.getItemId() + "");
