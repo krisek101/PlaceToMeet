@@ -31,6 +31,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,16 +70,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setPlaces() {
-        for(int i=0; i<Constants.PLACES.length; i++){
-            if(i<5){
+        for (int i = 0; i < Constants.PLACES.length; i++) {
+            if (i < 5) {
                 places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[1]}));
-            }else if(i<8){
+            } else if (i < 8) {
                 places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[0]}));
-            }else if(i<11) {
+            } else if (i < 11) {
                 places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[3]}));
-            }else if(i<14){
+            } else if (i < 14) {
                 places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[4]}));
-            }else{
+            } else {
                 places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[2]}));
             }
         }
@@ -154,16 +155,18 @@ public class MainActivity extends AppCompatActivity {
     // PERMISSIONS
     void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//TODO: Permissions: any dangerous permissions here! :D
+        //TODO: Permissions: any dangerous permissions here! :D
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                     checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
-                        shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
-//TODO: Show ratinoale
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
-                } else {
-//TODO: Permissions: as above :D
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                        checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                            shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
+            //TODO: Show ratinoale
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
+                    } else {
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
+                    }
                 }
             }
         }
@@ -205,7 +208,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         Log.d("MACIEK-DEBUG", item.getItemId() + "");
+        switch (item.getItemId()) {
+            case R.id.main_menu_help:
+                Toast.makeText(this, "POMOC", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.main_menu_quit:
+                Toast.makeText(this, "WYSCIE", Toast.LENGTH_SHORT).show();
+                finish();
+                break;
+            default:
+                Toast.makeText(this, "NOT IMPLEMENTED YET", Toast.LENGTH_SHORT).show();
+                break;
+        }
         return true;
     }
 }

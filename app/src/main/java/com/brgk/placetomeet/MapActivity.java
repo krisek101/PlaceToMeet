@@ -55,6 +55,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         String[] strings = bundle.getStringArray(Constants.EXTRA_CHECKED_PLACES);
         for( String s :  strings ) {
             Log.d("MACIEK_DEBUG", s);
+            //TODO: process with places
         }
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
