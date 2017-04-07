@@ -12,7 +12,7 @@ public class Place {
     private List<String> categories;
     private boolean checked;
 
-    public Place(String name, int id, int img, String[] categories){
+    public Place(String name, int id, int img, String[] categories) {
         this.name = name;
         this.id = id;
         this.img = img;

@@ -3,119 +3,128 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/place_autocomplete_prediction_primary_text"
+    android:layout_height="wrap_content"
+    android:background="#fff"
     tools:context="com.brgk.placetomeet.MainActivity">
 
-    <TextView
-        android:id="@+id/entertainment_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-              
-        android:layout_alignParentStart="true"
-        android:text="Rozrywka"
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
-        android:textColor="#EEE"
-        android:textSize="20sp"
-        android:layout_below="@+id/recycler_view"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="17dp" />
+        <RelativeLayout
+            android:id="@+id/scrollViewContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="20dp">
 
-    <View
-        android:id="@+id/line_up_entertainment"
-        android:layout_width="fill_parent"
-        android:layout_height="2dp"
-        android:layout_below="@+id/entertainment_text_view"
-        android:background="#000" />
+            <TextView
+                android:id="@+id/entertainment_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="15dp"
+                android:text="Rozrywka"
+                android:textColor="@color/colorCategoryText"
+                android:textSize="20sp" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view_entertainment"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:orientation="vertical"
-        android:scrollbars="none"
-        android:layout_below="@+id/line_up_entertainment" />
+            <View
+                android:id="@+id/line_up_entertainment"
+                android:layout_width="fill_parent"
+                android:layout_height="2dp"
+                android:layout_below="@+id/entertainment_text_view"
+                android:background="#505050" />
 
-    <TextView
-        android:id="@+id/food_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/recycler_view_entertainment"
-        android:text="Jedzenie i picie"
-        android:textColor="#EEE"
-        android:textSize="20sp" />
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view_entertainment"
+                android:layout_width="fill_parent"
+                android:layout_height="120dp"
+                android:layout_below="@+id/line_up_entertainment"
+                android:orientation="vertical"
+                android:scrollbars="none" />
 
-    <View
-        android:id="@+id/line_up_food"
-        android:layout_width="fill_parent"
-        android:layout_height="2dp"
-        android:layout_below="@+id/food_text_view"
-        android:background="#000" />
+            <TextView
+                android:id="@+id/food_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_below="@id/recycler_view_entertainment"
+                android:text="Jedzenie i picie"
+                android:textColor="@color/colorCategoryText"
+                android:textSize="20sp" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view_food"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:orientation="vertical"
-        android:scrollbars="none"
+            <View
+                android:id="@+id/line_up_food"
+                android:layout_width="fill_parent"
+                android:layout_height="2dp"
+                android:layout_below="@+id/food_text_view"
+                android:background="#000" />
 
-        android:layout_below="@+id/line_up_food" />
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view_food"
+                android:layout_width="fill_parent"
+                android:layout_height="120dp"
+                android:layout_below="@+id/line_up_food"
+                android:orientation="vertical"
+                android:scrollbars="none" />
 
+            <TextView
+                android:id="@+id/sport_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_below="@id/recycler_view_food"
+                android:text="Sport"
+                android:textColor="@color/colorCategoryText"
+                android:textSize="20sp" />
 
-    <TextView
-        android:id="@+id/sport_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/recycler_view_food"
-        android:text="Sport"
-        android:textColor="#EEE"
-        android:textSize="20sp" />
+            <View
+                android:id="@+id/line_up_sport"
+                android:layout_width="fill_parent"
+                android:layout_height="2dp"
+                android:layout_below="@+id/sport_text_view"
+                android:background="#000" />
 
-    <View
-        android:id="@+id/line_up_sport"
-        android:layout_width="fill_parent"
-        android:layout_height="2dp"
-        android:layout_below="@+id/sport_text_view"
-        android:background="#000" />
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view_sport"
+                android:layout_width="fill_parent"
+                android:layout_height="120dp"
+                android:layout_below="@+id/line_up_sport"
+                android:orientation="vertical"
+                android:scrollbars="none" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view_sport"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:orientation="vertical"
-        android:scrollbars="none"
-        android:layout_below="@+id/line_up_sport" />
+            <TextView
+                android:id="@+id/relax_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_below="@id/recycler_view_sport"
+                android:text="Relaks"
+                android:textColor="@color/colorCategoryText"
+                android:textSize="20sp" />
 
-    <TextView
-        android:id="@+id/relax_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/recycler_view_sport"
-        android:text="Relaks"
-        android:textColor="#EEE"
-        android:textSize="20sp" />
+            <View
+                android:id="@+id/line_up_relax"
+                android:layout_width="fill_parent"
+                android:layout_height="2dp"
+                android:layout_below="@+id/relax_text_view"
+                android:background="#000" />
 
-    <View
-        android:id="@+id/line_up_relax"
-        android:layout_width="fill_parent"
-        android:layout_height="2dp"
-        android:layout_below="@+id/relax_text_view"
-        android:background="#000" />
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view_relax"
+                android:layout_width="fill_parent"
+                android:layout_height="120dp"
+                android:layout_below="@+id/line_up_relax"
+                android:orientation="vertical"
+                android:scrollbars="none" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view_relax"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:orientation="vertical"
-        android:scrollbars="none"
-        android:layout_below="@+id/line_up_relax" />
-
+        </RelativeLayout>
+    </ScrollView>
 
     <RelativeLayout
+        android:id="@+id/relativeLayout2"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:layout_alignParentBottom="true"
-        android:id="@+id/relativeLayout2">
+        android:layout_alignParentBottom="true">
 
         <LinearLayout
             android:id="@+id/footer"

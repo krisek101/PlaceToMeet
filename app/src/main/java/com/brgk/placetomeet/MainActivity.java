@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,10 +42,8 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     // Collections
-
     public List<Place> places = new ArrayList<>();
     public List<String> namesCheckedPlaces = new ArrayList<>();
-
 
     // UI
     private Button nextButton;
@@ -69,21 +68,20 @@ public class MainActivity extends AppCompatActivity {
         setListeners();
     }
 
-    private void setPlaces(){
-        places.add(new Place("Restauracja", 1, R.drawable.place_restaurant, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Kebab", 2, R.drawable.place_kebab, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Pizza", 3, R.drawable.place_pizza, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Bar", 4, R.drawable.place_bar, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Kawiarnia", 5, R.drawable.place_cafe, new String[]{Constants.CATEGORIES[1]}));
-        places.add(new Place("Kręgielnia", 6, R.drawable.place_bowling, new String[]{Constants.CATEGORIES[0]}));
-        places.add(new Place("Lodowisko", 7, R.drawable.place_rink, new String[]{Constants.CATEGORIES[0]}));
-        places.add(new Place("Bilard", 8, R.drawable.place_billiards, new String[]{Constants.CATEGORIES[0]}));
-        places.add(new Place("Basen", 9, R.drawable.place_pool, new String[]{Constants.CATEGORIES[3]}));
-        places.add(new Place("Kort Tenisowy", 10, R.drawable.place_tenis, new String[]{Constants.CATEGORIES[3]}));
-        places.add(new Place("Hala sportowa", 11, R.drawable.place_sports_hall, new String[]{Constants.CATEGORIES[3]}));
-        places.add(new Place("Park", 12, R.drawable.place_park, new String[]{Constants.CATEGORIES[4]}));
-        places.add(new Place("Kino", 13, R.drawable.place_cinema, new String[]{Constants.CATEGORIES[4]}));
-        places.add(new Place("Centrum handlowe", 14, R.drawable.place_shopping_centre, new String[]{Constants.CATEGORIES[4]}));
+    private void setPlaces() {
+        for(int i=0; i<Constants.PLACES.length; i++){
+            if(i<5){
+                places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[1]}));
+            }else if(i<8){
+                places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[0]}));
+            }else if(i<11) {
+                places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[3]}));
+            }else if(i<14){
+                places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[4]}));
+            }else{
+                places.add(new Place(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[2]}));
+            }
+        }
 
         RecyclerView rv_food = (RecyclerView) findViewById(R.id.recycler_view_food);
         rv_food.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
@@ -108,11 +106,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-    private List<Place> getPlacesByCategory(String category){
+    private List<Place> getPlacesByCategory(String category) {
         List<Place> placesByCategory = new ArrayList<>();
-        for(Place place : places){
-            if(place.getCategories().contains(category)){
+        for (Place place : places) {
+            if (place.getCategories().contains(category)) {
                 placesByCategory.add(place);
             }
 
@@ -120,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         return placesByCategory;
     }
 
-    private void setListeners(){
+    private void setListeners() {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -135,24 +132,32 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateFooter(){
-        if(namesCheckedPlaces.size()>0){
+    public void updateFooter() {
+        RelativeLayout scrollContainer = (RelativeLayout) findViewById(R.id.scrollViewContainer);
+        if (namesCheckedPlaces.size() > 0) {
             footer.setVisibility(View.VISIBLE);
             nextButton.setVisibility(View.VISIBLE);
+            scrollContainer.setPadding(0, 0, 0, getPixelsFromDp(70));
             counter.setText(namesCheckedPlaces.size() + " zaznaczonych elementów");
-        }else{
+        } else {
+            scrollContainer.setPadding(0, 0, 0, getPixelsFromDp(20));
             nextButton.setVisibility(View.INVISIBLE);
             footer.setVisibility(View.INVISIBLE);
         }
+    }
+
+    int getPixelsFromDp(int sizeDp) {
+        float scale = getResources().getDisplayMetrics().density;
+        return (int) (sizeDp * scale + 0.5f);
     }
 
     // PERMISSIONS
     void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //TODO: Permissions: any dangerous permissions here! :D
-            if( checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                    checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED ) {
-                if( shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
                         shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
 //TODO: Show ratinoale
                     requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
@@ -169,12 +174,12 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         PERMISSIONS_SWITCH:
-        switch( requestCode ) {
+        switch (requestCode) {
             case Constants.REQUEST_PERMISSIONS_CODE:
-                if( grantResults.length > 0 ) {
-                    for( int i = 0; i < grantResults.length; i++ ) {
+                if (grantResults.length > 0) {
+                    for (int i = 0; i < grantResults.length; i++) {
                         Log.d("DEBUG", "Permission: " + permissions[i]);
-                        if( grantResults[i] == PackageManager.PERMISSION_DENIED ) {
+                        if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                             Log.d("DEBUG", "Any permission denied!");
                             requestPermissions();
                             break PERMISSIONS_SWITCH;
