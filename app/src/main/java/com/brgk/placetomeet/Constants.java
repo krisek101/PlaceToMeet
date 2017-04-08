@@ -4,9 +4,7 @@ package com.brgk.placetomeet;
 
 import android.graphics.Color;
 
-import java.util.HashMap;
-import java.util.Map;
-
+@SuppressWarnings("WeakerAccess")
 public class Constants {
 
     //Permissions request codes
@@ -26,5 +24,8 @@ public class Constants {
 
     //Extras
     public static final String EXTRA_CHECKED_PLACES = "EXTRA_PLACES";
+
+    //Activity request codes
+    public static final int PLACE_PICKER_REQUEST_CODE = 1;
 
 }

@@ -5,7 +5,10 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -22,56 +25,94 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback{
-    //TEMP
-    int PLACE_PICKER_REQUEST = 1;
 
     MapActivity activity = this;
     GoogleMap mGoogleMap = null;
-    List<Place> places;
 
-    List<Marker> markers;
-    Set<Polyline> lines;
+    List<RightSliderItem> persons;
 
     Circle centerCircle;
+
+    RelativeLayout rightPanel;
+    float rightPanelDefaultX;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        markers = new ArrayList<>();
-        lines = new HashSet<>();
+        rightPanelDefaultX = getPixelsFromDp(-250); // panel width
+        rightPanel = (RelativeLayout) findViewById(R.id.right_container);
+        persons = new ArrayList<>();
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         String[] strings = bundle.getStringArray(Constants.EXTRA_CHECKED_PLACES);
-        for( String s :  strings ) {
-            Log.d("MACIEK_DEBUG", s);
-            //TODO: process with places
+        if (strings != null) {
+            for( String s :  strings ) {
+                Log.d("MACIEK_DEBUG", s);
+                //TODO: process with places
+            }
         }
 
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
-        mapFragment.getMapAsync(this);
+        ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
 
-        findViewById(R.id.test).setOnClickListener(new View.OnClickListener() {
+        //move
+        rightPanel.setX(rightPanelDefaultX);
+
+        setListeners();
+    }
+
+    int getPixelsFromDp(int sizeDp) {
+        float scale = getResources().getDisplayMetrics().density;
+        return (int) (sizeDp * scale + 0.5f);
+    }
+
+    void setListeners() {
+        //add another person (and place)
+        findViewById(R.id.right_slider_footer).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
                 try {
-                    startActivityForResult(builder.build(activity), PLACE_PICKER_REQUEST);
-                } catch (GooglePlayServicesRepairableException e) {
-                    e.printStackTrace();
-                } catch (GooglePlayServicesNotAvailableException e) {
+                    startActivityForResult(builder.build(activity), Constants.PLACE_PICKER_REQUEST_CODE);
+                } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+        //right slider listener
+        findViewById(R.id.map_handle).setOnTouchListener(new View.OnTouchListener() {
+            float x;
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch( motionEvent.getActionMasked() ) {
+                    case MotionEvent.ACTION_DOWN:
+                        Log.d("MACIEK_DEBUG", "TOUCHEVENT: ACTION DOWN");
+                        x = view.getX() - motionEvent.getRawX();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        Log.d("MACIEK_DEBUG", "TOUCHEVENT: ACTION MVE: " + (motionEvent.getRawX() - x));
+                        view.animate().x(x+motionEvent.getRawX()).setDuration(0).start();
+                        rightPanel.animate().x(x+motionEvent.getRawX()+ rightPanelDefaultX).setDuration(0).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        float toX;
+                        if( motionEvent.getRawX() > 0.5*(-rightPanelDefaultX)) toX = (-rightPanelDefaultX);
+                        else toX = 0;
+                        view.animate().x(toX).setDuration(100).start();
+                        rightPanel.animate().x(toX + rightPanelDefaultX).setDuration(100).start();
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
             }
         });
     }
@@ -83,25 +124,35 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PLACE_PICKER_REQUEST) {
+        if (requestCode == Constants.PLACE_PICKER_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 if( mGoogleMap != null ) {
                     Place place = PlacePicker.getPlace(this, data);
 
-                    markers.add(mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + markers.size())));
-                    centerCircle.setCenter(calculateMidPoint());
+                    RightSliderItem r = new RightSliderItem(this);
+                    r.setAddress(place.getAddress().toString());
+                    r.setNumber(persons.size()+1);
+                    r.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + persons.size())));
+                    ((LinearLayout) findViewById(R.id.right_slider_persons)).addView(r);
+                    persons.add(r);
 
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 16));
+                    updateMapElements();
                 }
             }
         }
+    }
+
+    void updateMapElements() {
+        centerCircle.setCenter(calculateMidPoint());
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 16));
     }
 
     private LatLng calculateMidPoint() {
         double xSum = 0, ySum = 0, zSum = 0;
         double xAvg, yAvg, zAvg;
 
-        for( Marker marker : markers ) {
+        for( RightSliderItem r : persons ) {
+            Marker marker = r.getMarker();
             double latRad = marker.getPosition().latitude * Math.PI / 180;
             double lonRad = marker.getPosition().longitude * Math.PI / 180;
 
@@ -109,7 +160,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
             ySum += Math.cos(latRad) * Math.sin(lonRad);               //y
             zSum += Math.sin(latRad);                                //z
         }
-        int size = markers.size();
+        int size = persons.size();
         xAvg = xSum/size;
         yAvg = ySum/size;
         zAvg = zSum/size;
@@ -131,16 +182,20 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         Log.d("MACIEK-DEBUG", "Map ready!");
         mGoogleMap = googleMap;
         LatLng here = new LatLng(52.155922, 21.036642);
-        markers.add(mGoogleMap.addMarker(new MarkerOptions().position(here).title("DUDY")));
         centerCircle = mGoogleMap.addCircle(new CircleOptions().center(here).radius(10));
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 16));
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                if(markers.contains(marker)) {
-                    Log.d("MACIEK-DEBUG", marker.getTitle());
-                    markers.remove(marker);
-                    marker.remove();
+                for( int i = 0; i < persons.size(); i++ ) {
+                    RightSliderItem r = persons.get(i);
+                    if( r.getMarker().equals(marker) ) {
+
+                        marker.remove();
+                        ((LinearLayout) rightPanel.findViewById(R.id.right_slider_persons)).removeView(persons.get(i));
+                        persons.remove(r);
+                        break;
+                    }
                 }
                 return false;
             }
