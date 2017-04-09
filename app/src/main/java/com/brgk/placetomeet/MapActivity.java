@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -38,17 +39,29 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
 
     Circle centerCircle;
 
-    RelativeLayout rightPanel;
-    float rightPanelDefaultX;
+    //UI
+    RelativeLayout rightSlider;
+    View rightHandle;
+    float rightSliderDefaultX, rightHandleDefaultX;
+    float rightSliderWidth, rightHandleWidth;
+    float rightTotalWidth;
+
+    RelativeLayout leftSlider;
+    View leftHandle;
+    float leftSliderDefaultX, leftHandleDefaultX;
+    float leftSliderWidth, leftHandleWidth;
+    float leftTotalWidth;
+
+    float screenWidth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        rightPanelDefaultX = getPixelsFromDp(-250); // panel width
-        rightPanel = (RelativeLayout) findViewById(R.id.right_container);
         persons = new ArrayList<>();
+
+        arrangeSliders();
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
@@ -62,13 +75,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
 
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
 
-        //move
-        rightPanel.setX(rightPanelDefaultX);
-
         setListeners();
     }
 
-    int getPixelsFromDp(int sizeDp) {
+    int getPixelsFromDp(float sizeDp) {
         float scale = getResources().getDisplayMetrics().density;
         return (int) (sizeDp * scale + 0.5f);
     }
@@ -88,26 +98,32 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         });
 
         //right slider listener
-        findViewById(R.id.map_handle).setOnTouchListener(new View.OnTouchListener() {
+        rightHandle.setOnTouchListener(new View.OnTouchListener() {
             float x;
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
+                float toX;
                 switch( motionEvent.getActionMasked() ) {
                     case MotionEvent.ACTION_DOWN:
-                        Log.d("MACIEK_DEBUG", "TOUCHEVENT: ACTION DOWN");
                         x = view.getX() - motionEvent.getRawX();
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        Log.d("MACIEK_DEBUG", "TOUCHEVENT: ACTION MVE: " + (motionEvent.getRawX() - x));
-                        view.animate().x(x+motionEvent.getRawX()).setDuration(0).start();
-                        rightPanel.animate().x(x+motionEvent.getRawX()+ rightPanelDefaultX).setDuration(0).start();
+                        if( (x + motionEvent.getRawX()) < (screenWidth - (rightTotalWidth))) {
+                            toX = screenWidth - (rightTotalWidth);
+                        } else {
+                            toX = x+motionEvent.getRawX();
+                        }
+                        view.animate().x(toX).setDuration(0).start();
+                        rightSlider.animate().x(toX+rightHandleWidth).setDuration(0).start();
                         break;
                     case MotionEvent.ACTION_UP:
-                        float toX;
-                        if( motionEvent.getRawX() > 0.5*(-rightPanelDefaultX)) toX = (-rightPanelDefaultX);
-                        else toX = 0;
+                        if( (x + motionEvent.getRawX()) < (screenWidth - 0.5*(rightTotalWidth))) {
+                            toX = screenWidth - (rightTotalWidth);
+                        } else {
+                            toX = rightHandleDefaultX;
+                        }
                         view.animate().x(toX).setDuration(100).start();
-                        rightPanel.animate().x(toX + rightPanelDefaultX).setDuration(100).start();
+                        rightSlider.animate().x(toX+rightHandleWidth).setDuration(100).start();
                         break;
                     default:
                         return false;
@@ -115,6 +131,70 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                 return true;
             }
         });
+
+        leftHandle.setOnTouchListener(new View.OnTouchListener() {
+            float x;
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                float toX;
+                switch( motionEvent.getActionMasked() ) {
+                    case MotionEvent.ACTION_DOWN:
+                        x = view.getX() - motionEvent.getRawX();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        if( (x + motionEvent.getRawX()) > leftSliderWidth) {
+                            toX = leftSliderWidth;
+                        } else {
+                            toX = x+motionEvent.getRawX();
+                        }
+                        view.animate().x(toX).setDuration(0).start();
+                        leftSlider.animate().x(toX-leftSliderWidth).setDuration(0).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if( (x + motionEvent.getRawX()) > 0.5*leftTotalWidth) {
+                            toX = leftSliderWidth;
+                        } else {
+                            toX = leftHandleDefaultX;
+                        }
+                        view.animate().x(toX).setDuration(100).start();
+                        leftSlider.animate().x(toX-leftSliderWidth).setDuration(100).start();
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+        });
+    }
+
+    void arrangeSliders() {
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        screenWidth = dm.widthPixels;
+
+        //right panel
+        rightHandleWidth = getPixelsFromDp(30);
+        rightSliderWidth = getPixelsFromDp(250);
+        rightTotalWidth = rightSliderWidth+rightHandleWidth;
+        rightSliderDefaultX = screenWidth; // panel width
+        rightHandleDefaultX = screenWidth-rightHandleWidth;
+        rightHandle = findViewById(R.id.right_handle);
+        rightSlider = (RelativeLayout) findViewById(R.id.right_container);
+        rightSlider.setX(rightSliderDefaultX);
+        rightHandle.setX(rightHandleDefaultX);
+
+        //left slider
+        leftHandleWidth = getPixelsFromDp(30);
+        leftSliderWidth = getPixelsFromDp(250);
+        leftTotalWidth = leftSliderWidth+leftHandleWidth;
+        leftSliderDefaultX = getPixelsFromDp(-leftSliderWidth);
+        leftHandleDefaultX = getPixelsFromDp(leftHandleDefaultX);
+        leftHandle = findViewById(R.id.left_handle);
+        leftSlider = (RelativeLayout) findViewById(R.id.left_container);
+        leftHandle.setX(leftHandleDefaultX);
+        leftSlider.setX(leftSliderDefaultX);
+
+
     }
 
     //PLACES
@@ -192,7 +272,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                     if( r.getMarker().equals(marker) ) {
 
                         marker.remove();
-                        ((LinearLayout) rightPanel.findViewById(R.id.right_slider_persons)).removeView(persons.get(i));
+                        ((LinearLayout) rightSlider.findViewById(R.id.right_slider_persons)).removeView(persons.get(i));
                         persons.remove(r);
                         break;
                     }
