@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -61,12 +62,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
     MapActivity activity = this;
     GoogleMap mGoogleMap = null;
     Circle centerCircle;
-
+    GestureDetector gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        gestureDetector = new GestureDetector(this, new SingleTapConfirm());
 
         arrangeSliders();
         setPlaces();
@@ -98,33 +100,48 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         //right slider listener
         rightHandle.setOnTouchListener(new View.OnTouchListener() {
             float x;
+            boolean clicked = true;
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 float toX;
-                switch( motionEvent.getActionMasked() ) {
-                    case MotionEvent.ACTION_DOWN:
-                        x = view.getX() - motionEvent.getRawX();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if( (x + motionEvent.getRawX()) < (screenWidth - (rightTotalWidth))) {
-                            toX = screenWidth - (rightTotalWidth);
-                        } else {
-                            toX = x+motionEvent.getRawX();
-                        }
-                        view.animate().x(toX).setDuration(0).start();
-                        rightSlider.animate().x(toX+rightHandleWidth).setDuration(0).start();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        if( (x + motionEvent.getRawX()) < (screenWidth - 0.5*(rightTotalWidth))) {
-                            toX = screenWidth - (rightTotalWidth);
-                        } else {
-                            toX = rightHandleDefaultX;
-                        }
-                        view.animate().x(toX).setDuration(100).start();
-                        rightSlider.animate().x(toX+rightHandleWidth).setDuration(100).start();
-                        break;
-                    default:
-                        return false;
+                if (gestureDetector.onTouchEvent(motionEvent)) {
+                    Log.v("X",view.getX()+"");
+                    if (clicked) {
+                        toX = screenWidth - (rightTotalWidth);
+                        clicked = false;
+                    } else {
+                        toX = screenWidth - rightHandleWidth;
+                        clicked = true;
+                    }
+                    view.animate().x(toX).setDuration(100).start();
+                    rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
+                    return true;
+                } else {
+                    switch (motionEvent.getActionMasked()) {
+                        case MotionEvent.ACTION_DOWN:
+                            x = view.getX() - motionEvent.getRawX();
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            if ((x + motionEvent.getRawX()) < (screenWidth - (rightTotalWidth))) {
+                                toX = screenWidth - (rightTotalWidth);
+                            } else {
+                                toX = x + motionEvent.getRawX();
+                            }
+                            view.animate().x(toX).setDuration(0).start();
+                            rightSlider.animate().x(toX + rightHandleWidth).setDuration(0).start();
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            if ((x + motionEvent.getRawX()) < (screenWidth - 0.5 * (rightTotalWidth))) {
+                                toX = screenWidth - (rightTotalWidth);
+                            } else {
+                                toX = rightHandleDefaultX;
+                            }
+                            view.animate().x(toX).setDuration(100).start();
+                            rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
+                            break;
+                        default:
+                            return false;
+                    }
                 }
                 return true;
             }
@@ -133,33 +150,47 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         //left slider listener
         leftHandle.setOnTouchListener(new View.OnTouchListener() {
             float x;
+            boolean clicked = true;
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 float toX;
-                switch( motionEvent.getActionMasked() ) {
-                    case MotionEvent.ACTION_DOWN:
-                        x = view.getX() - motionEvent.getRawX();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if( (x + motionEvent.getRawX()) > leftSliderWidth) {
-                            toX = leftSliderWidth;
-                        } else {
-                            toX = x+motionEvent.getRawX();
-                        }
-                        view.animate().x(toX).setDuration(0).start();
-                        leftSlider.animate().x(toX-leftSliderWidth).setDuration(0).start();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        if( (x + motionEvent.getRawX()) > 0.5*leftTotalWidth) {
-                            toX = leftSliderWidth;
-                        } else {
-                            toX = leftHandleDefaultX;
-                        }
-                        view.animate().x(toX).setDuration(100).start();
-                        leftSlider.animate().x(toX-leftSliderWidth).setDuration(100).start();
-                        break;
-                    default:
-                        return false;
+                if (gestureDetector.onTouchEvent(motionEvent)) {
+                    if (clicked) {
+                        toX = leftSliderWidth;
+                        clicked = false;
+                    } else {
+                        toX = leftHandleDefaultX;
+                        clicked = true;
+                    }
+                    view.animate().x(toX).setDuration(100).start();
+                    leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
+                    return true;
+                } else {
+                    switch (motionEvent.getActionMasked()) {
+                        case MotionEvent.ACTION_DOWN:
+                            x = view.getX() - motionEvent.getRawX();
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            if ((x + motionEvent.getRawX()) > leftSliderWidth) {
+                                toX = leftSliderWidth;
+                            } else {
+                                toX = x + motionEvent.getRawX();
+                            }
+                            view.animate().x(toX).setDuration(0).start();
+                            leftSlider.animate().x(toX - leftSliderWidth).setDuration(0).start();
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            if ((x + motionEvent.getRawX()) > 0.5 * leftTotalWidth) {
+                                toX = leftSliderWidth;
+                            } else {
+                                toX = leftHandleDefaultX;
+                            }
+                            view.animate().x(toX).setDuration(100).start();
+                            leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
+                            break;
+                        default:
+                            return false;
+                    }
                 }
                 return true;
             }
@@ -299,5 +330,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                 return false;
             }
         });
+    }
+}
+
+class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent event) {
+        return true;
     }
 }
