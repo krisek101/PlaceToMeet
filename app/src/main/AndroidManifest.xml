@@ -13,6 +13,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MapActivity" android:label="@string/app_title">
+        </activity>
+        <activity
+            android:name=".SplashScreen"
+            android:label="@string/app_title" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

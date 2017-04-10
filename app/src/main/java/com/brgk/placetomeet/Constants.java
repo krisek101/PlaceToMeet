@@ -28,4 +28,7 @@ public class Constants {
     //Activity request codes
     public static final int PLACE_PICKER_REQUEST_CODE = 1;
 
+    //Others
+    public static final int SPLASH_TIME = 1000;
+
 }
