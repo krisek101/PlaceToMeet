@@ -8,7 +8,9 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -32,46 +34,42 @@ import java.util.List;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback{
 
-    MapActivity activity = this;
-    GoogleMap mGoogleMap = null;
-
-    List<RightSliderItem> persons;
-
-    Circle centerCircle;
+    //Collections
+    List<RightSliderItem> persons = new ArrayList<>();
+    List<PlaceElement> places = new ArrayList<>();
+    List<String> checkedPlaces = new ArrayList<>();
 
     //UI
+    //Right slider
     RelativeLayout rightSlider;
     View rightHandle;
     float rightSliderDefaultX, rightHandleDefaultX;
     float rightSliderWidth, rightHandleWidth;
     float rightTotalWidth;
 
+    //Left slider
     RelativeLayout leftSlider;
     View leftHandle;
     float leftSliderDefaultX, leftHandleDefaultX;
     float leftSliderWidth, leftHandleWidth;
     float leftTotalWidth;
-
     float screenWidth;
+    PlaceAdapter placeAdapter;
+    ListView placesList;
+
+    //Map
+    MapActivity activity = this;
+    GoogleMap mGoogleMap = null;
+    Circle centerCircle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        persons = new ArrayList<>();
-
         arrangeSliders();
-
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        String[] strings = bundle.getStringArray(Constants.EXTRA_CHECKED_PLACES);
-        if (strings != null) {
-            for( String s :  strings ) {
-                Log.d("MACIEK_DEBUG", s);
-                //TODO: process with places
-            }
-        }
+        setPlaces();
 
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
 
@@ -132,6 +130,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
             }
         });
 
+        //left slider listener
         leftHandle.setOnTouchListener(new View.OnTouchListener() {
             float x;
             @Override
@@ -165,6 +164,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                 return true;
             }
         });
+
     }
 
     void arrangeSliders() {
@@ -208,7 +208,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
             if (resultCode == RESULT_OK) {
                 if( mGoogleMap != null ) {
                     Place place = PlacePicker.getPlace(this, data);
-
                     RightSliderItem r = new RightSliderItem(this);
                     r.setAddress(place.getAddress().toString());
                     r.setNumber(persons.size()+1);
@@ -254,6 +253,26 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         Log.d("MACIEK_DEBUG", "center: lat: " + midLatDeg + ", lon: " + midLonDeg);
 
         return new LatLng(midLatDeg, midLonDeg);
+    }
+
+    private void setPlaces() {
+        for (int i = 0; i < Constants.PLACES.length; i++) {
+            if (i < 5) {
+                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[1]}));
+            } else if (i < 8) {
+                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[0]}));
+            } else if (i < 11) {
+                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[3]}));
+            } else if (i < 14) {
+                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[4]}));
+            } else {
+                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[2]}));
+            }
+        }
+
+        placesList = (ListView) findViewById(R.id.list_places);
+        placeAdapter = new PlaceAdapter(this, R.layout.left_slider_item, places, this);
+        placesList.setAdapter(placeAdapter);
     }
 
     //MAPS

@@ -14,7 +14,7 @@ public class Constants {
     public static final int CHECKED_COLOR = Color.parseColor("#0099FF");
     public static final int UNCHECKED_COLOR = Color.parseColor("#EEEEEE");
 
-    //Others
+    //Left Side
     public static final String[] CATEGORIES = {"Rozrywka", "Jedzenie i picie", "Impreza", "Sport", "Relaks"};
     public static final String[] PLACES = {"Restauracja", "Kebab", "Pizza", "Bar", "Kawiarnia", "Kręgielnia",
             "Lodowisko", "Bilard", "Basen", "Kort Tenisowy", "Hala sportowa", "Park", "Kino", "Centrum handlowe"};

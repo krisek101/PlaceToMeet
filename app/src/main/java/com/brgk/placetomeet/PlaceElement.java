@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Place {
+public class PlaceElement {
 
     private String name;
     private int id;
@@ -12,7 +12,7 @@ public class Place {
     private List<String> categories;
     private boolean checked;
 
-    public Place(String name, int id, int img, String[] categories) {
+    public PlaceElement(String name, int id, int img, String[] categories) {
         this.name = name;
         this.id = id;
         this.img = img;

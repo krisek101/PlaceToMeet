@@ -12,14 +12,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity" android:label="@string/app_title">
+        <activity android:name=".MapActivity" android:label="@string/app_title">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MapActivity"></activity>
+        <activity android:name=".MainActivity"></activity>
 
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDTmOH9Pi8frp-_JU9gZfUxN7yWdW7yNEM"/>

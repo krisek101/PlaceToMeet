@@ -25,4 +25,5 @@
         android:layout_weight="4"
         android:background="@color/colorPlaces"
         android:gravity="center_vertical" />
+
 </LinearLayout>
