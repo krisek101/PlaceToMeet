@@ -1,7 +1,19 @@
 package com.brgk.placetomeet;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -10,15 +22,28 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,7 +58,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback{
+public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,  LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback{
 
     //Collections
     List<RightSliderItem> persons = new ArrayList<>();
@@ -63,12 +88,27 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
     GoogleMap mGoogleMap = null;
     Circle centerCircle;
     GestureDetector gestureDetector;
+    LocationRequest locationRequest;
+    GoogleApiClient mGoogleApiClient;
+    Location mLastLocation;
+    double latitude = 52.155922, longitude = 21.036642;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
         gestureDetector = new GestureDetector(this, new SingleTapConfirm());
+
+        // location
+        if (checkPlayServices()) {
+            buildGoogleApiClient();
+            createLocationRequest();
+        } else {
+            Log.v("OPS", "checkPlayServices error");
+        }
+
+        requestPermissions();
 
         arrangeSliders();
         setPlaces();
@@ -76,6 +116,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
 
         setListeners();
+        checkUsersSettingGPS();
+
     }
 
     int getPixelsFromDp(float sizeDp) {
@@ -105,12 +147,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 float toX;
                 if (gestureDetector.onTouchEvent(motionEvent)) {
-                    Log.v("X",view.getX()+"");
                     if (clicked) {
                         toX = screenWidth - (rightTotalWidth);
                         clicked = false;
                     } else {
-                        toX = screenWidth - rightHandleWidth;
+                        toX = rightHandleDefaultX;
                         clicked = true;
                     }
                     view.animate().x(toX).setDuration(100).start();
@@ -133,7 +174,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                         case MotionEvent.ACTION_UP:
                             if ((x + motionEvent.getRawX()) < (screenWidth - 0.5 * (rightTotalWidth))) {
                                 toX = screenWidth - (rightTotalWidth);
+                                clicked = false;
                             } else {
+                                clicked = true;
                                 toX = rightHandleDefaultX;
                             }
                             view.animate().x(toX).setDuration(100).start();
@@ -182,8 +225,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                         case MotionEvent.ACTION_UP:
                             if ((x + motionEvent.getRawX()) > 0.5 * leftTotalWidth) {
                                 toX = leftSliderWidth;
+                                clicked = false;
                             } else {
                                 toX = leftHandleDefaultX;
+                                clicked = true;
                             }
                             view.animate().x(toX).setDuration(100).start();
                             leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
@@ -250,6 +295,16 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                 }
             }
         }
+        if (requestCode == Constants.REQUEST_CHECK_SETTINGS) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                // The user picked a contact.
+                // The Intent's data Uri identifies which contact was selected.
+                Log.w("resultCode == OK", "success");
+                getLocation();
+                // Do something with the contact here (bigger example below)
+            }
+        }
     }
 
     void updateMapElements() {
@@ -311,9 +366,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
     public void onMapReady(GoogleMap googleMap) {
         Log.d("MACIEK-DEBUG", "Map ready!");
         mGoogleMap = googleMap;
-        LatLng here = new LatLng(52.155922, 21.036642);
-        centerCircle = mGoogleMap.addCircle(new CircleOptions().center(here).radius(10));
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 16));
+        LatLng here = new LatLng(latitude, longitude);
+        //centerCircle = mGoogleMap.addCircle(new CircleOptions().center(here).radius(10));
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 13));
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -330,6 +385,201 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.On
                 return false;
             }
         });
+    }
+
+    public boolean checkPlayServices() {
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int status = googleApiAvailability.isGooglePlayServicesAvailable(this);
+        if (status != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(status)) {
+                googleApiAvailability.getErrorDialog(this, status, Constants.REQUEST_CHECK_PLAY_SERVICES).show();
+            }
+            return false;
+        }
+        return true;
+    }
+    private void createLocationRequest() {
+        locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+    private synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+    }
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
+    private void checkUsersSettingGPS() {
+        if (!mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+        }
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
+                        builder.build());
+        //builder.setAlwaysShow(true);
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result2) {
+                final Status status = result2.getStatus();
+                // final LocationSettingsStates result3 = result2.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can
+                        // initialize location requests here.
+                        getLocation();
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied, but this can be fixed
+                        // by showing the user a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(
+                                    MapActivity.this,
+                                    Constants.REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way
+                        // to fix the settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
+    }
+    private void getLocation() {
+        mGoogleApiClient.disconnect();
+        if (mGoogleApiClient != null && isOnline()) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Constants.REQUEST_PERMISSIONS_CODE);
+        } else {
+            if (isOnline()) {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this);
+            }
+        }
+    }
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.v("Connections suspended", "ERROR");
+    }
+    @Override
+    public void onLocationChanged(Location location) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Constants.REQUEST_PERMISSIONS_CODE);
+        } else {
+            if (isOnline()) {
+                mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                if (mLastLocation != null) {
+                    // set Location
+                    latitude = mLastLocation.getLatitude();
+                    longitude = mLastLocation.getLongitude();
+                    LatLng here = new LatLng(latitude, longitude);
+                    centerCircle = mGoogleMap.addCircle(new CircleOptions().center(here).radius(10));
+                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 13));
+                    mGoogleApiClient.disconnect();
+                    Log.v("LOCATION CHANGED", "LAT:"+latitude+", LNG:"+longitude);
+                }
+            }
+        }
+    }
+
+    // PERMISSIONS
+    void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            //TODO: Permissions: any dangerous permissions here! :D
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                        checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                            shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
+                        //TODO: Show ratinoale
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
+                    } else {
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
+                    }
+                }
+            }
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        PERMISSIONS_SWITCH:
+        switch (requestCode) {
+            case Constants.REQUEST_PERMISSIONS_CODE:
+                if (grantResults.length > 0) {
+                    for (int i = 0; i < grantResults.length; i++) {
+                        Log.d("DEBUG", "Permission: " + permissions[i]);
+                        if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                            Log.d("DEBUG", "Any permission denied!");
+                            requestPermissions();
+                            break PERMISSIONS_SWITCH;
+                        }
+                    }
+                    Log.d("DEBUG", "All permissions granted!");
+                } else {
+                    Log.d("DEBUG", "Request cancelled");
+                }
+                break;
+            default:
+                Log.d("DEBUG", "unhandled permission");
+                break;
+        }
+    }
+
+    // Activity actions
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mGoogleApiClient != null && isOnline()) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mGoogleApiClient != null && isOnline()) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
     }
 }
 
