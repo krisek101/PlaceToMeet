@@ -54,6 +54,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +94,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     double latitude = 52.155922, longitude = 21.036642;
+    boolean updateLocation = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -398,12 +401,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
         return true;
     }
+
     private void createLocationRequest() {
         locationRequest = LocationRequest.create();
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
+
     private synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -413,12 +418,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 .addOnConnectionFailedListener(this)
                 .build();
     }
+
     public boolean isOnline() {
         ConnectivityManager cm =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
+
     private void checkUsersSettingGPS() {
         if (!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
@@ -461,6 +468,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         });
     }
+
     private void getLocation() {
         mGoogleApiClient.disconnect();
         if (mGoogleApiClient != null && isOnline()) {
@@ -478,24 +486,30 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         }
     }
+
     @Override
     public void onConnectionSuspended(int i) {
         Log.v("Connections suspended", "ERROR");
     }
+
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(Location location){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Constants.REQUEST_PERMISSIONS_CODE);
         } else {
-            if (isOnline()) {
+            if (isOnline() && updateLocation) {
                 mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
                 if (mLastLocation != null) {
-                    // set Location
+
+                    // set lat and lng
                     latitude = mLastLocation.getLatitude();
                     longitude = mLastLocation.getLongitude();
                     LatLng here = new LatLng(latitude, longitude);
-                    centerCircle = mGoogleMap.addCircle(new CircleOptions().center(here).radius(10));
+                    mGoogleMap.setMyLocationEnabled(true);
+
+                    // move camera to user's location
                     mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 13));
+                    updateLocation = false;
                     mGoogleApiClient.disconnect();
                     Log.v("LOCATION CHANGED", "LAT:"+latitude+", LNG:"+longitude);
                 }
