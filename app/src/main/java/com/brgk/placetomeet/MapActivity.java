@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -21,9 +20,6 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -54,8 +50,6 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +68,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     float rightSliderDefaultX, rightHandleDefaultX;
     float rightSliderWidth, rightHandleWidth;
     float rightTotalWidth;
+    boolean rightSliderOpened = false;
 
     //Left slider
     RelativeLayout leftSlider;
@@ -82,6 +77,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     float leftSliderWidth, leftHandleWidth;
     float leftTotalWidth;
     float screenWidth;
+    boolean leftSliderOpened = false;
+
     PlaceAdapter placeAdapter;
     ListView placesList;
 
@@ -142,102 +139,126 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         });
 
-        //right slider listener
-        rightHandle.setOnTouchListener(new View.OnTouchListener() {
+        //left slider listener
+        leftHandle.setOnTouchListener(new View.OnTouchListener() {
             float x;
-            boolean clicked = true;
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 float toX;
-                if (gestureDetector.onTouchEvent(motionEvent)) {
-                    if (clicked) {
-                        toX = screenWidth - (rightTotalWidth);
-                        clicked = false;
+
+                if( !rightSliderOpened ) {
+                    if (gestureDetector.onTouchEvent(motionEvent)) {
+                        if (leftSliderOpened) {
+                            toX = leftHandleDefaultX;
+                            leftSliderOpened = false;
+                        } else {
+                            toX = leftSliderWidth;
+                            leftSliderOpened = true;
+                        }
+                        view.animate().x(toX).setDuration(100).start();
+                        leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
+                        return true;
                     } else {
-                        toX = rightHandleDefaultX;
-                        clicked = true;
-                    }
-                    view.animate().x(toX).setDuration(100).start();
-                    rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
-                    return true;
-                } else {
-                    switch (motionEvent.getActionMasked()) {
-                        case MotionEvent.ACTION_DOWN:
-                            x = view.getX() - motionEvent.getRawX();
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            if ((x + motionEvent.getRawX()) < (screenWidth - (rightTotalWidth))) {
-                                toX = screenWidth - (rightTotalWidth);
-                            } else {
-                                toX = x + motionEvent.getRawX();
-                            }
-                            view.animate().x(toX).setDuration(0).start();
-                            rightSlider.animate().x(toX + rightHandleWidth).setDuration(0).start();
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            if ((x + motionEvent.getRawX()) < (screenWidth - 0.5 * (rightTotalWidth))) {
-                                toX = screenWidth - (rightTotalWidth);
-                                clicked = false;
-                            } else {
-                                clicked = true;
-                                toX = rightHandleDefaultX;
-                            }
-                            view.animate().x(toX).setDuration(100).start();
-                            rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
-                            break;
-                        default:
-                            return false;
+                        switch (motionEvent.getActionMasked()) {
+                            case MotionEvent.ACTION_DOWN:
+                                x = view.getX() - motionEvent.getRawX();
+                                break;
+                            case MotionEvent.ACTION_MOVE:
+                                if ((x + motionEvent.getRawX()) > leftSliderWidth) {
+                                    toX = leftSliderWidth;
+                                } else {
+                                    toX = x + motionEvent.getRawX();
+                                }
+                                view.animate().x(toX).setDuration(0).start();
+                                leftSlider.animate().x(toX - leftSliderWidth).setDuration(0).start();
+                                break;
+                            case MotionEvent.ACTION_UP:
+                                if( leftSliderOpened ) {
+                                    if( (x + motionEvent.getRawX()) < 0.9 * leftTotalWidth ) {
+                                        toX = leftHandleDefaultX;
+                                        leftSliderOpened = false;
+                                    } else {
+                                        toX = leftSliderWidth;
+                                        leftSliderOpened = true;
+                                    }
+                                } else {
+                                    if( (x + motionEvent.getRawX()) > 0.1 * leftTotalWidth ) {
+                                        toX = leftSliderWidth;
+                                        leftSliderOpened = true;
+                                    } else {
+                                        toX = leftHandleDefaultX;
+                                        leftSliderOpened = false;
+                                    }
+                                }
+                                view.animate().x(toX).setDuration(100).start();
+                                leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
+                                break;
+                            default:
+                                return false;
+                        }
                     }
                 }
                 return true;
             }
         });
 
-        //left slider listener
-        leftHandle.setOnTouchListener(new View.OnTouchListener() {
+        //right slider listener
+        rightHandle.setOnTouchListener(new View.OnTouchListener() {
             float x;
-            boolean clicked = true;
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 float toX;
-                if (gestureDetector.onTouchEvent(motionEvent)) {
-                    if (clicked) {
-                        toX = leftSliderWidth;
-                        clicked = false;
+
+                if( !leftSliderOpened ) {
+                    if (gestureDetector.onTouchEvent(motionEvent)) {
+                        if (rightSliderOpened) {
+                            toX = rightHandleDefaultX;
+                            rightSliderOpened = false;
+                        } else {
+                            toX = screenWidth - rightTotalWidth;
+                            rightSliderOpened = true;
+                        }
+                        view.animate().x(toX).setDuration(100).start();
+                        rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
+                        return true;
                     } else {
-                        toX = leftHandleDefaultX;
-                        clicked = true;
-                    }
-                    view.animate().x(toX).setDuration(100).start();
-                    leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
-                    return true;
-                } else {
-                    switch (motionEvent.getActionMasked()) {
-                        case MotionEvent.ACTION_DOWN:
-                            x = view.getX() - motionEvent.getRawX();
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            if ((x + motionEvent.getRawX()) > leftSliderWidth) {
-                                toX = leftSliderWidth;
-                            } else {
-                                toX = x + motionEvent.getRawX();
-                            }
-                            view.animate().x(toX).setDuration(0).start();
-                            leftSlider.animate().x(toX - leftSliderWidth).setDuration(0).start();
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            if ((x + motionEvent.getRawX()) > 0.5 * leftTotalWidth) {
-                                toX = leftSliderWidth;
-                                clicked = false;
-                            } else {
-                                toX = leftHandleDefaultX;
-                                clicked = true;
-                            }
-                            view.animate().x(toX).setDuration(100).start();
-                            leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
-                            break;
-                        default:
-                            return false;
+                        switch (motionEvent.getActionMasked()) {
+                            case MotionEvent.ACTION_DOWN:
+                                x = view.getX() - motionEvent.getRawX();
+                                break;
+                            case MotionEvent.ACTION_MOVE:
+                                if ((x + motionEvent.getRawX()) < (screenWidth - (rightTotalWidth))) {
+                                    toX = screenWidth - (rightTotalWidth);
+                                } else {
+                                    toX = x + motionEvent.getRawX();
+                                }
+                                view.animate().x(toX).setDuration(0).start();
+                                rightSlider.animate().x(toX + rightHandleWidth).setDuration(0).start();
+                                break;
+                            case MotionEvent.ACTION_UP:
+                                if( rightSliderOpened ) {
+                                    if ((x + motionEvent.getRawX()) > (screenWidth - 0.9 * (rightTotalWidth))) {
+                                        toX = rightHandleDefaultX;
+                                        rightSliderOpened = false;
+                                    } else {
+                                        toX = screenWidth - rightTotalWidth;
+                                        rightSliderOpened = true;
+                                    }
+                                } else {
+                                    if ((x + motionEvent.getRawX()) < (screenWidth - 0.1 * (rightTotalWidth))) {
+                                        toX = screenWidth - rightTotalWidth;
+                                        rightSliderOpened = true;
+                                    } else {
+                                        toX = rightTotalWidth;
+                                        rightSliderOpened = false;
+                                    }
+                                }
+                                view.animate().x(toX).setDuration(100).start();
+                                rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
+                                break;
+                            default:
+                                return false;
+                        }
                     }
                 }
                 return true;
@@ -311,7 +332,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     void updateMapElements() {
-        centerCircle.setCenter(calculateMidPoint());
+        if( centerCircle != null ) {
+            centerCircle.setCenter(calculateMidPoint());
+        } else {
+            centerCircle = mGoogleMap.addCircle(new CircleOptions().radius(10).center(calculateMidPoint()));
+        }
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 16));
     }
 
@@ -369,16 +394,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public void onMapReady(GoogleMap googleMap) {
         Log.d("MACIEK-DEBUG", "Map ready!");
         mGoogleMap = googleMap;
-        LatLng here = new LatLng(latitude, longitude);
-        //centerCircle = mGoogleMap.addCircle(new CircleOptions().center(here).radius(10));
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here, 13));
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
                 for( int i = 0; i < persons.size(); i++ ) {
                     RightSliderItem r = persons.get(i);
                     if( r.getMarker().equals(marker) ) {
-
                         marker.remove();
                         ((LinearLayout) rightSlider.findViewById(R.id.right_slider_persons)).removeView(persons.get(i));
                         persons.remove(r);
@@ -438,7 +459,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         //builder.setAlwaysShow(true);
         result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
             @Override
-            public void onResult(LocationSettingsResult result2) {
+            public void onResult(@NonNull LocationSettingsResult result2) {
                 final Status status = result2.getStatus();
                 // final LocationSettingsStates result3 = result2.getLocationSettingsStates();
                 switch (status.getStatusCode()) {
