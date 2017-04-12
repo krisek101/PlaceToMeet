@@ -6,7 +6,7 @@
     android:layout_gravity="start"
     android:orientation="vertical">
 
-    <LinearLayout
+    <ListView
         android:id="@+id/right_slider_persons"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -14,10 +14,9 @@
         android:layout_alignParentEnd="false"
         android:layout_alignParentStart="false"
         android:layout_alignParentTop="true"
-        android:background="@color/colorPlaces"
-        android:orientation="vertical">
+        android:background="@color/colorPlaces">
 
-    </LinearLayout>
+    </ListView>
 
     <RelativeLayout
         android:id="@+id/right_slider_footer"

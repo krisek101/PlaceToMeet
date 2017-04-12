@@ -9,18 +9,17 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 
@@ -57,7 +56,7 @@ import java.util.List;
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,  LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback{
 
     //Collections
-    List<RightSliderItem> persons = new ArrayList<>();
+    List<PersonElement> persons = new ArrayList<>();
     List<PlaceElement> places = new ArrayList<>();
     List<String> checkedPlaces = new ArrayList<>();
 
@@ -69,6 +68,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     float rightSliderWidth, rightHandleWidth;
     float rightTotalWidth;
     boolean rightSliderOpened = false;
+
+    PersonAdapter personAdapter;
+    ListView personList;
 
     //Left slider
     RelativeLayout leftSlider;
@@ -283,6 +285,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         rightSlider.setX(rightSliderDefaultX);
         rightHandle.setX(rightHandleDefaultX);
 
+        //adapter for right slider
+        personList = (ListView) findViewById(R.id.right_slider_persons);
+        personAdapter = new PersonAdapter(this, R.layout.right_slider_item, persons);
+        personList.setAdapter(personAdapter);
+
         //left slider
         leftHandleWidth = getPixelsFromDp(30);
         leftSliderWidth = getPixelsFromDp(250);
@@ -293,7 +300,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         leftSlider = (RelativeLayout) findViewById(R.id.left_container);
         leftHandle.setX(leftHandleDefaultX);
         leftSlider.setX(leftSliderDefaultX);
-
 
     }
 
@@ -308,12 +314,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (resultCode == RESULT_OK) {
                 if( mGoogleMap != null ) {
                     Place place = PlacePicker.getPlace(this, data);
-                    RightSliderItem r = new RightSliderItem(this);
-                    r.setAddress(place.getAddress().toString());
-                    r.setNumber(persons.size()+1);
-                    r.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + persons.size())));
-                    ((LinearLayout) findViewById(R.id.right_slider_persons)).addView(r);
+                    PersonElement r = new PersonElement(place.getAddress().toString(),
+                        persons.size()+1,
+                        mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + persons.size())));
                     persons.add(r);
+                    personAdapter.notifyDataSetChanged();
 
                     updateMapElements();
                 }
@@ -344,7 +349,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         double xSum = 0, ySum = 0, zSum = 0;
         double xAvg, yAvg, zAvg;
 
-        for( RightSliderItem r : persons ) {
+        for( PersonElement r : persons ) {
             Marker marker = r.getMarker();
             double latRad = marker.getPosition().latitude * Math.PI / 180;
             double lonRad = marker.getPosition().longitude * Math.PI / 180;
@@ -398,11 +403,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public boolean onMarkerClick(Marker marker) {
                 for( int i = 0; i < persons.size(); i++ ) {
-                    RightSliderItem r = persons.get(i);
+                    PersonElement r = persons.get(i);
                     if( r.getMarker().equals(marker) ) {
                         marker.remove();
-                        ((LinearLayout) rightSlider.findViewById(R.id.right_slider_persons)).removeView(persons.get(i));
                         persons.remove(r);
+                        personAdapter.notifyDataSetChanged();
                         break;
                     }
                 }
@@ -616,12 +621,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             mGoogleApiClient.disconnect();
         }
     }
-}
 
-class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
+    private class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
 
-    @Override
-    public boolean onSingleTapUp(MotionEvent event) {
-        return true;
+        @Override
+        public boolean onSingleTapUp(MotionEvent event) {
+            return true;
+        }
     }
 }
+
