@@ -2,10 +2,12 @@ package com.brgk.placetomeet;
 
 import com.google.android.gms.maps.model.Marker;
 
+@SuppressWarnings("unused")
 public class PersonElement {
     private String address;
     private int number;
     private Marker marker = null;
+    private boolean isFavourite = false;
 
     public PersonElement(String address, int number, Marker marker) {
         this.address = address;
@@ -13,7 +15,6 @@ public class PersonElement {
         this.marker = marker;
     }
 
-    @SuppressWarnings("unused")
     public String getAddress() {
         return address;
     }
@@ -22,7 +23,6 @@ public class PersonElement {
         this.address = address;
     }
 
-    @SuppressWarnings("unused")
     public int getNumber() {
         return number;
     }
@@ -38,5 +38,18 @@ public class PersonElement {
     public void setMarker(Marker marker) {
         this.marker = marker;
     }
+
+    public void favourite( boolean f ) {
+        isFavourite = f;
+    }
+
+    public boolean isFavourite() {
+        return isFavourite;
+    }
+
+    public void changeFavouriteState() {
+        isFavourite = !isFavourite;
+    }
+
 
 }
