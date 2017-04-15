@@ -13,6 +13,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,7 +80,11 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
                     holder.placeContainer.setBackgroundColor(Constants.UNCHECKED_COLOR);
                     holder.placeName.setTextColor(Color.BLACK);
                     holder.placeImage.setColorFilter(null);
-
+                }
+                try {
+                    mapActivity.updatePlaces();
+                }catch (JSONException e){
+                    Log.v("JSON Eception", e.toString());
                 }
                 Log.v("CHECKED PLACES: ", mapActivity.checkedPlaces.toString());
             }
