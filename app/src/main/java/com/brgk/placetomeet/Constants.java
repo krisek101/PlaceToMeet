@@ -33,4 +33,5 @@ public class Constants {
     //Others
     public static final int SPLASH_TIME = 1000;
     public static final String API_KEY = "AIzaSyDTmOH9Pi8frp-_JU9gZfUxN7yWdW7yNEM";
+    public static final String TAG = "MyTag";
 }

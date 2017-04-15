@@ -73,7 +73,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     List<PersonElement> persons = new ArrayList<>();
     List<PlaceElement> places = new ArrayList<>();
     List<String> checkedPlaces = new ArrayList<>();
-    List<JSONObject> resultPlaces = new ArrayList<>();
+    List<LatLng> markeredPlaces = new ArrayList<>();
+    List<String> placesAlreadyMarkered = new ArrayList<>();
 
     //UI
     //Right slider
@@ -109,6 +110,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     LatLng userLocation;
     boolean updateLocation = true;
     String[] urls;
+    JsonObjectRequest jsonObjReq;
+    RequestQueue queue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -521,15 +524,22 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void updatePlaces() throws JSONException {
+        //resultPlaces.clear();
+        if (queue != null) {
+            queue.cancelAll(Constants.TAG);
+        }
+        mGoogleMap.clear();
         if (checkedPlaces != null) {
             urls = new String[checkedPlaces.size()];
             int i = 0;
-            if (userLocation != null) {
+            if (userLocation != null && center == null) {
                 Log.v("UPDATE PLACES", "USER LOCATION");
                 for (String checkedPlaceName : checkedPlaces) {
-                    urls[i] = getPlaceUrl(checkedPlaceName.toLowerCase(), userLocation);
-                    setJsonArray(urls[i]);
-                    i++;
+                    if(!placesAlreadyMarkered.contains(checkedPlaceName)) {
+                        urls[i] = getPlaceUrl(checkedPlaceName.toLowerCase(), userLocation);
+                        setJsonArray(urls[i]);
+                        i++;
+                    }
                 }
             } else if (center != null) {
                 for (String checkedPlaceName : checkedPlaces) {
@@ -540,23 +550,58 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         }
 
-        Log.v("RESULT PLACES", "" + resultPlaces.size());
-        if (resultPlaces != null) {
-            double lat, lng;
-            String name, icon;
-            try {
-                for (JSONObject jo : resultPlaces) {
-                    name = (String) jo.get("name");
-                    //icon = (String) jo.get("icon");
-                    lat = jo.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
-                    lng = jo.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
-                    LatLng here = new LatLng(lat, lng);
-                    mGoogleMap.addMarker(new MarkerOptions().position(here).title(name));
+//        if (resultPlaces != null) {
+//            Log.v("RESULT PLACES", "" + resultPlaces.size());
+//            double lat, lng;
+//            String name, icon;
+//            try {
+//                for (JSONObject jo : resultPlaces) {
+//                    name = (String) jo.get("name");
+//                    //icon = (String) jo.get("icon");
+//                    lat = jo.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
+//                    lng = jo.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
+//                    LatLng here = new LatLng(lat, lng);
+//                    mGoogleMap.addMarker(new MarkerOptions().position(here).title(name));
+//                }
+//            } catch (Exception e) {
+//                Log.v("Error", e.toString());
+//            }
+//        }
+    }
+
+    public void setJsonArray(String link) {
+        queue = Volley.newRequestQueue(this);
+        jsonObjReq = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                double lat, lng;
+                String name, icon;
+                try {
+                    JSONArray ja = response.getJSONArray("results");
+                    for (int i = 0; i < ja.length(); i++) {
+                        JSONObject c = ja.getJSONObject(i);
+                        name = (String) c.get("name");
+                        //icon = (String) jo.get("icon");
+                        lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
+                        lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
+                        LatLng here = new LatLng(lat, lng);
+                        Marker marker = mGoogleMap.addMarker(new MarkerOptions().position(here).title(name));
+                        if(markeredPlaces.contains(here)) {
+                            marker.remove();
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.v("Error", e.toString());
                 }
-            } catch (Exception e) {
-                Log.v("Error", e.toString());
             }
-        }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        jsonObjReq.setTag(Constants.TAG);
+        queue.add(jsonObjReq);
+        //MyApplication.getInstance().addToReqQueue(jsonObjReq, "jreq");
     }
 
     public String getPlaceUrl(String keyword, LatLng location) {
@@ -569,35 +614,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        urlString.append("&language=pl&location=" + location.latitude + "," + location.longitude + "&radius=500");
+        urlString.append("&language=pl&location=" + location.latitude + "," + location.longitude + "&radius=1000");
         urlString.append("&key=" + Constants.API_KEY);
         return urlString.toString();
-    }
-
-    public void setJsonArray(String link) {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    JSONArray ja = response.getJSONArray("results");
-                    for (int i = 0; i < ja.length(); i++) {
-                        JSONObject c = ja.getJSONObject(i);
-                        if (!resultPlaces.contains(c)) {
-                            resultPlaces.add(c);
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.v("Error", e.toString());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-            }
-        });
-        queue.add(jsonObjReq);
-        //MyApplication.getInstance().addToReqQueue(jsonObjReq, "jreq");
     }
 
     // Connection Callbacks
