@@ -35,4 +35,21 @@
 
     <include layout="@layout/left_slider" />
 
+    <RelativeLayout
+        android:id="@+id/footer_container"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:visibility="invisible"
+        android:background="#EEE">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:id="@+id/footer_text"
+            android:textColor="#000"
+            android:textSize="20sp"
+            android:layout_marginLeft="20dp"/>
+    </RelativeLayout>
+
 </RelativeLayout>

@@ -22,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -74,7 +75,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     List<PlaceElement> places = new ArrayList<>();
     List<String> checkedPlaces = new ArrayList<>();
     List<LatLng> markeredPlaces = new ArrayList<>();
-    List<String> placesAlreadyMarkered = new ArrayList<>();
+    List<JSONObject> placesOnMap = new ArrayList<>();
 
     //UI
     //Right slider
@@ -528,6 +529,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         if (queue != null) {
             queue.cancelAll(Constants.TAG);
         }
+        placesOnMap.clear();
         mGoogleMap.clear();
         if (checkedPlaces != null) {
             urls = new String[checkedPlaces.size()];
@@ -535,11 +537,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (userLocation != null && center == null) {
                 Log.v("UPDATE PLACES", "USER LOCATION");
                 for (String checkedPlaceName : checkedPlaces) {
-                    if(!placesAlreadyMarkered.contains(checkedPlaceName)) {
-                        urls[i] = getPlaceUrl(checkedPlaceName.toLowerCase(), userLocation);
-                        setJsonArray(urls[i]);
-                        i++;
-                    }
+                    urls[i] = getPlaceUrl(checkedPlaceName.toLowerCase(), userLocation);
+                    setJsonArray(urls[i]);
+                    i++;
                 }
             } else if (center != null) {
                 for (String checkedPlaceName : checkedPlaces) {
@@ -549,24 +549,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             }
         }
-
-//        if (resultPlaces != null) {
-//            Log.v("RESULT PLACES", "" + resultPlaces.size());
-//            double lat, lng;
-//            String name, icon;
-//            try {
-//                for (JSONObject jo : resultPlaces) {
-//                    name = (String) jo.get("name");
-//                    //icon = (String) jo.get("icon");
-//                    lat = jo.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
-//                    lng = jo.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
-//                    LatLng here = new LatLng(lat, lng);
-//                    mGoogleMap.addMarker(new MarkerOptions().position(here).title(name));
-//                }
-//            } catch (Exception e) {
-//                Log.v("Error", e.toString());
-//            }
-//        }
     }
 
     public void setJsonArray(String link) {
@@ -586,10 +568,16 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
                         LatLng here = new LatLng(lat, lng);
                         Marker marker = mGoogleMap.addMarker(new MarkerOptions().position(here).title(name));
-                        if(markeredPlaces.contains(here)) {
+                        if(!placesOnMap.contains(c)) {
+                            placesOnMap.add(c);
+                        }else{
+                            placesOnMap.remove(c);
+                        }
+                        if (markeredPlaces.contains(here)) {
                             marker.remove();
                         }
                     }
+                    updateList(placesOnMap.size());
                 } catch (Exception e) {
                     Log.v("Error", e.toString());
                 }
@@ -601,7 +589,17 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         });
         jsonObjReq.setTag(Constants.TAG);
         queue.add(jsonObjReq);
-        //MyApplication.getInstance().addToReqQueue(jsonObjReq, "jreq");
+    }
+
+    public void updateList(int p) {
+        RelativeLayout footerContainer = (RelativeLayout) findViewById(R.id.footer_container);
+        TextView footerText = (TextView) findViewById(R.id.footer_text);
+        if(p>0) {
+            footerContainer.setVisibility(View.VISIBLE);
+            footerText.setText("Znalezionych miejsc: " + p);
+        }else{
+            footerContainer.setVisibility(View.INVISIBLE);
+        }
     }
 
     public String getPlaceUrl(String keyword, LatLng location) {
