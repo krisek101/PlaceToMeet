@@ -14,6 +14,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -68,6 +69,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
 
@@ -153,11 +155,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         checkUsersSettingGPS();
     }
 
-    int getPixelsFromDp(float sizeDp) {
-        float scale = getResources().getDisplayMetrics().density;
-        return (int) (sizeDp * scale + 0.5f);
-    }
 
+    // Main functions
     void setListeners() {
         //add another person (and place)
         findViewById(R.id.right_slider_footer).setOnClickListener(new View.OnClickListener() {
@@ -364,17 +363,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         });
     }
 
-    void closeBothSliders() {
-        if (leftSliderOpened || rightSliderOpened) {
-            rightSlider.animate().x(rightHandleDefaultX + rightHandleWidth).setDuration(100).start();
-            leftSlider.animate().x(leftHandleDefaultX - leftSliderWidth).setDuration(100).start();
-            rightHandle.animate().x(rightHandleDefaultX).setDuration(100).start();
-            leftHandle.animate().x(leftHandleDefaultX).setDuration(100).start();
-            leftSliderOpened = false;
-            rightSliderOpened = false;
-        }
-    }
-
     void arrangeSliders() {
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -425,12 +413,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         footerSlider.setY(getPixelsFromDp(512));
     }
 
-    //PLACES
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d("MACIEK_DEBUG", "Connection failed");
-    }
-
+    // Places
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == Constants.PLACE_PICKER_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
@@ -517,7 +500,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         placesList.setAdapter(placeAdapter);
     }
 
-    //MAPS
+    // Maps
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.d("MACIEK-DEBUG", "Map ready!");
@@ -539,6 +522,104 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         });
     }
 
+    public void updatePlaces(String placeName) throws JSONException {
+        if (checkedPlaces != null) {
+            if (checkedPlaces.contains(placeName)) {
+                // add places from one category
+                url = getPlaceUrl(placeName.toLowerCase(), center);
+                setJsonArray(url, placeName);
+            } else {
+                // delete places from one category
+                deleteMarkers(placeName);
+            }
+        }
+    }
+
+    public void setJsonArray(String link, final String placeName) {
+        queue = Volley.newRequestQueue(this);
+        jsonObjReq = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                double lat, lng;
+                String name;
+                LatLng position;
+                Marker marker;
+                try {
+                    JSONArray ja = response.getJSONArray("results");
+                    for (int i = 0; i < ja.length(); i++) {
+                        JSONObject c = ja.getJSONObject(i);
+                        name = (String) c.get("name");
+                        lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
+                        lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
+                        position = new LatLng(lat, lng);
+                        marker = mGoogleMap.addMarker(new MarkerOptions().position(position).title(name));
+                        markersInOneCategory.add(marker);
+                        if (!foundPlaces.containsKey(position)) {
+                            foundPlaces.put(position, c);
+                        }
+                    }
+                    listOfMarkersCategorized.put(placeName, new ArrayList<>(markersInOneCategory));
+                    markersInOneCategory.clear();
+                    updateList(foundPlaces, placeName);
+                } catch (Exception e) {
+                    Log.v("Error", e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        jsonObjReq.setTag(Constants.TAG);
+        queue.add(jsonObjReq);
+    }
+
+    public void updateList(Map<LatLng, JSONObject> foundPlaces, String placeName) {
+        if (foundPlaces.size() > 0) {
+            footer.setVisibility(View.VISIBLE);
+            footer.setText("Pokaż listę | liczba miejsc: " + foundPlaces.size());
+            foundPlacesA = new ArrayList<>(foundPlaces.values());
+            foundPlacesList = (ListView) findViewById(R.id.list_found_places);
+            foundPlaceAdapter = new FoundPlaceAdapter(this, R.layout.footer_slider_item, foundPlacesA, this);
+            foundPlacesList.setAdapter(foundPlaceAdapter);
+        } else {
+            footer.setVisibility(View.INVISIBLE);
+        }
+        Log.v("FOUND PLACES", foundPlaces.keySet().toString());
+    }
+
+    public void deleteMarkers(String placeName) {
+        if (queue != null) {
+            queue.cancelAll(Constants.TAG);
+        }
+        if(listOfMarkersCategorized.get(placeName) != null) {
+            if (!listOfMarkersCategorized.get(placeName).isEmpty()) {
+                for (Marker m : listOfMarkersCategorized.get(placeName)) {
+                    foundPlaces.remove(m.getPosition());
+                    m.remove();
+                }
+                updateList(foundPlaces, placeName);
+                listOfMarkersCategorized.remove(placeName);
+            }
+        }
+    }
+
+    public String getPlaceUrl(String keyword, LatLng location) {
+        // EXAMPLE: https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword=restauracja&language=pl&location=51.23324223,20.32554332&radius=500&key=KEY
+        StringBuilder urlString = new StringBuilder();
+        urlString.append("https://maps.googleapis.com/maps/api/place/nearbysearch/json");
+        urlString.append("?keyword=");
+        try {
+            urlString.append(URLEncoder.encode(keyword, "utf8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        urlString.append("&language=pl&location=" + location.latitude + "," + location.longitude + "&radius=1000");
+        urlString.append("&key=" + Constants.API_KEY);
+        return urlString.toString();
+    }
+
+    // Location
     public boolean checkPlayServices() {
         GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
         int status = googleApiAvailability.isGooglePlayServicesAvailable(this);
@@ -566,13 +647,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-    }
-
-    public boolean isOnline() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
     private void checkUsersSettingGPS() {
@@ -625,109 +699,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    public void updatePlaces(String placeName) throws JSONException {
-        if (checkedPlaces != null) {
-            if (checkedPlaces.contains(placeName)) {
-                // add places from one category
-                if (userLocation != null && center == null) {
-                    url = getPlaceUrl(placeName.toLowerCase(), userLocation);
-                    setJsonArray(url, placeName);
-                } else if (center != null) {
-                    url = getPlaceUrl(placeName.toLowerCase(), center);
-                    setJsonArray(url, placeName);
-                }
-            } else {
-                // delete places from one category
-                deleteMarkers(placeName);
-            }
-        }
-    }
-
-    public void setJsonArray(String link, final String placeName) {
-        markersInOneCategory.clear();
-        queue = Volley.newRequestQueue(this);
-        jsonObjReq = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                double lat, lng;
-                String name;
-                LatLng position;
-                try {
-                    JSONArray ja = response.getJSONArray("results");
-                    for (int i = 0; i < ja.length(); i++) {
-                        JSONObject c = ja.getJSONObject(i);
-                        name = (String) c.get("name");
-                        lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
-                        lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
-                        position = new LatLng(lat, lng);
-                        if (!foundPlaces.containsKey(position)) {
-                            foundPlaces.put(position, c);
-                        }
-                        markersInOneCategory.add(mGoogleMap.addMarker(new MarkerOptions().position(position).title(name)));
-                    }
-                    if (!listOfMarkersCategorized.containsKey(placeName)) {
-                        listOfMarkersCategorized.put(placeName, markersInOneCategory);
-                    }
-                    updateList(foundPlaces, placeName);
-                } catch (Exception e) {
-                    Log.v("Error", e.toString());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-            }
-        });
-        jsonObjReq.setTag(Constants.TAG);
-        queue.add(jsonObjReq);
-    }
-
-    public void updateList(Map<LatLng, JSONObject> foundPlaces, String placeName) {
-        if (foundPlaces.size() > 0) {
-            footer.setVisibility(View.VISIBLE);
-            footer.setText("Pokaż listę | liczba miejsc: " + foundPlaces.size());
-            foundPlacesA = new ArrayList<>(foundPlaces.values());
-            foundPlacesList = (ListView) findViewById(R.id.list_found_places);
-            foundPlaceAdapter = new FoundPlaceAdapter(this, R.layout.footer_slider_item, foundPlacesA, this);
-            foundPlacesList.setAdapter(foundPlaceAdapter);
-        } else {
-            footer.setVisibility(View.INVISIBLE);
-        }
-        Log.v("FOUND PLACES", foundPlaces.keySet().toString());
-    }
-
-    public void deleteMarkers(String placeName) {
-        Log.v("PLACE NAME", placeName);
-        if (queue != null) {
-            queue.cancelAll(Constants.TAG);
-        }
-        if (listOfMarkersCategorized.get(placeName) != null) {
-            Log.v("LIST OF MARKERS", listOfMarkersCategorized.get(placeName).toString());
-            for (Marker m : listOfMarkersCategorized.get(placeName)) {
-                foundPlaces.remove(m.getPosition());
-                m.remove();
-                Log.v("MARKER USUNIETY", m.getPosition().toString());
-            }
-            updateList(foundPlaces, placeName);
-            listOfMarkersCategorized.remove(placeName);
-        }
-    }
-
-    public String getPlaceUrl(String keyword, LatLng location) {
-        // EXAMPLE: https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword=restauracja&language=pl&location=51.23324223,20.32554332&radius=500&key=KEY
-        StringBuilder urlString = new StringBuilder();
-        urlString.append("https://maps.googleapis.com/maps/api/place/nearbysearch/json");
-        urlString.append("?keyword=");
-        try {
-            urlString.append(URLEncoder.encode(keyword, "utf8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        urlString.append("&language=pl&location=" + location.latitude + "," + location.longitude + "&radius=1000");
-        urlString.append("&key=" + Constants.API_KEY);
-        return urlString.toString();
-    }
-
     // Connection Callbacks
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -745,7 +716,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.v("Connection", "suspended");
     }
 
-    // Location Listener
     @Override
     public void onLocationChanged(Location location) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -761,6 +731,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     double latitude = mLastLocation.getLatitude();
                     double longitude = mLastLocation.getLongitude();
                     userLocation = new LatLng(latitude, longitude);
+                    center = userLocation;
 
                     // move camera to user's location
                     mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
@@ -770,6 +741,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             }
         }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d("MACIEK_DEBUG", "Connection failed");
     }
 
     // PERMISSIONS
@@ -849,6 +825,30 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         super.onStop();
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
+        }
+    }
+
+    // Other functions
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
+
+    int getPixelsFromDp(float sizeDp) {
+        float scale = getResources().getDisplayMetrics().density;
+        return (int) (sizeDp * scale + 0.5f);
+    }
+
+    void closeBothSliders() {
+        if (leftSliderOpened || rightSliderOpened) {
+            rightSlider.animate().x(rightHandleDefaultX + rightHandleWidth).setDuration(100).start();
+            leftSlider.animate().x(leftHandleDefaultX - leftSliderWidth).setDuration(100).start();
+            rightHandle.animate().x(rightHandleDefaultX).setDuration(100).start();
+            leftHandle.animate().x(leftHandleDefaultX).setDuration(100).start();
+            leftSliderOpened = false;
+            rightSliderOpened = false;
         }
     }
 
