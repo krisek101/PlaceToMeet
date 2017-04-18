@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -51,8 +52,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -66,7 +65,9 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
 
@@ -74,8 +75,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     List<PersonElement> persons = new ArrayList<>();
     List<PlaceElement> places = new ArrayList<>();
     List<String> checkedPlaces = new ArrayList<>();
-    List<LatLng> markeredPlaces = new ArrayList<>();
-    List<JSONObject> placesOnMap = new ArrayList<>();
+    Map<LatLng, JSONObject> foundPlaces = new HashMap<>();
+    List<Marker> markersInOneCategory = new ArrayList<>();
+    Map<String, List<Marker>> listOfMarkersCategorized = new HashMap<>();
+    List<JSONObject> foundPlacesA = new ArrayList<>();
 
     //UI
     //Right slider
@@ -95,9 +98,20 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     float leftSliderWidth, leftHandleWidth;
     float leftTotalWidth;
     float screenWidth;
+    float screenHeight;
     boolean leftSliderOpened = false;
     PlaceAdapter placeAdapter;
     ListView placesList;
+
+    //Footer
+    TextView footer;
+    boolean footerOpened = false;
+    float navigationBarHeight;
+    float statusBarHeight;
+    float footerTop;
+    LinearLayout footerSlider;
+    ListView foundPlacesList;
+    FoundPlaceAdapter foundPlaceAdapter;
 
     //Map
     MapActivity activity = this;
@@ -110,7 +124,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     LatLng center;
     LatLng userLocation;
     boolean updateLocation = true;
-    String[] urls;
+    String url;
     JsonObjectRequest jsonObjReq;
     RequestQueue queue;
 
@@ -118,7 +132,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-
+        footer = (TextView) findViewById(R.id.footer);
         gestureDetector = new GestureDetector(this, new SingleTapConfirm());
 
         // location
@@ -130,7 +144,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
 
         requestPermissions();
-
         arrangeSliders();
         setPlaces();
 
@@ -138,7 +151,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
         setListeners();
         checkUsersSettingGPS();
-
     }
 
     int getPixelsFromDp(float sizeDp) {
@@ -288,12 +300,97 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         });
 
+        //footer listener
+        footer.setOnTouchListener(new View.OnTouchListener() {
+            float x;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                float toY;
+                closeBothSliders();
+
+                if (gestureDetector.onTouchEvent(motionEvent)) {
+                    if (footerOpened) {
+                        toY = getPixelsFromDp(512);
+                        footerOpened = false;
+                    } else {
+                        toY = footerTop + footer.getHeight();
+                        footerOpened = true;
+                    }
+                    footerSlider.animate().y(toY);
+                    view.animate().y(toY - footer.getHeight()).setDuration(100).start();
+                    return true;
+                } else {
+//                    switch (motionEvent.getActionMasked()) {
+//                        case MotionEvent.ACTION_DOWN:
+//                            x = view.getX() - motionEvent.getRawX();
+//                            break;
+//                        case MotionEvent.ACTION_MOVE:
+//                            if ((x + motionEvent.getRawX()) < (screenWidth - (rightTotalWidth))) {
+//                                toX = screenWidth - (rightTotalWidth);
+//                            } else {
+//                                toX = x + motionEvent.getRawX();
+//                            }
+//                            view.animate().x(toX).setDuration(0).start();
+//                            rightSlider.animate().x(toX + rightHandleWidth).setDuration(0).start();
+//                            break;
+//                        case MotionEvent.ACTION_UP:
+//                            if (rightSliderOpened) {
+//                                if ((x + motionEvent.getRawX()) > (screenWidth - 0.9 * (rightTotalWidth))) {
+//                                    toX = rightHandleDefaultX;
+//                                    rightSliderOpened = false;
+//                                } else {
+//                                    toX = screenWidth - rightTotalWidth;
+//                                    rightSliderOpened = true;
+//                                }
+//                            } else {
+//                                if ((x + motionEvent.getRawX()) < (screenWidth - 0.1 * (rightTotalWidth))) {
+//                                    toX = screenWidth - rightTotalWidth;
+//                                    rightSliderOpened = true;
+//                                } else {
+//                                    toX = rightTotalWidth;
+//                                    rightSliderOpened = false;
+//                                }
+//                            }
+//                            view.animate().x(toX).setDuration(100).start();
+//                            rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
+//                            break;
+//                        default:
+//                            return false;
+//                    }
+                }
+                return true;
+            }
+        });
+    }
+
+    void closeBothSliders() {
+        if (leftSliderOpened || rightSliderOpened) {
+            rightSlider.animate().x(rightHandleDefaultX + rightHandleWidth).setDuration(100).start();
+            leftSlider.animate().x(leftHandleDefaultX - leftSliderWidth).setDuration(100).start();
+            rightHandle.animate().x(rightHandleDefaultX).setDuration(100).start();
+            leftHandle.animate().x(leftHandleDefaultX).setDuration(100).start();
+            leftSliderOpened = false;
+            rightSliderOpened = false;
+        }
     }
 
     void arrangeSliders() {
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         screenWidth = dm.widthPixels;
+        screenHeight = dm.heightPixels;
+
+        // navigation bar height
+        int resourceId;
+        resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            navigationBarHeight = getResources().getDimensionPixelSize(resourceId);
+        }
+        resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+        }
 
         //right panel
         rightHandleWidth = getPixelsFromDp(30);
@@ -322,6 +419,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         leftHandle.setX(leftHandleDefaultX);
         leftSlider.setX(leftSliderDefaultX);
 
+        // footer
+        footerTop = footer.getY();
+        footerSlider = (LinearLayout) findViewById(R.id.footer_slider);
+        footerSlider.setY(getPixelsFromDp(512));
     }
 
     //PLACES
@@ -524,60 +625,50 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    public void updatePlaces() throws JSONException {
-        //resultPlaces.clear();
-        if (queue != null) {
-            queue.cancelAll(Constants.TAG);
-        }
-        placesOnMap.clear();
-        mGoogleMap.clear();
+    public void updatePlaces(String placeName) throws JSONException {
         if (checkedPlaces != null) {
-            urls = new String[checkedPlaces.size()];
-            int i = 0;
-            if (userLocation != null && center == null) {
-                Log.v("UPDATE PLACES", "USER LOCATION");
-                for (String checkedPlaceName : checkedPlaces) {
-                    urls[i] = getPlaceUrl(checkedPlaceName.toLowerCase(), userLocation);
-                    setJsonArray(urls[i]);
-                    i++;
+            if (checkedPlaces.contains(placeName)) {
+                // add places from one category
+                if (userLocation != null && center == null) {
+                    url = getPlaceUrl(placeName.toLowerCase(), userLocation);
+                    setJsonArray(url, placeName);
+                } else if (center != null) {
+                    url = getPlaceUrl(placeName.toLowerCase(), center);
+                    setJsonArray(url, placeName);
                 }
-            } else if (center != null) {
-                for (String checkedPlaceName : checkedPlaces) {
-                    urls[i] = getPlaceUrl(checkedPlaceName.toLowerCase(), center);
-                    setJsonArray(urls[i]);
-                    i++;
-                }
+            } else {
+                // delete places from one category
+                deleteMarkers(placeName);
             }
         }
     }
 
-    public void setJsonArray(String link) {
+    public void setJsonArray(String link, final String placeName) {
+        markersInOneCategory.clear();
         queue = Volley.newRequestQueue(this);
         jsonObjReq = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 double lat, lng;
-                String name, icon;
+                String name;
+                LatLng position;
                 try {
                     JSONArray ja = response.getJSONArray("results");
                     for (int i = 0; i < ja.length(); i++) {
                         JSONObject c = ja.getJSONObject(i);
                         name = (String) c.get("name");
-                        //icon = (String) jo.get("icon");
                         lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
                         lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
-                        LatLng here = new LatLng(lat, lng);
-                        Marker marker = mGoogleMap.addMarker(new MarkerOptions().position(here).title(name));
-                        if(!placesOnMap.contains(c)) {
-                            placesOnMap.add(c);
-                        }else{
-                            placesOnMap.remove(c);
+                        position = new LatLng(lat, lng);
+                        if (!foundPlaces.containsKey(position)) {
+                            foundPlaces.put(position, c);
                         }
-                        if (markeredPlaces.contains(here)) {
-                            marker.remove();
-                        }
+                        markersInOneCategory.add(mGoogleMap.addMarker(new MarkerOptions().position(position).title(name)));
                     }
-                    updateList(placesOnMap.size());
+                    if (!listOfMarkersCategorized.containsKey(placeName)) {
+                        listOfMarkersCategorized.put(placeName, markersInOneCategory);
+                    }
+                    updateList(foundPlaces, placeName);
                 } catch (Exception e) {
                     Log.v("Error", e.toString());
                 }
@@ -591,14 +682,34 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         queue.add(jsonObjReq);
     }
 
-    public void updateList(int p) {
-        RelativeLayout footerContainer = (RelativeLayout) findViewById(R.id.footer_container);
-        TextView footerText = (TextView) findViewById(R.id.footer_text);
-        if(p>0) {
-            footerContainer.setVisibility(View.VISIBLE);
-            footerText.setText("Znalezionych miejsc: " + p);
-        }else{
-            footerContainer.setVisibility(View.INVISIBLE);
+    public void updateList(Map<LatLng, JSONObject> foundPlaces, String placeName) {
+        if (foundPlaces.size() > 0) {
+            footer.setVisibility(View.VISIBLE);
+            footer.setText("Pokaż listę | liczba miejsc: " + foundPlaces.size());
+            foundPlacesA = new ArrayList<>(foundPlaces.values());
+            foundPlacesList = (ListView) findViewById(R.id.list_found_places);
+            foundPlaceAdapter = new FoundPlaceAdapter(this, R.layout.footer_slider_item, foundPlacesA, this);
+            foundPlacesList.setAdapter(foundPlaceAdapter);
+        } else {
+            footer.setVisibility(View.INVISIBLE);
+        }
+        Log.v("FOUND PLACES", foundPlaces.keySet().toString());
+    }
+
+    public void deleteMarkers(String placeName) {
+        Log.v("PLACE NAME", placeName);
+        if (queue != null) {
+            queue.cancelAll(Constants.TAG);
+        }
+        if (listOfMarkersCategorized.get(placeName) != null) {
+            Log.v("LIST OF MARKERS", listOfMarkersCategorized.get(placeName).toString());
+            for (Marker m : listOfMarkersCategorized.get(placeName)) {
+                foundPlaces.remove(m.getPosition());
+                m.remove();
+                Log.v("MARKER USUNIETY", m.getPosition().toString());
+            }
+            updateList(foundPlaces, placeName);
+            listOfMarkersCategorized.remove(placeName);
         }
     }
 

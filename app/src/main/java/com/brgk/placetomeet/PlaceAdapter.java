@@ -82,7 +82,7 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
                     holder.placeImage.setColorFilter(null);
                 }
                 try {
-                    mapActivity.updatePlaces();
+                    mapActivity.updatePlaces(holder.placeName.getText().toString());
                 }catch (JSONException e){
                     Log.v("JSON Eception", e.toString());
                 }
