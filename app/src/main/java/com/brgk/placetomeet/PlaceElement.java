@@ -1,38 +1,66 @@
 package com.brgk.placetomeet;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class PlaceElement {
 
-    private String name;
-    private int id;
+    private JSONObject place;
+    private String id;
     private int img;
-    private List<String> categories;
-    private boolean checked;
+    private LatLng position;
+    private Marker marker;
+    private double rate;
+    private String name;
+    private String category;
+    private boolean openNow;
 
-    public PlaceElement(String name, int id, int img, String[] categories) {
-        this.name = name;
-        this.id = id;
-        this.img = img;
-        this.categories = Arrays.asList(categories);
-        this.checked = false;
+    public PlaceElement(JSONObject place, String category) throws JSONException {
+        this.place = place;
+        this.category = category;
+        this.getData();
     }
 
-    public String getName() {
-        return name;
+    private void getData() throws JSONException {
+        position = new LatLng(place.getJSONObject("geometry").getJSONObject("location").getDouble("lat"), place.getJSONObject("geometry").getJSONObject("location").getDouble("lng"));
+        id = place.getString("place_id");
+        //rate = place.getDouble("rating");
+        name = place.getString("name");
+        //openNow = place.getJSONObject("opening_hours").getBoolean("open_now");
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof PlaceElement)) {
+            return false;
+        }
+        PlaceElement other = (PlaceElement) obj;
+        return (this.getPosition().equals(other.getPosition()));
     }
 
-    public int getId() {
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    public JSONObject getPlace() {
+        return place;
+    }
+
+    public void setPlace(JSONObject place) {
+        this.place = place;
+    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -44,20 +72,51 @@ public class PlaceElement {
         this.img = img;
     }
 
-    public List<String> getCategories() {
-        return this.categories;
+    public double getRate() {
+        return rate;
     }
 
-    public void setCategories(List<String> categories) {
-        this.categories = categories;
+    public void setRate(double rate) {
+        this.rate = rate;
     }
 
-    public boolean isChecked() {
-        return checked;
+    public String getName() {
+        return name;
     }
 
-    public void setChecked(boolean checked) {
-        this.checked = checked;
+    public void setName(String name) {
+        this.name = name;
     }
 
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public LatLng getPosition() {
+        return position;
+    }
+
+    public void setPosition(LatLng position) {
+        this.position = position;
+    }
+
+    public Marker getMarker() {
+        return marker;
+    }
+
+    public void setMarker(Marker marker) {
+        this.marker = marker;
+    }
+
+    public boolean isOpenNow() {
+        return openNow;
+    }
+
+    public void setOpenNow(boolean openNow) {
+        this.openNow = openNow;
+    }
 }

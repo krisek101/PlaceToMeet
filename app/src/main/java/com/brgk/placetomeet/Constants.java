@@ -31,6 +31,7 @@ public class Constants {
     public static final int PLACE_PICKER_REQUEST_CODE = 1;
 
     //Others
+    public static final int RADIUS = 1000;
     public static final int SPLASH_TIME = 1000;
     public static final String API_KEY = "AIzaSyDTmOH9Pi8frp-_JU9gZfUxN7yWdW7yNEM";
     public static final String TAG = "MyTag";

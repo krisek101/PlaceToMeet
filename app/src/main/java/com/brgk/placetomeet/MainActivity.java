@@ -23,7 +23,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     // Collections
-    public List<PlaceElement> places = new ArrayList<>();
+    public List<CategoryElement> places = new ArrayList<>();
     public List<String> namesCheckedPlaces = new ArrayList<>();
 
     // UI
@@ -52,15 +52,15 @@ public class MainActivity extends AppCompatActivity {
     private void setPlaces() {
         for (int i = 0; i < Constants.PLACES.length; i++) {
             if (i < 5) {
-                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[1]}));
+                places.add(new CategoryElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[1]}));
             } else if (i < 8) {
-                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[0]}));
+                places.add(new CategoryElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[0]}));
             } else if (i < 11) {
-                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[3]}));
+                places.add(new CategoryElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[3]}));
             } else if (i < 14) {
-                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[4]}));
+                places.add(new CategoryElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[4]}));
             } else {
-                places.add(new PlaceElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[2]}));
+                places.add(new CategoryElement(Constants.PLACES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[2]}));
             }
         }
 
@@ -87,9 +87,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private List<PlaceElement> getPlacesByCategory(String category) {
-        List<PlaceElement> placesByCategory = new ArrayList<>();
-        for (PlaceElement place : places) {
+    private List<CategoryElement> getPlacesByCategory(String category) {
+        List<CategoryElement> placesByCategory = new ArrayList<>();
+        for (CategoryElement place : places) {
             if (place.getCategories().contains(category)) {
                 placesByCategory.add(place);
             }
