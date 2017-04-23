@@ -39,10 +39,10 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentBottom="true"
-        android:paddingStart="20dp"
         android:gravity="center_vertical"
-        android:background="#EEE"
-        android:textColor="#000"
+        android:textAlignment="center"
+        android:background="@color/colorPrimary"
+        android:textColor="#eeeeee"
         android:textSize="20sp"
         android:visibility="invisible" />
 

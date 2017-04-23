@@ -52,6 +52,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -78,7 +79,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     List<CategoryElement> categories = new ArrayList<>();
     List<String> checkedCategories = new ArrayList<>();
     List<PlaceElement> places = new ArrayList<>();
-    Set<JSONObject> listedPlaces = new HashSet<>();
 
     //UI
     //Right slider
@@ -112,6 +112,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     LinearLayout footerSlider;
     ListView placesList;
     PlaceAdapter placeAdapter;
+    boolean footerChanged = true;
 
     //Map
     MapActivity activity = this;
@@ -517,17 +518,41 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 return false;
             }
         });
+
+        mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                for (PlaceElement p : places) {
+                    p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
+                    p.setChecked(false);
+                    placeAdapter.notifyDataSetChanged();
+                }
+            }
+        });
+
+        mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                tickPlaceOnList(marker);
+                float toY = footerTop + footer.getHeight();
+                footerOpened = true;
+                footerSlider.animate().y(toY).setDuration(100).start();
+                footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
+            }
+        });
     }
 
     public void updatePlaces(String category) throws JSONException {
-        if (checkedCategories != null) {
-            if (checkedCategories.contains(category)) {
-                // add places from one category
-                url = getPlaceUrl(category.toLowerCase(), center);
-                setJsonArray(url, category);
-            } else {
-                // delete places from one category
-                deletePlaces(category);
+        if (center != null) {
+            if (checkedCategories != null) {
+                if (checkedCategories.contains(category)) {
+                    // add places from one category
+                    url = getPlaceUrl(category.toLowerCase(), center);
+                    setJsonArray(url, category);
+                } else {
+                    // delete places from one category
+                    deletePlaces(category);
+                }
             }
         }
     }
@@ -550,7 +575,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
                         position = new LatLng(lat, lng);
                         PlaceElement p = new PlaceElement(c, category);
-                        if(!places.contains(p)){
+                        if (!places.contains(p)) {
                             p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(position).title(name)));
                             places.add(p);
                         }
@@ -571,12 +596,20 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     public void updateList(List<PlaceElement> places) {
         if (places.size() > 0) {
+            if (footerChanged) {
+                leftSlider.getLayoutParams().height = leftSlider.getMeasuredHeight() - footer.getHeight();
+                rightSlider.getLayoutParams().height = rightSlider.getMeasuredHeight() - footer.getHeight();
+                footerChanged = false;
+            }
             footer.setVisibility(View.VISIBLE);
-            footer.setText("Pokaż listę | liczba miejsc: " + places.size());
+            footer.setText("Liczba znalezionych miejsc: " + places.size());
             placesList = (ListView) findViewById(R.id.list_found_places);
             placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, places, this);
             placesList.setAdapter(placeAdapter);
         } else {
+            footerChanged = true;
+            leftSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
+            rightSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
             footer.setVisibility(View.INVISIBLE);
         }
     }
@@ -588,7 +621,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Iterator<PlaceElement> i = places.iterator();
         while (i.hasNext()) {
             PlaceElement s = i.next();
-            if(s.getCategory().equals(category)) {
+            if (s.getCategory().equals(category)) {
                 s.getMarker().remove();
                 i.remove();
             }
@@ -609,6 +642,25 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         urlString.append("&language=pl&location=" + location.latitude + "," + location.longitude + "&radius=" + Constants.RADIUS);
         urlString.append("&key=" + Constants.API_KEY);
         return urlString.toString();
+    }
+
+    public void highlightMarker(PlaceElement place) {
+        if(place.isChecked()) {
+            place.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+        }else{
+            place.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
+        }
+    }
+
+    public void tickPlaceOnList(Marker marker){
+        for(PlaceElement p : places){
+            if(p.getMarker().equals(marker)){
+                p.setChecked(true);
+                highlightMarker(p);
+                placeAdapter.notifyDataSetChanged();
+                break;
+            }
+        }
     }
 
     // Location
@@ -844,12 +896,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    private class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
+private class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
 
-        @Override
-        public boolean onSingleTapUp(MotionEvent event) {
-            return true;
-        }
-
+    @Override
+    public boolean onSingleTapUp(MotionEvent event) {
+        return true;
     }
+
+}
 }

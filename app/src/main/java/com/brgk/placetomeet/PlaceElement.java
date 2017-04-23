@@ -1,5 +1,8 @@
 package com.brgk.placetomeet;
 
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -8,6 +11,11 @@ import com.google.android.gms.maps.model.Marker;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 public class PlaceElement {
 
     private JSONObject place;
@@ -15,23 +23,41 @@ public class PlaceElement {
     private int img;
     private LatLng position;
     private Marker marker;
-    private double rate;
+    private double rate = 0;
     private String name;
     private String category;
-    private boolean openNow;
+    private boolean openNow = false;
+    private String address;
+    private Geocoder geocoder;
+    private Context context;
+    private boolean checked;
 
-    public PlaceElement(JSONObject place, String category) throws JSONException {
+    public PlaceElement(JSONObject place, String category){
         this.place = place;
         this.category = category;
         this.getData();
     }
 
-    private void getData() throws JSONException {
-        position = new LatLng(place.getJSONObject("geometry").getJSONObject("location").getDouble("lat"), place.getJSONObject("geometry").getJSONObject("location").getDouble("lng"));
-        id = place.getString("place_id");
-        //rate = place.getDouble("rating");
-        name = place.getString("name");
-        //openNow = place.getJSONObject("opening_hours").getBoolean("open_now");
+    private void getData(){
+        try {
+            position = new LatLng(place.getJSONObject("geometry").getJSONObject("location").getDouble("lat"), place.getJSONObject("geometry").getJSONObject("location").getDouble("lng"));
+            id = place.getString("place_id");
+            name = place.getString("name");
+            if(!place.isNull("rating")) {
+                rate = place.getDouble("rating");
+            }
+            if(!place.isNull("opening_hours")) {
+                openNow = place.getJSONObject("opening_hours").getBoolean("open_now");
+            }
+            if(!place.isNull("vicinity")) {
+                address = place.getString("vicinity");
+            }else{
+                getAddressFromPosition(position.latitude, position.longitude);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -119,4 +145,39 @@ public class PlaceElement {
     public void setOpenNow(boolean openNow) {
         this.openNow = openNow;
     }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
+
+    private String getAddressFromPosition(double latitudeNow, double longitudeNow) {
+        geocoder = new Geocoder(context, Locale.getDefault());
+        List<Address> addressArray = new ArrayList<>();
+        String addressBuilder = "";
+        try {
+            addressArray = geocoder.getFromLocation(latitudeNow, longitudeNow, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (addressArray != null) {
+            addressBuilder += addressArray.get(0).getAddressLine(0) + ", ";
+            addressBuilder += addressArray.get(0).getLocality() + ", ";
+            addressBuilder += addressArray.get(0).getCountryName();
+        }
+        Log.v("ADDRESS", addressBuilder);
+        return addressBuilder;
+    }
+
 }

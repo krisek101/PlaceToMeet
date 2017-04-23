@@ -4,23 +4,15 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RatingBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.model.LatLng;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 class PlaceAdapter extends ArrayAdapter<PlaceElement> {
 
@@ -37,6 +29,10 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
 
     private class ViewHolder {
         TextView placeName;
+        TextView rating;
+        TextView address;
+        RatingBar ratingStars;
+        RelativeLayout placeOnList;
     }
 
     @NonNull
@@ -49,12 +45,41 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
             convertView = inflater.inflate(R.layout.footer_slider_item, null);
             holder = new ViewHolder();
         } else {
-            holder = (ViewHolder) convertView.getTag();
+            holder = new ViewHolder();
         }
 
         holder.placeName = (TextView) convertView.findViewById(R.id.footer_slider_place_name);
-        convertView.setTag(holder);
+        holder.rating = (TextView) convertView.findViewById(R.id.rating);
+        holder.address = (TextView) convertView.findViewById(R.id.address);
+        holder.ratingStars = (RatingBar) convertView.findViewById(R.id.rating_stars);
+        holder.placeOnList = (RelativeLayout) convertView.findViewById(R.id.place_on_list);
         holder.placeName.setText(place.getName());
+        holder.rating.setText(String.valueOf(place.getRate()));
+        holder.address.setText(place.getAddress());
+        holder.ratingStars.setRating((float) place.getRate());
+        holder.placeOnList.setTag(place);
+        //convertView.setTag(holder);
+
+        if (place.isChecked()) {
+            holder.placeOnList.setBackgroundColor(Constants.CHECKED_COLOR);
+        } else {
+            holder.placeOnList.setBackgroundColor(Constants.UNCHECKED_COLOR);
+        }
+
+        holder.placeOnList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PlaceElement place = (PlaceElement) view.getTag();
+                if(place.isChecked()){
+                    place.setChecked(false);
+                    view.setBackgroundColor(Constants.UNCHECKED_COLOR);
+                }else {
+                    place.setChecked(true);
+                    view.setBackgroundColor(Constants.CHECKED_COLOR);
+                }
+                mapActivity.highlightMarker(place);
+            }
+        });
 
         return convertView;
     }
