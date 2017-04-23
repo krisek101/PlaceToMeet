@@ -53,17 +53,23 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
         holder.address = (TextView) convertView.findViewById(R.id.address);
         holder.ratingStars = (RatingBar) convertView.findViewById(R.id.rating_stars);
         holder.placeOnList = (RelativeLayout) convertView.findViewById(R.id.place_on_list);
+
         holder.placeName.setText(place.getName());
         holder.rating.setText(String.valueOf(place.getRate()));
         holder.address.setText(place.getAddress());
         holder.ratingStars.setRating((float) place.getRate());
         holder.placeOnList.setTag(place);
-        //convertView.setTag(holder);
 
         if (place.isChecked()) {
             holder.placeOnList.setBackgroundColor(Constants.CHECKED_COLOR);
+            holder.rating.setTextColor(Color.WHITE);
+            holder.address.setTextColor(Color.WHITE);
+            holder.placeName.setTextColor(Color.WHITE);
         } else {
             holder.placeOnList.setBackgroundColor(Constants.UNCHECKED_COLOR);
+            holder.rating.setTextColor(Color.BLACK);
+            holder.address.setTextColor(Color.BLACK);
+            holder.placeName.setTextColor(Color.BLACK);
         }
 
         holder.placeOnList.setOnClickListener(new View.OnClickListener() {
@@ -73,9 +79,15 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
                 if(place.isChecked()){
                     place.setChecked(false);
                     view.setBackgroundColor(Constants.UNCHECKED_COLOR);
+                    holder.rating.setTextColor(Color.BLACK);
+                    holder.address.setTextColor(Color.BLACK);
+                    holder.placeName.setTextColor(Color.BLACK);
                 }else {
                     place.setChecked(true);
                     view.setBackgroundColor(Constants.CHECKED_COLOR);
+                    holder.rating.setTextColor(Color.WHITE);
+                    holder.address.setTextColor(Color.WHITE);
+                    holder.placeName.setTextColor(Color.WHITE);
                 }
                 mapActivity.highlightMarker(place);
             }

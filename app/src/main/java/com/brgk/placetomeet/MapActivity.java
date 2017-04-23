@@ -10,6 +10,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -63,7 +65,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -128,6 +133,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     String url;
     JsonObjectRequest jsonObjReq;
     RequestQueue queue;
+    TextView internetInfoTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +141,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         setContentView(R.layout.activity_map);
         footer = (TextView) findViewById(R.id.footer);
         gestureDetector = new GestureDetector(this, new SingleTapConfirm());
+        internetInfoTextView = (TextView) findViewById(R.id.internet_info);
 
         // location
         if (checkPlayServices()) {
@@ -540,6 +547,31 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
             }
         });
+
+        final Handler h = new Handler();
+        final int delay = 1000; //milliseconds
+        final Runnable[] runnable = new Runnable[1];
+
+        h.postDelayed(new Runnable(){
+            public void run(){
+                //do something
+                if(isOnline()){
+                    internetInfoTextView.setVisibility(View.INVISIBLE);
+                }else{
+                    internetInfoTextView.setVisibility(View.VISIBLE);
+                    h.removeCallbacks(runnable[0]);
+                }
+                runnable[0] = this;
+
+                h.postDelayed(runnable[0], delay);
+            }
+        }, delay);
+
+
+        if(!PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "").isEmpty() && !PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "").isEmpty()){
+            center = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 13));
+        }
     }
 
     public void updatePlaces(String category) throws JSONException {
@@ -776,6 +808,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     double longitude = mLastLocation.getLongitude();
                     userLocation = new LatLng(latitude, longitude);
                     center = userLocation;
+                    PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Latitude", String.valueOf(latitude)).apply();
+                    PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Longitude", String.valueOf(longitude)).apply();
 
                     // move camera to user's location
                     mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
