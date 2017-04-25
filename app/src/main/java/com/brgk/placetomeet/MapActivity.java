@@ -14,14 +14,19 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -65,17 +70,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
 
@@ -86,6 +85,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     List<PlaceElement> places = new ArrayList<>();
 
     //UI
+    ActionBar mActionBar;
+    boolean isAddingPerson = false;
+
     //Right slider
     RelativeLayout rightSlider;
     View rightHandle;
@@ -158,10 +160,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
 
         setListeners();
+
+        setupActionBar();
+
         checkUsersSettingGPS();
     }
 
-    // Main functions
+    // Design functions
     void setListeners() {
         //add another person (and place)
         findViewById(R.id.right_slider_footer).setOnClickListener(new View.OnClickListener() {
@@ -172,6 +177,19 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     startActivityForResult(builder.build(activity), Constants.PLACE_PICKER_REQUEST_CODE);
                 } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
                     e.printStackTrace();
+                }
+            }
+        });
+        findViewById(R.id.floatingActionButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if( isAddingPerson ) {
+                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
+
+                } else {
+                    ((FloatingActionButton) view).setImageResource(R.drawable.ic_my_location_white_24dp);
+                    showActionBar();
+                    isAddingPerson = true;
                 }
             }
         });
@@ -418,31 +436,94 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         footerSlider.setY(getPixelsFromDp(512));
     }
 
+    void setupActionBar() {
+        mActionBar = getSupportActionBar();
+        View view = LayoutInflater.from(this).inflate(R.layout.action_bar, null);
+        mActionBar.setCustomView(view);
+
+        final EditText field = (EditText) view.findViewById(R.id.action_bar_address_field);
+        view.findViewById(R.id.action_bar_add_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //TODO dodawanie osoby
+                Log.d("MACIEK_DEBUG", field.getText().toString());
+
+                isAddingPerson = false;
+                hideActionBar();
+            }
+        });
+
+        view.findViewById(R.id.action_bar_back_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isAddingPerson = false;
+                hideActionBar();
+            }
+        });
+    }
+
+    void showActionBar() {
+        ((FloatingActionButton) findViewById(R.id.floatingActionButton)).setImageResource(R.drawable.ic_my_location_white_24dp);
+        View view = mActionBar.getCustomView();
+        EditText addressField = (EditText) view.findViewById(R.id.action_bar_address_field);
+        addressField.setText("");
+        addressField.requestFocus();
+        Log.d("MACIEK_DEBUG", "focused: " + addressField.hasFocus());
+        showKeyboard();
+        view.setAlpha(0);
+        mActionBar.setDisplayShowCustomEnabled(true);
+        //TODO dopracowac animacje
+        view.animate().alpha(1).setDuration(1000).start();
+
+    }
+
+    void hideActionBar() {
+        hideKeyboard();
+        ((FloatingActionButton) findViewById(R.id.floatingActionButton)).setImageResource(R.drawable.ic_add_white_24dp);
+        mActionBar.setDisplayShowCustomEnabled(false);
+    }
+
+    void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    void showKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(0, 0);
+    }
+
     // Places
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == Constants.PLACE_PICKER_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                if (mGoogleMap != null) {
-                    Place place = PlacePicker.getPlace(this, data);
-                    PersonElement r = new PersonElement(place.getAddress().toString(),
-                            persons.size() + 1,
-                            mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + persons.size())));
-                    persons.add(r);
-                    personAdapter.notifyDataSetChanged();
-                    updateMapElements();
+        switch (requestCode) {
+            case Constants.PLACE_PICKER_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    if (mGoogleMap != null) {
+                        Place place = PlacePicker.getPlace(this, data);
+                        PersonElement r = new PersonElement(place.getAddress().toString(),
+                                persons.size() + 1,
+                                mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + persons.size())));
+                        persons.add(r);
+                        personAdapter.notifyDataSetChanged();
+                        updateMapElements();
+                    }
                 }
-            }
-        }
-
-        if (requestCode == Constants.REQUEST_CHECK_SETTINGS) {
-            // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
-                // The user picked a contact.
-                // The Intent's data Uri identifies which contact was selected.
-                Log.w("resultCode == OK", "success");
-                getLocation();
-                // Do something with the contact here (bigger example below)
-            }
+                break;
+            case Constants.REQUEST_CHECK_SETTINGS:
+                if (resultCode == RESULT_OK) {
+                    // The user picked a contact.
+                    // The Intent's data Uri identifies which contact was selected.
+                    Log.w("resultCode == OK", "success");
+                    getLocation();
+                    // Do something with the contact here (bigger example below)
+                }
+                break;
+            default:
+                Log.d("MACIEK_DEBUG", "Not supported Activity result code");
+                break;
         }
     }
 
