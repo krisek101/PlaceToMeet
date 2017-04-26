@@ -19,12 +19,14 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
     private List<PlaceElement> places;
     private Context mContext;
     private MapActivity mapActivity;
+    private float radius;
 
-    PlaceAdapter(@NonNull Context context, @LayoutRes int resource, List<PlaceElement> places, MapActivity mapActivity) {
+    PlaceAdapter(@NonNull Context context, @LayoutRes int resource, List<PlaceElement> places, MapActivity mapActivity, float radius) {
         super(context, resource, places);
         this.places = places;
         this.mContext = context;
         this.mapActivity = mapActivity;
+        this.radius = radius;
     }
 
     private class ViewHolder {
@@ -47,7 +49,6 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
         } else {
             holder = new ViewHolder();
         }
-
         holder.placeName = (TextView) convertView.findViewById(R.id.footer_slider_place_name);
         holder.rating = (TextView) convertView.findViewById(R.id.rating);
         holder.address = (TextView) convertView.findViewById(R.id.address);
@@ -66,7 +67,11 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
             holder.address.setTextColor(Color.WHITE);
             holder.placeName.setTextColor(Color.WHITE);
         } else {
-            holder.placeOnList.setBackgroundColor(Constants.UNCHECKED_COLOR);
+            if (place.getDistanceFromCenter() <= radius) {
+                holder.placeOnList.setBackgroundColor(Color.GRAY);
+            } else {
+                holder.placeOnList.setBackgroundColor(Constants.UNCHECKED_COLOR);
+            }
             holder.rating.setTextColor(Color.BLACK);
             holder.address.setTextColor(Color.BLACK);
             holder.placeName.setTextColor(Color.BLACK);
@@ -76,13 +81,17 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
             @Override
             public void onClick(View view) {
                 PlaceElement place = (PlaceElement) view.getTag();
-                if(place.isChecked()){
+                if (place.isChecked()) {
                     place.setChecked(false);
-                    view.setBackgroundColor(Constants.UNCHECKED_COLOR);
+                    if (place.getDistanceFromCenter() <= radius) {
+                        view.setBackgroundColor(Color.GRAY);
+                    } else {
+                        view.setBackgroundColor(Constants.UNCHECKED_COLOR);
+                    }
                     holder.rating.setTextColor(Color.BLACK);
                     holder.address.setTextColor(Color.BLACK);
                     holder.placeName.setTextColor(Color.BLACK);
-                }else {
+                } else {
                     place.setChecked(true);
                     view.setBackgroundColor(Constants.CHECKED_COLOR);
                     holder.rating.setTextColor(Color.WHITE);
@@ -92,7 +101,6 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
                 mapActivity.highlightMarker(place);
             }
         });
-
         return convertView;
     }
 }

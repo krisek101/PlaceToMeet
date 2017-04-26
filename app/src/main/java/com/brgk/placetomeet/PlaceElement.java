@@ -31,10 +31,12 @@ public class PlaceElement {
     private Geocoder geocoder;
     private Context context;
     private boolean checked;
+    private float distanceFromCenter;
 
-    public PlaceElement(JSONObject place, String category){
+    public PlaceElement(JSONObject place, String category, float distanceFromCenter){
         this.place = place;
         this.category = category;
+        this.distanceFromCenter = distanceFromCenter;
         this.getData();
     }
 
@@ -160,6 +162,14 @@ public class PlaceElement {
 
     public void setChecked(boolean checked) {
         this.checked = checked;
+    }
+
+    public float getDistanceFromCenter() {
+        return distanceFromCenter;
+    }
+
+    public void setDistanceFromCenter(int distanceFromCenter) {
+        this.distanceFromCenter = distanceFromCenter;
     }
 
     private String getAddressFromPosition(double latitudeNow, double longitudeNow) {

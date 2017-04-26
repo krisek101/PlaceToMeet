@@ -30,6 +30,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -136,6 +137,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     JsonObjectRequest jsonObjReq;
     RequestQueue queue;
     TextView internetInfoTextView;
+    SeekBar radiusSeekBar;
+    TextView radiusText;
+    RelativeLayout seekBarContainer;
+    float radius = 500;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +149,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         footer = (TextView) findViewById(R.id.footer);
         gestureDetector = new GestureDetector(this, new SingleTapConfirm());
         internetInfoTextView = (TextView) findViewById(R.id.internet_info);
+        radiusSeekBar = (SeekBar) findViewById(R.id.radius_seekbar);
+        radiusText = (TextView) findViewById(R.id.radius_text);
+        seekBarContainer = (RelativeLayout) findViewById(R.id.seek_bar_container);
 
         // location
         if (checkPlayServices()) {
@@ -384,6 +392,25 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 return true;
             }
         });
+
+        //radius SeekBar listener
+        radiusSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
+                radiusText.setText(progress + "m");
+                updateList(places, progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
     void arrangeSliders() {
@@ -496,6 +523,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         imm.toggleSoftInput(0, 0);
     }
 
+    // Places
     // Places
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -611,9 +639,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onMapClick(LatLng latLng) {
                 for (PlaceElement p : places) {
-                    p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
-                    p.setChecked(false);
-                    placeAdapter.notifyDataSetChanged();
+                    if (p.getMarker() != null){
+                        p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
+                    }
+                        p.setChecked(false);
+                        placeAdapter.notifyDataSetChanged();
                 }
             }
         });
@@ -629,13 +659,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         });
 
+        // check Internet status changes
         final Handler h = new Handler();
         final int delay = 1000; //milliseconds
         final Runnable[] runnable = new Runnable[1];
-
         h.postDelayed(new Runnable(){
             public void run(){
-                //do something
                 if(isOnline()){
                     internetInfoTextView.setVisibility(View.INVISIBLE);
                 }else{
@@ -648,7 +677,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         }, delay);
 
-
+        // go to last location
         if(!PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "").isEmpty() && !PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "").isEmpty()){
             center = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 13));
@@ -687,13 +716,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
                         lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
                         position = new LatLng(lat, lng);
-                        PlaceElement p = new PlaceElement(c, category);
+                        PlaceElement p = new PlaceElement(c, category, getDistanceFromCenter(position));
                         if (!places.contains(p)) {
-                            p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(position).title(name)));
                             places.add(p);
                         }
                     }
-                    updateList(places);
+                    updateList(places, radius);
                 } catch (Exception e) {
                     Log.v("Error", e.toString());
                 }
@@ -707,23 +735,39 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         queue.add(jsonObjReq);
     }
 
-    public void updateList(List<PlaceElement> places) {
+    public void updateList(List<PlaceElement> places, float radius) {
         if (places.size() > 0) {
             if (footerChanged) {
                 leftSlider.getLayoutParams().height = leftSlider.getMeasuredHeight() - footer.getHeight();
                 rightSlider.getLayoutParams().height = rightSlider.getMeasuredHeight() - footer.getHeight();
                 footerChanged = false;
             }
+            int counter = 0;
+            for(PlaceElement p : places){
+                if(p.getMarker() != null) {
+                    p.getMarker().remove();
+                }
+                if(p.getDistanceFromCenter() <= radius){
+                    counter++;
+                    p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(p.getPosition()).title(p.getName())));
+                }
+                if(p.isChecked()){
+                    highlightMarker(p);
+                }
+            }
+            radiusSeekBar.setProgress((int) radius);
             footer.setVisibility(View.VISIBLE);
-            footer.setText("Liczba znalezionych miejsc: " + places.size());
+            footer.setText("Liczba znalezionych miejsc: " + counter);
             placesList = (ListView) findViewById(R.id.list_found_places);
-            placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, places, this);
+            placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, places, this, radius);
             placesList.setAdapter(placeAdapter);
+            seekBarContainer.setVisibility(View.VISIBLE);
         } else {
             footerChanged = true;
             leftSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
             rightSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
             footer.setVisibility(View.INVISIBLE);
+            seekBarContainer.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -735,11 +779,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         while (i.hasNext()) {
             PlaceElement s = i.next();
             if (s.getCategory().equals(category)) {
-                s.getMarker().remove();
+                if(s.getMarker() != null) {
+                    s.getMarker().remove();
+                }
                 i.remove();
             }
         }
-        updateList(places);
+        updateList(places, radiusSeekBar.getProgress());
     }
 
     public String getPlaceUrl(String keyword, LatLng location) {
@@ -758,22 +804,32 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void highlightMarker(PlaceElement place) {
-        if(place.isChecked()) {
-            place.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
-        }else{
-            place.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
+        if(place.getMarker() != null) {
+            if (place.isChecked()) {
+                place.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+            } else {
+                place.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
+            }
         }
     }
 
     public void tickPlaceOnList(Marker marker){
         for(PlaceElement p : places){
-            if(p.getMarker().equals(marker)){
-                p.setChecked(true);
-                highlightMarker(p);
-                placeAdapter.notifyDataSetChanged();
-                break;
+            if(p.getMarker() != null) {
+                if (p.getMarker().equals(marker)) {
+                    p.setChecked(true);
+                    highlightMarker(p);
+                    placeAdapter.notifyDataSetChanged();
+                    break;
+                }
             }
         }
+    }
+
+    public float getDistanceFromCenter(LatLng position){
+        float[] results = new float[1];
+        Location.distanceBetween(position.latitude, position.longitude, center.latitude, center.longitude, results);
+        return results[0];
     }
 
     // Location

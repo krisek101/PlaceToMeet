@@ -13,6 +13,31 @@
         android:layout_height="match_parent"
         android:layout_alignParentEnd="true" />
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#252359"
+        android:textAlignment="center"
+        android:id="@+id/seek_bar_container"
+        android:visibility="invisible">
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/radius_seekbar"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="10dp"
+            android:progress="500"
+            android:max="1000" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="500m"
+            android:layout_below="@+id/radius_seekbar"
+            android:id="@+id/radius_text"
+            android:textColor="#fff"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
