@@ -131,7 +131,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     LinearLayout footerSlider;
     ListView placesList;
     PlaceAdapter placeAdapter;
-    boolean footerChanged = true;
+    boolean footerShowed = false;
 
     //Map
     MapActivity activity = this;
@@ -158,6 +158,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+        //init
         footer = (TextView) findViewById(R.id.footer);
         gestureDetector = new GestureDetector(this, new SingleTapConfirm());
         internetInfoTextView = (TextView) findViewById(R.id.internet_info);
@@ -201,6 +203,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             }
         });
+        //floating button (add person)
         findViewById(R.id.floatingActionButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -208,7 +211,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
 
                 } else {
-                    ((FloatingActionButton) view).setImageResource(R.drawable.ic_my_location_white_24dp);
                     showActionBar();
                     isAddingPerson = true;
                 }
@@ -216,13 +218,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         });
 
         //left slider listener
-        leftHandle.setOnTouchListener(new View.OnTouchListener() {
+        View.OnTouchListener leftListener = new View.OnTouchListener() {
             float x;
 
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 float toX;
-
                 if (!rightSliderOpened) {
                     if (gestureDetector.onTouchEvent(motionEvent)) {
                         if (leftSliderOpened) {
@@ -277,10 +278,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
                 return true;
             }
-        });
+        };
+        leftHandle.setOnTouchListener(leftListener);
 
         //right slider listener
-        rightHandle.setOnTouchListener(new View.OnTouchListener() {
+        View.OnTouchListener rightListener = new View.OnTouchListener() {
             float x;
 
             @Override
@@ -341,7 +343,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
                 return true;
             }
-        });
+        };
+        rightHandle.setOnTouchListener(rightListener);
 
         //footer listener
         footer.setOnTouchListener(new View.OnTouchListener() {
@@ -443,7 +446,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             statusBarHeight = getResources().getDimensionPixelSize(resourceId);
         }
 
-        //right panel
+        //right slider
         rightHandleWidth = getPixelsFromDp(30);
         rightSliderWidth = getPixelsFromDp(250);
         rightTotalWidth = rightSliderWidth + rightHandleWidth;
@@ -569,33 +572,33 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         JsonObjectRequest jsonObjRequest = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                try {
-                    JSONArray ja = response.getJSONArray("predictions");
-                    for (int i = 0; i < ja.length(); i++) {
-                        JSONObject c = ja.getJSONObject(i);
-                        String description = c.getString("description");
-                        description = description.replaceAll(", Polska", "");
-                        String place_id = c.getString("place_id");
-                        autoCompleteAddresses.add(description);
-                        autoCompleteIDs.add(place_id);
-                    }
-                    autoCompleteIDsCopy = new ArrayList<>(autoCompleteIDs);
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, autoCompleteAddresses) {
-                        @Override
-                        @NonNull
-                        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-                            View view = super.getView(position,
-                                    convertView, parent);
-                            TextView text = (TextView) view
-                                    .findViewById(android.R.id.text1);
-                            text.setTextColor(Color.BLACK);
-                            return view;
-                        }
-                    };
-                    addressField.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
-                } catch (Exception e) {
+            try {
+                JSONArray ja = response.getJSONArray("predictions");
+                for (int i = 0; i < ja.length(); i++) {
+                    JSONObject c = ja.getJSONObject(i);
+                    String description = c.getString("description");
+                    description = description.replaceAll(", Polska", "");
+                    String place_id = c.getString("place_id");
+                    autoCompleteAddresses.add(description);
+                    autoCompleteIDs.add(place_id);
                 }
+                autoCompleteIDsCopy = new ArrayList<>(autoCompleteIDs);
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, autoCompleteAddresses) {
+                    @Override
+                    @NonNull
+                    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+                        View view = super.getView(position,
+                                convertView, parent);
+                        TextView text = (TextView) view
+                                .findViewById(android.R.id.text1);
+                        text.setTextColor(Color.BLACK);
+                        return view;
+                    }
+                };
+                addressField.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
+            } catch (Exception e) {
+            }
             }
         }, new Response.ErrorListener() {
             @Override
@@ -623,15 +626,18 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     void showActionBar() {
         ((FloatingActionButton) findViewById(R.id.floatingActionButton)).setImageResource(R.drawable.ic_my_location_white_24dp);
         View view = mActionBar.getCustomView();
+        mActionBar.setDisplayShowCustomEnabled(true);
+
         EditText addressField = (EditText) view.findViewById(R.id.action_bar_address_field);
         addressField.setText("");
         addressField.requestFocus();
-        Log.d("MACIEK_DEBUG", "focused: " + addressField.hasFocus());
+
         showKeyboard();
-        view.setAlpha(0);
-        mActionBar.setDisplayShowCustomEnabled(true);
+
+        view.setScaleX(0);
+
         //TODO dopracowac animacje
-        view.animate().alpha(1).setDuration(1000).start();
+        view.animate().scaleX(1).setDuration(1000).start();
 
     }
 
@@ -652,6 +658,32 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     void showKeyboard() {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.toggleSoftInput(0, 0);
+    }
+
+    void showFooter() {
+        //update height
+//        leftSlider.getLayoutParams().height = leftSlider.getMeasuredHeight() - footer.getHeight();
+//        rightSlider.getLayoutParams().height = rightSlider.getMeasuredHeight() - footer.getHeight();
+        findViewById(R.id.sliders).getLayoutParams().height = findViewById(R.id.sliders).getMeasuredHeight() - footer.getHeight();
+        //show footer
+        footer.setVisibility(View.VISIBLE);
+        footerShowed = true;
+        //show seekbar
+        radiusSeekBar.setProgress(radiusSeekBar.getProgress());
+        seekBarContainer.setVisibility(View.VISIBLE);
+    }
+
+    void hideFooter() {
+        //update height
+//        leftSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
+//        rightSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
+        findViewById(R.id.sliders).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+
+        //hide footer
+        footer.setVisibility(View.INVISIBLE);
+        footerShowed = false;
+        //hide seekBar
+        seekBarContainer.setVisibility(View.INVISIBLE);
     }
 
     // Places
@@ -866,10 +898,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     public void updateList(List<PlaceElement> places, float radius) {
         if (places.size() > 0) {
-            if (footerChanged) {
-                leftSlider.getLayoutParams().height = leftSlider.getMeasuredHeight() - footer.getHeight();
-                rightSlider.getLayoutParams().height = rightSlider.getMeasuredHeight() - footer.getHeight();
-                footerChanged = false;
+            if (!footerShowed) {
+                showFooter();
             }
             int counter = 0;
             for(PlaceElement p : places){
@@ -884,19 +914,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     highlightMarker(p);
                 }
             }
-            radiusSeekBar.setProgress(radiusSeekBar.getProgress());
-            footer.setVisibility(View.VISIBLE);
             footer.setText("Liczba znalezionych miejsc: " + counter);
+
             placesList = (ListView) findViewById(R.id.list_found_places);
             placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, places, this, radius);
             placesList.setAdapter(placeAdapter);
-            seekBarContainer.setVisibility(View.VISIBLE);
         } else {
-            footerChanged = true;
-            leftSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
-            rightSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
-            footer.setVisibility(View.INVISIBLE);
-            seekBarContainer.setVisibility(View.INVISIBLE);
+            hideFooter();
         }
     }
 
