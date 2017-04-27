@@ -11,14 +11,15 @@
         android:layout_height="wrap_content"
         app:srcCompat="@android:drawable/ic_menu_revert" />
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/action_bar_address_field"
-        android:layout_width="0dp"
+        android:layout_width="500dp"
         android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
         android:layout_weight="1"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Name" />
+        android:textColorHint="#FFFFFF"
+        android:hint="Szukaj tutaj.."
+        android:maxLines="2"/>
 
     <ImageButton
         android:id="@+id/action_bar_add_btn"

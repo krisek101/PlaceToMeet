@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -19,13 +20,19 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -84,6 +91,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     List<CategoryElement> categories = new ArrayList<>();
     List<String> checkedCategories = new ArrayList<>();
     List<PlaceElement> places = new ArrayList<>();
+    List<String> autoCompleteAddresses = new ArrayList<>();
+    List<String> autoCompleteIDs = new ArrayList<>();
+    List<String> autoCompleteIDsCopy;
 
     //UI
     ActionBar mActionBar;
@@ -98,6 +108,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     boolean rightSliderOpened = false;
     PersonAdapter personAdapter;
     ListView personList;
+    PersonElement person;
 
     //Left slider
     RelativeLayout leftSlider;
@@ -140,7 +151,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     SeekBar radiusSeekBar;
     TextView radiusText;
     RelativeLayout seekBarContainer;
-    float radius = 500;
+    float radius = Constants.RADIUS_SHOW;
+    AutoCompleteTextView addressField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,6 +164,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         radiusSeekBar = (SeekBar) findViewById(R.id.radius_seekbar);
         radiusText = (TextView) findViewById(R.id.radius_text);
         seekBarContainer = (RelativeLayout) findViewById(R.id.seek_bar_container);
+        queue = Volley.newRequestQueue(this);
 
         // location
         if (checkPlayServices()) {
@@ -192,7 +205,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onClick(View view) {
                 if( isAddingPerson ) {
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
+                    mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
 
                 } else {
                     ((FloatingActionButton) view).setImageResource(R.drawable.ic_my_location_white_24dp);
@@ -468,18 +481,79 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         View view = LayoutInflater.from(this).inflate(R.layout.action_bar, null);
         mActionBar.setCustomView(view);
 
-        final EditText field = (EditText) view.findViewById(R.id.action_bar_address_field);
+        addressField = (AutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
+        addressField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.toString().length() >= 3) {
+                    if(person != null){
+                        if(!persons.contains(person)) {
+                            person.getMarker().remove();
+                            person = null;
+                        }
+                    }
+                    autoCompleteIDs.clear();
+                    autoCompleteAddresses.clear();
+                    updateAutoCompleteTextView(s.toString());
+                }
+                addressField.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view,
+                                            int position, long id) {
+                        String placeID = autoCompleteIDsCopy.get(position);
+                        String link = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + placeID + "&key=" + Constants.API_KEY;
+                        JsonObjectRequest placeDetailsRequest = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                try {
+                                    JSONObject resultObj = response.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
+                                    Double latitude = resultObj.getDouble("lat");
+                                    Double longitude = resultObj.getDouble("lng");
+                                    String address = response.getJSONObject("result").getString("formatted_address");
+                                    address = address.replaceAll(", Polska", "");
+                                    person = new PersonElement(address, persons.size()+1, mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude,longitude)).title("OSOBA " + (persons.size()))));
+                                    person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                                } catch (Exception e) {
+                                }
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+
+                            }
+                        });
+                        placeDetailsRequest.setTag(Constants.TAG_PLACE_DETAILS);
+                        queue.add(placeDetailsRequest);
+                    }
+                });
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        // add person button
         view.findViewById(R.id.action_bar_add_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO dodawanie osoby
-                Log.d("MACIEK_DEBUG", field.getText().toString());
-
+                if (mGoogleMap != null && person !=null) {
+                    persons.add(person);
+                    personAdapter.notifyDataSetChanged();
+                    updateMapElements();
+                }
                 isAddingPerson = false;
                 hideActionBar();
             }
         });
 
+        // go back button
         view.findViewById(R.id.action_bar_back_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -487,6 +561,63 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 hideActionBar();
             }
         });
+    }
+
+    public void updateAutoCompleteTextView(String place) {
+        String link = getPlaceAutoCompleteUrl(place);
+        Log.v("LINK", link);
+        JsonObjectRequest jsonObjRequest = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray ja = response.getJSONArray("predictions");
+                    for (int i = 0; i < ja.length(); i++) {
+                        JSONObject c = ja.getJSONObject(i);
+                        String description = c.getString("description");
+                        description = description.replaceAll(", Polska", "");
+                        String place_id = c.getString("place_id");
+                        autoCompleteAddresses.add(description);
+                        autoCompleteIDs.add(place_id);
+                    }
+                    autoCompleteIDsCopy = new ArrayList<>(autoCompleteIDs);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, autoCompleteAddresses) {
+                        @Override
+                        @NonNull
+                        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+                            View view = super.getView(position,
+                                    convertView, parent);
+                            TextView text = (TextView) view
+                                    .findViewById(android.R.id.text1);
+                            text.setTextColor(Color.BLACK);
+                            return view;
+                        }
+                    };
+                    addressField.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                } catch (Exception e) {
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        jsonObjRequest.setTag(Constants.TAG_AUTOCOMPLETE);
+        queue.add(jsonObjRequest);
+    }
+
+    public String getPlaceAutoCompleteUrl(String input) {
+        StringBuilder urlString = new StringBuilder();
+        urlString.append("https://maps.googleapis.com/maps/api/place/autocomplete/json");
+        urlString.append("?input=");
+        try {
+            urlString.append(URLEncoder.encode(input, "utf8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        urlString.append("&language=pl&components=country:pl");
+        urlString.append("&key=" + Constants.API_KEY);
+        return urlString.toString();
     }
 
     void showActionBar() {
@@ -523,7 +654,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         imm.toggleSoftInput(0, 0);
     }
 
-    // Places
     // Places
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -700,7 +830,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void setJsonArray(String link, final String category) {
-        queue = Volley.newRequestQueue(this);
         Log.v("LINK", link);
         jsonObjReq = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
             @Override
@@ -755,7 +884,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     highlightMarker(p);
                 }
             }
-            radiusSeekBar.setProgress((int) radius);
+            radiusSeekBar.setProgress(radiusSeekBar.getProgress());
             footer.setVisibility(View.VISIBLE);
             footer.setText("Liczba znalezionych miejsc: " + counter);
             placesList = (ListView) findViewById(R.id.list_found_places);
