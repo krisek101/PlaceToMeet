@@ -1,9 +1,12 @@
-package com.brgk.placetomeet;
+package com.brgk.placetomeet.activities;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.brgk.placetomeet.contants.Constants;
+import com.brgk.placetomeet.R;
 
 public class SplashScreen extends Activity {
 

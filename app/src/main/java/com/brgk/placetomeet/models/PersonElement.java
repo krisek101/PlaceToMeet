@@ -1,4 +1,4 @@
-package com.brgk.placetomeet;
+package com.brgk.placetomeet.models;
 
 import com.google.android.gms.maps.model.Marker;
 

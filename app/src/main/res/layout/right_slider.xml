@@ -15,7 +15,6 @@
         android:layout_alignParentStart="false"
         android:layout_alignParentTop="true"
         android:background="@color/colorPlaces">
-
     </ListView>
 
     <RelativeLayout
@@ -34,7 +33,7 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:gravity="center"
-            android:text="CLICK TO ADD PERSON" />
+            android:text="DODAJ NOWĄ OSOBĘ" />
     </RelativeLayout>
 
 </RelativeLayout>

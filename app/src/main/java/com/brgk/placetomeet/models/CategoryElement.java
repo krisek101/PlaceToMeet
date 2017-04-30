@@ -1,4 +1,4 @@
-package com.brgk.placetomeet;
+package com.brgk.placetomeet.models;
 
 import java.util.Arrays;
 import java.util.List;

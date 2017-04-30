@@ -1,4 +1,4 @@
-package com.brgk.placetomeet;
+package com.brgk.placetomeet.models;
 
 import android.content.Context;
 import android.location.Address;

@@ -1,4 +1,4 @@
-package com.brgk.placetomeet;
+package com.brgk.placetomeet.adapters;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -13,17 +13,22 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.brgk.placetomeet.models.CategoryElement;
+import com.brgk.placetomeet.contants.Constants;
+import com.brgk.placetomeet.activities.MapActivity;
+import com.brgk.placetomeet.R;
+
 import org.json.JSONException;
 
 import java.util.List;
 
-class CategoryAdapter extends ArrayAdapter<CategoryElement> {
+public class CategoryAdapter extends ArrayAdapter<CategoryElement> {
 
     private List<CategoryElement> places;
     private Context mContext;
     private MapActivity mapActivity;
 
-    CategoryAdapter(@NonNull Context context, @LayoutRes int resource, List<CategoryElement> places, MapActivity mapActivity) {
+    public CategoryAdapter(@NonNull Context context, @LayoutRes int resource, List<CategoryElement> places, MapActivity mapActivity) {
         super(context, resource, places);
         this.places = places;
         this.mContext = context;
@@ -85,7 +90,7 @@ class CategoryAdapter extends ArrayAdapter<CategoryElement> {
                 }catch (JSONException e){
                     Log.v("JSON Eception", e.toString());
                 }
-                Log.v("CHECKED PLACES: ", mapActivity.checkedCategories.toString());
+                Log.v("CHECKED CATEGORIES: ", mapActivity.checkedCategories.toString());
             }
         });
 

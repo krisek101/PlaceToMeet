@@ -1,8 +1,10 @@
-package com.brgk.placetomeet;
+package com.brgk.placetomeet.contants;
 
 //Here we'll store constants
 
 import android.graphics.Color;
+
+import com.brgk.placetomeet.R;
 
 @SuppressWarnings("WeakerAccess")
 public class Constants {
@@ -17,21 +19,18 @@ public class Constants {
     public static final int UNCHECKED_COLOR = Color.parseColor("#EEEEEE");
 
     // Places
-    public static final String[] CATEGORIES = {"Rozrywka", "Jedzenie i picie", "Impreza", "Sport", "Relaks"};
-    public static final String[] PLACES = {"Restauracja", "Kebab", "Pizza", "Bar", "Kawiarnia", "Kręgielnia",
+    public static final String[] CATEGORIES = {"Restauracja", "Kebab", "Pizza", "Bar", "Kawiarnia", "Kręgielnia",
             "Lodowisko", "Bilard", "Basen", "Kort Tenisowy", "Hala sportowa", "Park", "Kino", "Centrum handlowe"};
     public static final int[] IMAGES = {R.drawable.place_restaurant, R.drawable.place_kebab, R.drawable.place_pizza, R.drawable.place_bar, R.drawable.place_cafe, R.drawable.place_bowling,
     R.drawable.place_rink, R.drawable.place_billiards, R.drawable.place_pool, R.drawable.place_tenis, R.drawable.place_sports_hall, R.drawable.place_park, R.drawable.place_cinema,
     R.drawable.place_shopping_centre};
-    public static final int RADIUS_SHOW = 500;
     public static final int RADIUS = 1000;
+    public static final String API_KEY = "AIzaSyDTmOH9Pi8frp-_JU9gZfUxN7yWdW7yNEM";
+
+    // Tags
     public static final String TAG = "PlacesTag";
     public static final String TAG_AUTOCOMPLETE = "AutocompleteTag";
     public static final String TAG_PLACE_DETAILS = "PlaceDetailsTag";
-    public static final String API_KEY = "AIzaSyDTmOH9Pi8frp-_JU9gZfUxN7yWdW7yNEM";
-
-    // Extras
-    public static final String EXTRA_CHECKED_PLACES = "EXTRA_PLACES";
 
     // Activity request codes
     public static final int PLACE_PICKER_REQUEST_CODE = 1;

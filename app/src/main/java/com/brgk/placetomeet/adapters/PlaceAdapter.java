@@ -1,4 +1,4 @@
-package com.brgk.placetomeet;
+package com.brgk.placetomeet.adapters;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -12,21 +12,24 @@ import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.brgk.placetomeet.contants.Constants;
+import com.brgk.placetomeet.activities.MapActivity;
+import com.brgk.placetomeet.models.PlaceElement;
+import com.brgk.placetomeet.R;
+
 import java.util.List;
 
-class PlaceAdapter extends ArrayAdapter<PlaceElement> {
+public class PlaceAdapter extends ArrayAdapter<PlaceElement> {
 
     private List<PlaceElement> places;
     private Context mContext;
     private MapActivity mapActivity;
-    private float radius;
 
-    PlaceAdapter(@NonNull Context context, @LayoutRes int resource, List<PlaceElement> places, MapActivity mapActivity, float radius) {
+    public PlaceAdapter(@NonNull Context context, @LayoutRes int resource, List<PlaceElement> places, MapActivity mapActivity) {
         super(context, resource, places);
         this.places = places;
         this.mContext = context;
         this.mapActivity = mapActivity;
-        this.radius = radius;
     }
 
     private class ViewHolder {
@@ -49,6 +52,7 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
         } else {
             holder = new ViewHolder();
         }
+
         holder.placeName = (TextView) convertView.findViewById(R.id.footer_slider_place_name);
         holder.rating = (TextView) convertView.findViewById(R.id.rating);
         holder.address = (TextView) convertView.findViewById(R.id.address);
@@ -67,11 +71,7 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
             holder.address.setTextColor(Color.WHITE);
             holder.placeName.setTextColor(Color.WHITE);
         } else {
-            if (place.getDistanceFromCenter() <= radius) {
-                holder.placeOnList.setBackgroundColor(Color.GRAY);
-            } else {
-                holder.placeOnList.setBackgroundColor(Constants.UNCHECKED_COLOR);
-            }
+            holder.placeOnList.setBackgroundColor(Constants.UNCHECKED_COLOR);
             holder.rating.setTextColor(Color.BLACK);
             holder.address.setTextColor(Color.BLACK);
             holder.placeName.setTextColor(Color.BLACK);
@@ -83,11 +83,7 @@ class PlaceAdapter extends ArrayAdapter<PlaceElement> {
                 PlaceElement place = (PlaceElement) view.getTag();
                 if (place.isChecked()) {
                     place.setChecked(false);
-                    if (place.getDistanceFromCenter() <= radius) {
-                        view.setBackgroundColor(Color.GRAY);
-                    } else {
-                        view.setBackgroundColor(Constants.UNCHECKED_COLOR);
-                    }
+                    view.setBackgroundColor(Constants.UNCHECKED_COLOR);
                     holder.rating.setTextColor(Color.BLACK);
                     holder.address.setTextColor(Color.BLACK);
                     holder.placeName.setTextColor(Color.BLACK);
