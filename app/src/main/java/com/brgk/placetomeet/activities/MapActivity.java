@@ -875,13 +875,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onInfoWindowClick(Marker marker) {
                 for (PlaceElement place : places) {
-                    if (place.getMarker().equals(marker)) {
-                        tickPlaceOnList(marker);
-                        float toY = footerTop + footer.getHeight();
-                        footerOpened = true;
-                        footerSlider.animate().y(toY).setDuration(100).start();
-                        footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
-                        placesList.setSelection(orderedPlaces.indexOf(place));
+                    if(place.getMarker() != null) {
+                        if (place.getMarker().equals(marker)) {
+                            tickPlaceOnList(marker);
+                            float toY = footerTop + footer.getHeight();
+                            footerOpened = true;
+                            footerSlider.animate().y(toY).setDuration(100).start();
+                            footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
+                            placesList.setSelection(orderedPlaces.indexOf(place));
+                        }
                     }
                 }
             }
