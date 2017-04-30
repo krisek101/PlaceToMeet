@@ -36,7 +36,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -94,6 +93,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
+import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
 
@@ -176,28 +179,39 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         queue = Volley.newRequestQueue(this);
         loading = (pl.droidsonroids.gif.GifTextView) findViewById(R.id.loading);
 
-        // location
+        // location - preparation
         if (checkPlayServices()) {
             buildGoogleApiClient();
             createLocationRequest();
         } else {
-            Log.v("OPS", "checkPlayServices error");
+            Log.v("Error", "Google Play Services unavailable");
         }
 
         requestPermissions();
         arrangeSliders();
         setCategories();
-
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
-
         setListeners();
-
         setupActionBar();
-
         checkUsersSettingGPS();
+        guide();
     }
 
     // Design functions
+    void guide(){
+        ShowcaseConfig config = new ShowcaseConfig();
+        config.setDelay(200);
+        MaterialShowcaseSequence sequence = new MaterialShowcaseSequence(this, "showcase_id");
+        sequence.setConfig(config);
+        sequence.addSequenceItem((findViewById(R.id.left_handle)),
+                "Tutaj wybierasz interesujące Cię miejsca.", "Rozumiem");
+        sequence.addSequenceItem((findViewById(R.id.right_handle)),
+                "Tutaj znajduje się lista uczestników spotkania.", "Rozumiem");
+        sequence.addSequenceItem((findViewById(R.id.floatingActionButton)),
+                "Za pomocą plusika możesz dodawać nowe osoby.", "Rozumiem");
+        sequence.start();
+    }
+
     void setListeners() {
         //add another person (and place)
         findViewById(R.id.right_slider_footer).setOnClickListener(new View.OnClickListener() {
@@ -536,7 +550,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         view.findViewById(R.id.action_bar_add_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mGoogleMap != null && person !=null) {
+                if (mGoogleMap != null && person != null) {
                     persons.add(person);
                     personAdapter.notifyDataSetChanged();
                     updateMapElements();
@@ -552,6 +566,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             public void onClick(View view) {
                 isAddingPerson = false;
                 hideActionBar();
+                if(person != null){
+                    if(!persons.contains(person)) {
+                        person.getMarker().remove();
+                        person = null;
+                    }
+                }
             }
         });
     }
@@ -1179,6 +1199,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             break PERMISSIONS_SWITCH;
                         }
                     }
+                    checkUsersSettingGPS();
                     Log.d("DEBUG", "All permissions granted!");
                 } else {
                     Log.d("DEBUG", "Request cancelled");
