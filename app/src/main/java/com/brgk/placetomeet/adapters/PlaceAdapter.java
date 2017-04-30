@@ -52,7 +52,6 @@ public class PlaceAdapter extends ArrayAdapter<PlaceElement> {
         } else {
             holder = new ViewHolder();
         }
-
         holder.placeName = (TextView) convertView.findViewById(R.id.footer_slider_place_name);
         holder.rating = (TextView) convertView.findViewById(R.id.rating);
         holder.address = (TextView) convertView.findViewById(R.id.address);
