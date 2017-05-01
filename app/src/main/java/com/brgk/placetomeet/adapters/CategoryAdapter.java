@@ -24,13 +24,13 @@ import java.util.List;
 
 public class CategoryAdapter extends ArrayAdapter<CategoryElement> {
 
-    private List<CategoryElement> places;
+    private List<CategoryElement> categories;
     private Context mContext;
     private MapActivity mapActivity;
 
-    public CategoryAdapter(@NonNull Context context, @LayoutRes int resource, List<CategoryElement> places, MapActivity mapActivity) {
-        super(context, resource, places);
-        this.places = places;
+    public CategoryAdapter(@NonNull Context context, @LayoutRes int resource, List<CategoryElement> categories, MapActivity mapActivity) {
+        super(context, resource, categories);
+        this.categories = categories;
         this.mContext = context;
         this.mapActivity = mapActivity;
     }
@@ -46,7 +46,7 @@ public class CategoryAdapter extends ArrayAdapter<CategoryElement> {
     public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         final ViewHolder holder;
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final CategoryElement place = places.get(position);
+        final CategoryElement category = categories.get(position);
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.left_slider_item, null);
             holder = new ViewHolder();
@@ -60,7 +60,7 @@ public class CategoryAdapter extends ArrayAdapter<CategoryElement> {
 
         convertView.setTag(holder);
 
-        if (place.isChecked()) {
+        if (category.isChecked()) {
             holder.placeContainer.setBackgroundColor(Constants.CHECKED_COLOR);
             holder.placeName.setTextColor(Color.WHITE);
             holder.placeImage.setColorFilter(Color.WHITE);
@@ -72,15 +72,15 @@ public class CategoryAdapter extends ArrayAdapter<CategoryElement> {
 
         holder.placeName.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(!place.isChecked()) {
-                    place.setChecked(true);
-                    mapActivity.checkedCategories.add(place.getName());
+                if(!category.isChecked()) {
+                    category.setChecked(true);
+                    mapActivity.checkedCategories.add(category.getName());
                     holder.placeContainer.setBackgroundColor(Constants.CHECKED_COLOR);
                     holder.placeName.setTextColor(Color.WHITE);
                     holder.placeImage.setColorFilter(Color.WHITE);
                 }else{
-                    place.setChecked(false);
-                    mapActivity.checkedCategories.remove(place.getName());
+                    category.setChecked(false);
+                    mapActivity.checkedCategories.remove(category.getName());
                     holder.placeContainer.setBackgroundColor(Constants.UNCHECKED_COLOR);
                     holder.placeName.setTextColor(Color.BLACK);
                     holder.placeImage.setColorFilter(null);
@@ -94,8 +94,8 @@ public class CategoryAdapter extends ArrayAdapter<CategoryElement> {
             }
         });
 
-        holder.placeName.setText(place.getName());
-        holder.placeImage.setImageResource(place.getImg());
+        holder.placeName.setText(category.getName());
+        holder.placeImage.setImageResource(category.getImg());
 
         return convertView;
     }

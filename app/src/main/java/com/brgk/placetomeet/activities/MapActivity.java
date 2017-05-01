@@ -36,6 +36,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -114,7 +115,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     // Action Bar
     private ActionBar mActionBar;
     private boolean isAddingPerson = false;
-    private AutoCompleteTextView addressField;
+    private com.brgk.placetomeet.contants.ClearableAutoCompleteTextView addressField;
 
     // Right slider
     private RelativeLayout rightSlider;
@@ -134,6 +135,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private float leftTotalWidth;
     private float screenWidth;
     private boolean leftSliderOpened = false;
+    CategoryAdapter categoryAdapter;
 
     // Footer
     private TextView footer;
@@ -492,7 +494,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         View view = LayoutInflater.from(this).inflate(R.layout.action_bar, null);
         mActionBar.setCustomView(view);
 
-        addressField = (AutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
+        addressField = (com.brgk.placetomeet.contants.ClearableAutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
+        addressField.setClearButton(getResources().getDrawable(R.drawable.clear));
         addressField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -521,14 +524,24 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         JsonObjectRequest placeDetailsRequest = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
                             @Override
                             public void onResponse(JSONObject response) {
+                                boolean exists = false;
                                 try {
                                     JSONObject resultObj = response.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
                                     Double latitude = resultObj.getDouble("lat");
                                     Double longitude = resultObj.getDouble("lng");
                                     String address = response.getJSONObject("result").getString("formatted_address");
                                     address = address.replaceAll(", Polska", "");
-                                    person = new PersonElement(address, persons.size() + 1, mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("OSOBA " + (persons.size()))));
-                                    person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                                    for(PersonElement p : persons){
+                                        if(p.getAddress().equals(address)){
+                                            exists = true;
+                                        }
+                                    }
+                                    if(!exists) {
+                                        person = new PersonElement(address, persons.size() + 1, mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("OSOBA " + (persons.size()))));
+                                        person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                                    }else{
+                                        person = null;
+                                    }
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -560,6 +573,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     persons.add(person);
                     personAdapter.notifyDataSetChanged();
                     updateMapElements();
+                    addressField.setText("");
                 }
             }
         });
@@ -703,7 +717,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     @Override
     public void onBackPressed() {
-        if (isAddingPerson) {
+        if (rightSliderOpened || leftSliderOpened || footerOpened) {
+            closeBothSliders();
+            if (footerOpened) {
+                float toY = getPixelsFromDp(512);
+                footerOpened = false;
+                footerSlider.animate().y(toY).setDuration(100).start();
+                footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
+            }
+        } else if (isAddingPerson) {
             if (person != null) {
                 if (!persons.contains(person)) {
                     person.getMarker().remove();
@@ -714,16 +736,21 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             hideActionBar();
             mActionBar.setDisplayHomeAsUpEnabled(false);
             mActionBar.setDisplayShowHomeEnabled(false);
-        } else if (rightSliderOpened || leftSliderOpened || footerOpened) {
-            closeBothSliders();
-            if(footerOpened) {
-                float toY = getPixelsFromDp(512);
-                footerOpened = false;
-                footerSlider.animate().y(toY).setDuration(100).start();
-                footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
+        } else if(!checkedCategories.isEmpty()) {
+            for(CategoryElement ce: categories){
+                try {
+                    if(checkedCategories.contains(ce.getName())) {
+                        deletePlaces(ce.getName());
+                        ce.setChecked(false);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
+            checkedCategories.clear();
+            categoryAdapter.notifyDataSetChanged();
         } else {
-            finish();
+                finish();
         }
     }
 
@@ -817,7 +844,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
 
         ListView categoryList = (ListView) findViewById(R.id.list_places);
-        CategoryAdapter categoryAdapter = new CategoryAdapter(this, R.layout.left_slider_item, categories, this);
+        categoryAdapter = new CategoryAdapter(this, R.layout.left_slider_item, categories, this);
         categoryList.setAdapter(categoryAdapter);
     }
 
@@ -875,7 +902,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onInfoWindowClick(Marker marker) {
                 for (PlaceElement place : places) {
-                    if(place.getMarker() != null) {
+                    if (place.getMarker() != null) {
                         if (place.getMarker().equals(marker)) {
                             tickPlaceOnList(marker);
                             float toY = footerTop + footer.getHeight();

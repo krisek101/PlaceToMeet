@@ -5,9 +5,11 @@
     android:orientation="horizontal"
     android:weightSum="1">
 
-    <AutoCompleteTextView
+
+    <com.brgk.placetomeet.contants.ClearableAutoCompleteTextView
         android:id="@+id/action_bar_address_field"
-        android:layout_width="230dp"
+        android:layout_width="220dp"
+        android:paddingEnd="10dp"
         android:layout_height="50dp"
         android:layout_alignParentStart="true"
         android:hint="@string/search_field_hint"
@@ -20,9 +22,9 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_centerVertical="true"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="13dp"
+        android:layout_toEndOf="@id/action_bar_address_field"
         android:background="@drawable/plus"
-        android:contentDescription="@string/action_bar_add_btn"
-        android:layout_toEndOf="@id/action_bar_address_field" />
+        android:contentDescription="@string/action_bar_add_btn" />
 
 </RelativeLayout>
