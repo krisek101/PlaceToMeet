@@ -35,8 +35,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -101,7 +99,6 @@ import java.util.List;
 import java.util.Locale;
 
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
-import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
 import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
@@ -127,6 +124,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private View rightHandle;
     private float rightHandleDefaultX;
     private float rightHandleWidth;
+    private float rightSliderWidth;
     private float rightTotalWidth;
     private boolean rightSliderOpened = false;
     private PersonAdapter personAdapter;
@@ -340,6 +338,51 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         };
         leftHandle.setOnTouchListener(leftListener);
 
+        View.OnTouchListener leftSliderListener = new View.OnTouchListener() {
+            float startX;
+            boolean started = false;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                float toX;
+                switch (motionEvent.getActionMasked()) {
+                    case MotionEvent.ACTION_MOVE:
+                        if( !started ) {
+                            startX = motionEvent.getRawX();
+                            started = true;
+                        }
+                        if ((motionEvent.getRawX() - startX) > 0) {
+                            toX = 0;
+                        } else {
+                            toX = motionEvent.getRawX() - startX;
+                        }
+
+                        leftHandle.animate().x(toX + leftSliderWidth).setDuration(0).start();
+                        leftSlider.animate().x(toX).setDuration(0).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if( motionEvent.getRawX() - startX < -0.1*leftSliderWidth ) {
+                            toX = -leftSliderWidth;
+                            leftSliderOpened = false;
+                        } else {
+                            toX = 0;
+                            leftSliderOpened = true;
+                        }
+
+                        started = false;
+
+                        leftHandle.animate().x(toX + leftSliderWidth).setDuration(100).start();
+                        leftSlider.animate().x(toX).setDuration(100).start();
+                        break;
+                    default:
+                        return false;
+                }
+                return false;
+            }
+        };
+        findViewById(R.id.list_places).setOnTouchListener(leftSliderListener);
+
+
         //right slider listener
         View.OnTouchListener rightListener = new View.OnTouchListener() {
             float x;
@@ -405,6 +448,51 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         };
         rightHandle.setOnTouchListener(rightListener);
 
+        View.OnTouchListener rightSliderListener = new View.OnTouchListener() {
+            float startX;
+            boolean started = false;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                float toX;
+                switch (motionEvent.getActionMasked()) {
+                    case MotionEvent.ACTION_MOVE:
+                        if( !started ) {
+                            startX = motionEvent.getRawX();
+                            started = true;
+                        }
+                        if ((motionEvent.getRawX() - startX) < 0) {
+                            toX = screenWidth - rightSliderWidth;
+                        } else {
+                            toX = screenWidth - rightSliderWidth + motionEvent.getRawX() - startX;
+                        }
+
+                        rightHandle.animate().x(toX - rightHandleWidth).setDuration(0).start();
+                        rightSlider.animate().x(toX).setDuration(0).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if( motionEvent.getRawX() - startX > 0.1*rightSliderWidth ) {
+                            toX = screenWidth;
+                            rightSliderOpened = false;
+                        } else {
+                            toX = screenWidth - rightSliderWidth;
+                            rightSliderOpened = true;
+                        }
+
+                        started = false;
+
+                        rightHandle.animate().x(toX - rightHandleWidth).setDuration(100).start();
+                        rightSlider.animate().x(toX).setDuration(100).start();
+                        break;
+                    default:
+                        return false;
+                }
+                return false;
+            }
+        };
+        findViewById(R.id.right_slider_persons).setOnTouchListener(rightSliderListener);
+        findViewById(R.id.show_fav).setOnTouchListener(rightSliderListener);
+
         //footer listener
         footer.setOnTouchListener(new View.OnTouchListener() {
             float y;
@@ -424,37 +512,46 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     }
                     footerSlider.animate().y(toY).setDuration(100).start();
                     view.animate().y(toY - footer.getHeight()).setDuration(100).start();
-                    return true;
+                    return false;
                 } else {
-//                    switch (motionEvent.getActionMasked()) {
-//                        case MotionEvent.ACTION_DOWN:
-//                            y = view.getY() - motionEvent.getRawY();
-//                            break;
-//                        case MotionEvent.ACTION_MOVE:
-//                            if (footerOpened) {
-//                                toY = getPixelsFromDp(512);
-//                                footerOpened = false;
-//                            } else {
-//                                toY = footerTop + footer.getHeight();
-//                                footerOpened = true;
-//                            }
-//                            footerSlider.animate().y(toY).setDuration(100).start();
-//                            view.animate().y(toY - footer.getHeight()).setDuration(100).start();
-//                            break;
-//                        case MotionEvent.ACTION_UP:
-//                            if (footerOpened) {
-//                                toY = getPixelsFromDp(512);
-//                                footerOpened = false;
-//                            } else {
-//                                toY = footerTop + footer.getHeight();
-//                                footerOpened = true;
-//                            }
-//                            footerSlider.animate().y(toY).setDuration(100).start();
-//                            view.animate().y(toY - footer.getHeight()).setDuration(100).start();
-//                            break;
-//                        default:
-//                            return false;
-//                    }
+                    switch (motionEvent.getActionMasked()) {
+                        case MotionEvent.ACTION_DOWN:
+                            y =  motionEvent.getRawY() - view.getY();
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            if (motionEvent.getRawY() - y < footerTop + footer.getHeight()) {
+                                toY = footerTop + footer.getHeight();
+                            } else {
+                                toY = motionEvent.getRawY() - y;
+                            }
+
+                            footerSlider.animate().y(toY).setDuration(0).start();
+                            view.animate().y(toY - footer.getHeight()).setDuration(0).start();
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            if (footerOpened) {
+                                if( motionEvent.getRawY() - y > 0.1*footerSlider.getHeight() ) {
+                                    toY = getPixelsFromDp(512);
+                                    footerOpened = false;
+                                } else {
+                                    toY = footerTop + footer.getHeight();
+                                    footerOpened = true;
+                                }
+                            } else {
+                                if( motionEvent.getRawY() - y < 0.9*footerSlider.getHeight() ) {
+                                    toY = footerTop + footer.getHeight();
+                                    footerOpened = true;
+                                } else {
+                                    toY = getPixelsFromDp(512);
+                                    footerOpened = false;
+                                }
+                            }
+                            footerSlider.animate().y(toY).setDuration(100).start();
+                            view.animate().y(toY - footer.getHeight()).setDuration(100).start();
+                            break;
+                        default:
+                            return false;
+                    }
                 }
                 return true;
             }
@@ -505,7 +602,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
         //right slider
         rightHandleWidth = getPixelsFromDp(30);
-        float rightSliderWidth = getPixelsFromDp(250);
+
+        rightSliderWidth = getPixelsFromDp(250);
         rightTotalWidth = rightSliderWidth + rightHandleWidth;
         float rightSliderDefaultX = screenWidth; // panel width
         rightHandleDefaultX = screenWidth - rightHandleWidth;
@@ -1410,7 +1508,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     void restoreFav() {
         String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
         Log.d("MACIEK_DEBUG", json);
-        favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>(){}.getType());
+        if(json != "none") {
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>(){}.getType());
+        }
     }
 
     public void moveFavToElem(PersonElement fav) {
