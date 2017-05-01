@@ -26,10 +26,10 @@
     <TextView
         android:id="@+id/right_slider_item_address"
         android:layout_width="160dp"
-        android:layout_height="match_parent"
+        android:layout_height="60dp"
+        android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
-        android:layout_toEndOf="@+id/line"
-        android:layout_centerVertical="true" />
+        android:layout_toEndOf="@+id/line" />
 
     <ImageView
         android:id="@+id/right_slider_item_favourite"

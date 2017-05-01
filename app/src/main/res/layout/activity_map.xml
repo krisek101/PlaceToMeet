@@ -106,6 +106,7 @@
         <include
             android:id="@+id/left_container"
             layout="@layout/left_slider" />
+
     </RelativeLayout>
 
     <TextView

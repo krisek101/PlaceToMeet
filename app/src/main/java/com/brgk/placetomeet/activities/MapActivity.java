@@ -83,6 +83,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -104,6 +106,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     // Collections
     public List<PersonElement> persons = new ArrayList<>();
+    public ArrayList<PersonElement> favouritePersons = new ArrayList<>();
     public List<CategoryElement> categories = new ArrayList<>();
     public List<String> checkedCategories = new ArrayList<>();
     public List<PlaceElement> places = new ArrayList<>();
@@ -149,6 +152,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     // Map
     private GoogleMap mGoogleMap = null;
+    private boolean mapReady = false;
     private Circle centerCircle;
     private pl.droidsonroids.gif.GifTextView loading;
 
@@ -200,6 +204,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         setupActionBar();
         checkUsersSettingGPS();
         guide();
+        restoreFav();
     }
 
     // Design functions
@@ -218,17 +223,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     void setListeners() {
-        //add another person
-        findViewById(R.id.right_slider_footer).setOnClickListener(new View.OnClickListener() {
+        //show favourites button
+        findViewById(R.id.show_fav).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isAddingPerson) {
-                    mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
-                } else {
-                    closeBothSliders();
-                    showActionBar();
-                    isAddingPerson = true;
-                }
+                showFav();
             }
         });
 
@@ -750,7 +749,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             checkedCategories.clear();
             categoryAdapter.notifyDataSetChanged();
         } else {
-                finish();
+            finish();
         }
     }
 
@@ -778,6 +777,23 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     Log.w("resultCode == OK", "success");
                     getLocation();
                     // Do something with the contact here (bigger example below)
+                }
+                break;
+            case Constants.REQUEST_FAVOURITES:
+                if (resultCode == RESULT_OK) {
+                    ArrayList<Integer> positions = data.getIntegerArrayListExtra("positions");
+                    Log.d("MACIEK_DEBUG", "map: " + positions.toString());
+                    for( int i = 0; i < favouritePersons.size(); i++) {
+                        PersonElement p = favouritePersons.get(i);
+                        if(persons.contains(p) && !positions.contains(i)) {
+                            persons.remove(p);
+                        } else if( !persons.contains(p) && positions.contains(i)) {
+                            moveFavToElem(favouritePersons.get(i));
+                        }
+
+                        Log.d("","");
+                    }
+                    personAdapter.notifyDataSetChanged();
                 }
                 break;
             default:
@@ -852,6 +868,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.d("MACIEK-DEBUG", "Map ready!");
+        mapReady = true;
         mGoogleMap = googleMap;
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
@@ -861,7 +878,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     if (r.getMarker().equals(marker)) {
                         marker.remove();
                         persons.remove(r);
-                        personAdapter.notifyDataSetChanged();
                         updateMapElements();
                         break;
                     }
@@ -1339,6 +1355,45 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             leftSliderOpened = false;
             rightSliderOpened = false;
         }
+    }
+
+    public void saveFav() {
+        String json = new Gson().toJson(favouritePersons);
+        Log.d("MACIEK_DEBUG", json);
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putString("Fav", json).apply();
+    }
+
+    void restoreFav() {
+        String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
+        Log.d("MACIEK_DEBUG", json);
+        favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>(){}.getType());
+    }
+
+    public void moveFavToElem(PersonElement fav) {
+        if( mapReady ) {
+            if( !persons.contains(fav) ) {
+                fav.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(fav.getPosition())));
+                fav.setNumber(persons.size()+1);
+                fav.favourite(true);
+                persons.add(fav);
+            }
+        } else {
+            Log.e("MACIEK_DEBUG", "Map not ready!");
+        }
+    }
+
+    void showFav() {
+        Intent intent = new Intent(this, FavouritesActivity.class);
+        Log.d("MACIEK_DEBUG", "currentActivity: " + favouritePersons.toString());
+        intent.putParcelableArrayListExtra("Fav", favouritePersons);
+        ArrayList<Integer> added = new ArrayList<>();
+        for( int i = 0; i < persons.size(); i++ ) {
+            if( persons.get(i).isFavourite() ) {
+                added.add(i);
+            }
+        }
+        intent.putIntegerArrayListExtra("Added", added);
+        startActivityForResult(intent, Constants.REQUEST_FAVOURITES);
     }
 
     private class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {

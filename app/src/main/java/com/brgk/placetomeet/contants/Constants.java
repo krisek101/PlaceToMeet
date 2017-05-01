@@ -13,6 +13,7 @@ public class Constants {
     public static final int REQUEST_PERMISSIONS_CODE = 2;
     public static final int REQUEST_CHECK_PLAY_SERVICES = 3;
     public static final int REQUEST_CHECK_SETTINGS = 4;
+    public static final int REQUEST_FAVOURITES = 5;
 
     // Colors
     public static final int CHECKED_COLOR = Color.parseColor("#0099FF");

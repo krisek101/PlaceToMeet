@@ -27,13 +27,15 @@
         android:background="@color/colorPlaces">
 
         <TextView
-            android:id="@+id/addPerson"
+            android:id="@+id/show_fav"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             android:gravity="center"
-            android:text="DODAJ NOWĄ OSOBĘ" />
+            android:text="SHOW FAVOURITES" />
     </RelativeLayout>
 
 </RelativeLayout>

@@ -53,13 +53,14 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         favouriteStar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                if( p.isFavourite() ) {
-//                    activity.favouritePersons.remove(p);
-//                } else {
-//                    activity.favouritePersons.add(p);
-//                }
                 p.changeFavouriteState();
+                if( !p.isFavourite() ) {
+                    activity.favouritePersons.remove(p);
+                } else {
+                    activity.favouritePersons.add(p);
+                }
                 notifyDataSetInvalidated();
+                activity.saveFav();
             }
         });
 
