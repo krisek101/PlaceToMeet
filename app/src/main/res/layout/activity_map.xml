@@ -13,14 +13,24 @@
         android:layout_height="match_parent"
         android:layout_alignParentEnd="true" />
 
+    <ImageView
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/location2"
+        android:id="@+id/getMyLocationButton"/>
+
     <pl.droidsonroids.gif.GifTextView
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:background="@drawable/rolling"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="10dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="10dp"
         android:id="@+id/loading"
         android:visibility="invisible"
         />
