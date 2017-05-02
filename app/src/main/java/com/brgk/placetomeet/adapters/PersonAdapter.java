@@ -68,6 +68,13 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             }
         });
 
+        addressView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.goToPerson(p);
+            }
+        });
+
         return convertView;
     }
 

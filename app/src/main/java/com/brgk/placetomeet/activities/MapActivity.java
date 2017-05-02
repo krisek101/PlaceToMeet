@@ -1531,6 +1531,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         startActivityForResult(intent, Constants.REQUEST_FAVOURITES);
     }
 
+    public void goToPerson(PersonElement p) {
+        if(mapReady) {
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(p.getMarker().getPosition(), 15));
+            p.getMarker().showInfoWindow();
+        }
+    }
+
     private class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
 
         @Override
