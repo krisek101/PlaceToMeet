@@ -161,6 +161,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private GoogleApiClient mGoogleApiClient;
     private LatLng center;
     private LatLng userLocation;
+    private LatLng lastLocation;
     private boolean updateLocation = true;
     private ImageView getMyLocationButton;
     private Marker userLocationMarker;
@@ -202,13 +203,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         requestPermissions();
         arrangeSliders();
         setCategories();
+        restoreData();
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
-        setListeners();
-        setupActionBar();
         loading.setVisibility(View.VISIBLE);
         checkUsersSettingGPS();
+        setupActionBar();
+        setListeners();
         guide();
-        restoreFav();
     }
 
     // Design functions
@@ -767,11 +768,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         EditText addressField = (EditText) view.findViewById(R.id.action_bar_address_field);
         addressField.setText("");
         addressField.requestFocus();
-
-        //showKeyboard();
-
-        //TODO dopracowac animacje
-        view.animate().setDuration(1000).start();
     }
 
     void hideActionBar() {
@@ -924,20 +920,26 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    void updateMapElements() {
-        calculateMidPoint();
+    public void updateMapElements() {
+        if (persons.isEmpty()) {
+            if (userLocation != null) {
+                center = userLocation;
+            } else {
+                center = lastLocation;
+            }
+        } else {
+            center = calculateMidPoint();
+        }
         if (centerCircle != null) {
             centerCircle.setCenter(center);
         } else {
             centerCircle = mGoogleMap.addCircle(new CircleOptions().radius(10).center(center));
         }
         mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 13));
-        if (persons.isEmpty() && userLocation != null) {
-            center = userLocation;
-        }
+
     }
 
-    private void calculateMidPoint() {
+    private LatLng calculateMidPoint() {
         double xSum = 0, ySum = 0, zSum = 0;
         double xAvg, yAvg, zAvg;
 
@@ -963,7 +965,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
         Log.d("MACIEK_DEBUG", "center: lat: " + midLatDeg + ", lon: " + midLonDeg);
 
-        center = new LatLng(midLatDeg, midLonDeg);
+        return new LatLng(midLatDeg, midLonDeg);
     }
 
     private void setCategories() {
@@ -992,21 +994,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK-DEBUG", "Map ready!");
         mapReady = true;
         mGoogleMap = googleMap;
-        mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                for (int i = 0; i < persons.size(); i++) {
-                    PersonElement r = persons.get(i);
-                    if (r.getMarker().equals(marker)) {
-                        marker.remove();
-                        persons.remove(r);
-                        updateMapElements();
-                        break;
-                    }
-                }
-                return false;
-            }
-        });
 
         mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -1073,8 +1060,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }, delay);
 
         // go to last location
-        if (!PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "").isEmpty() && !PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "").isEmpty()) {
-            center = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
+        if (!PreferenceManager.getDefaultSharedPreferences(this).getString("Latitude", "").isEmpty() && !PreferenceManager.getDefaultSharedPreferences(this).getString("Longitude", "").isEmpty()) {
+            center = lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 13));
         }
     }
@@ -1505,12 +1492,16 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         PreferenceManager.getDefaultSharedPreferences(this).edit().putString("Fav", json).apply();
     }
 
-    void restoreFav() {
+    void restoreData() {
+        //favourites
         String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
         Log.d("MACIEK_DEBUG", json);
         if(json != "none") {
             favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>(){}.getType());
         }
+
+        //last location
+        lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "0.00")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "0.00")));
     }
 
     public void moveFavToElem(PersonElement fav) {
@@ -1531,8 +1522,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK_DEBUG", "currentActivity: " + favouritePersons.toString());
         intent.putParcelableArrayListExtra("Fav", favouritePersons);
         ArrayList<Integer> added = new ArrayList<>();
-        for( int i = 0; i < persons.size(); i++ ) {
-            if( persons.get(i).isFavourite() ) {
+        for( int i = 0; i < favouritePersons.size(); i++ ) {
+            if( persons.contains(favouritePersons.get(i)) ) {
                 added.add(i);
             }
         }

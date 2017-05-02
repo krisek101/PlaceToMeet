@@ -46,6 +46,14 @@ public class PersonElement implements Parcelable {
         this.number = number;
     }
 
+    public void decreaseNumber() {
+        this.number--;
+    }
+
+    public void increaseNumber() {
+        this.number++;
+    }
+
     public Marker getMarker() {
         return marker;
     }
