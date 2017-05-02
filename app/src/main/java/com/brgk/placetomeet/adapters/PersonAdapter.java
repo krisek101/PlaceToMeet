@@ -17,6 +17,7 @@ import android.widget.Toast;
 import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.R;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 import java.util.List;
 
@@ -92,13 +93,10 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     private void openDialog(View view, final PersonElement p) {
         PopupMenu popup = new PopupMenu(context, view);
         popup.getMenuInflater().inflate(R.menu.persons_popup_menu, popup.getMenu());
-        final String toastText;
         if( p.isFavourite() ) {
             popup.getMenu().getItem(0).setTitle("Usuń z ulubionych");
-            toastText = "Usunięto!";
         } else {
             popup.getMenu().getItem(0).setTitle("Dodaj do ulubionych");
-            toastText = "Dodano!";
         }
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
@@ -106,14 +104,12 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
                 switch( item.getItemId() ) {
                     case R.id.persons_menu_fav:
                         changeFavourite(p);
-                        Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show();
                         break;
                     case R.id.persons_menu_changeAddress:
-                        Toast.makeText(context, "TODO: change address", Toast.LENGTH_SHORT).show();
+                        changeAddress(p);
                         break;
                     case R.id.persons_menu_delete:
                         removePerson(p);
-                        Toast.makeText(context, "Usunięto!", Toast.LENGTH_SHORT).show();
                         break;
                 }
                 return false;
@@ -131,4 +127,16 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         notifyDataSetChanged();
         activity.updateMapElements();
     }
+
+    private void changeAddress(PersonElement p){
+        activity.closeBothSliders();
+        if (!activity.isAddingPerson) {
+            activity.showActionBar();
+            activity.isAddingPerson = true;
+        }
+        activity.addressField.setText(p.getAddress());
+        p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+        activity.editPerson = p;
+    }
+
 }

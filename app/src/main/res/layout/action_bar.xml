@@ -8,7 +8,7 @@
 
     <com.brgk.placetomeet.contants.ClearableAutoCompleteTextView
         android:id="@+id/action_bar_address_field"
-        android:layout_width="230dp"
+        android:layout_width="match_parent"
         android:paddingEnd="10dp"
         android:layout_height="50dp"
         android:layout_alignParentStart="true"
@@ -16,14 +16,5 @@
         android:maxLines="2"
         android:textColor="#FFFFFF"
         android:textColorHint="#FFFFFF" />
-
-    <ImageButton
-        android:id="@+id/action_bar_favourite"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="13dp"
-        android:layout_toEndOf="@id/action_bar_address_field"
-        android:background="@drawable/star" />
 
 </RelativeLayout>

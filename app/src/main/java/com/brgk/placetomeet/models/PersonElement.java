@@ -48,10 +48,12 @@ public class PersonElement implements Parcelable {
 
     public void decreaseNumber() {
         this.number--;
+        this.getMarker().setTitle("OSOBA " + number);
     }
 
     public void increaseNumber() {
         this.number++;
+        this.getMarker().setTitle("OSOBA " + number);
     }
 
     public Marker getMarker() {
@@ -62,8 +64,8 @@ public class PersonElement implements Parcelable {
         return position;
     }
 
-    public void setPosition(double lat, double lng) {
-        this.position = new LatLng(lat, lng);
+    public void setPosition(LatLng position) {
+        this.position = position;
     }
 
     public void setMarker(Marker marker) {
