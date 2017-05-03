@@ -10,16 +10,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.Switch;
-import android.widget.TextView;
 
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.FavouritesActivity;
-import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.models.PersonElement;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -55,10 +51,8 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if( isChecked ) {
                     parentActivity.positions.add(position);
-                    Log.d("MACIEK_DEBUG", parentActivity.positions.toString());
                 } else {
-                    parentActivity.positions.remove(position);
-                    Log.d("MACIEK_DEBUG", parentActivity.positions.toString());
+                    parentActivity.positions.remove((Object) position);
                 }
             }
         });

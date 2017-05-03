@@ -264,8 +264,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         }
                         if (!exists) {
                             if (mGoogleMap != null) {
-                                persons.add(person);
                                 person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                                persons.add(person);
                                 personAdapter.notifyDataSetChanged();
                                 updateMapElements();
                                 addressField.setText("");
@@ -362,7 +362,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 float toX;
                 switch (motionEvent.getActionMasked()) {
                     case MotionEvent.ACTION_MOVE:
-                        if (!started) {
+                        if( !started ) {
                             startX = motionEvent.getRawX();
                             started = true;
                         }
@@ -376,7 +376,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         leftSlider.animate().x(toX).setDuration(0).start();
                         break;
                     case MotionEvent.ACTION_UP:
-                        if (motionEvent.getRawX() - startX < -0.1 * leftSliderWidth) {
+                        if( motionEvent.getRawX() - startX < -0.1*leftSliderWidth ) {
                             toX = -leftSliderWidth;
                             leftSliderOpened = false;
                         } else {
@@ -472,7 +472,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 float toX;
                 switch (motionEvent.getActionMasked()) {
                     case MotionEvent.ACTION_MOVE:
-                        if (!started) {
+                        if( !started ) {
                             startX = motionEvent.getRawX();
                             started = true;
                         }
@@ -486,7 +486,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         rightSlider.animate().x(toX).setDuration(0).start();
                         break;
                     case MotionEvent.ACTION_UP:
-                        if (motionEvent.getRawX() - startX > 0.1 * rightSliderWidth) {
+                        if( motionEvent.getRawX() - startX > 0.1*rightSliderWidth ) {
                             toX = screenWidth;
                             rightSliderOpened = false;
                         } else {
@@ -531,7 +531,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 } else {
                     switch (motionEvent.getActionMasked()) {
                         case MotionEvent.ACTION_DOWN:
-                            y = motionEvent.getRawY() - view.getY();
+                            y =  motionEvent.getRawY() - view.getY();
                             break;
                         case MotionEvent.ACTION_MOVE:
                             if (motionEvent.getRawY() - y < footerTop + footer.getHeight()) {
@@ -545,7 +545,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             break;
                         case MotionEvent.ACTION_UP:
                             if (footerOpened) {
-                                if (motionEvent.getRawY() - y > 0.1 * footerSlider.getHeight()) {
+                                if( motionEvent.getRawY() - y > 0.1*footerSlider.getHeight() ) {
                                     toY = getPixelsFromDp(512);
                                     footerOpened = false;
                                 } else {
@@ -553,7 +553,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                                     footerOpened = true;
                                 }
                             } else {
-                                if (motionEvent.getRawY() - y < 0.9 * footerSlider.getHeight()) {
+                                if( motionEvent.getRawY() - y < 0.9*footerSlider.getHeight() ) {
                                     toY = footerTop + footer.getHeight();
                                     footerOpened = true;
                                 } else {
@@ -895,7 +895,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-
     // Places
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -926,15 +925,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (resultCode == RESULT_OK) {
                     ArrayList<Integer> positions = data.getIntegerArrayListExtra("positions");
                     Log.d("MACIEK_DEBUG", "map: " + positions.toString());
-                    for (int i = 0; i < favouritePersons.size(); i++) {
+                    for(int i = 0; i < favouritePersons.size(); i++) {
                         PersonElement p = favouritePersons.get(i);
-                        if (persons.contains(p) && !positions.contains(i)) {
+                        if(persons.contains(p) && !positions.contains(i)) {
+                            p.getMarker().remove();
                             persons.remove(p);
-                        } else if (!persons.contains(p) && positions.contains(i)) {
+                        } else if(!persons.contains(p) && positions.contains(i)) {
                             moveFavToElem(favouritePersons.get(i));
                         }
-
-                        Log.d("", "");
                     }
                     personAdapter.notifyDataSetChanged();
                 }
@@ -960,7 +958,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         } else {
             centerCircle = mGoogleMap.addCircle(new CircleOptions().radius(10).center(center));
         }
-        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 13));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLng(centerCircle.getCenter()));
 
     }
 
@@ -1104,7 +1102,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         // go to last location
         if (!PreferenceManager.getDefaultSharedPreferences(this).getString("Latitude", "").isEmpty() && !PreferenceManager.getDefaultSharedPreferences(this).getString("Longitude", "").isEmpty()) {
             center = lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 13));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 14));
         }
     }
 
@@ -1408,7 +1406,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
 
                     // move camera to user's location
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
+                    mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 14));
                     updateLocation = false;
                     mGoogleApiClient.disconnect();
                     loading.setVisibility(View.INVISIBLE);
@@ -1538,9 +1536,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         //favourites
         String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
         Log.d("MACIEK_DEBUG", json);
-        if (json != "none") {
-            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
-            }.getType());
+        if(!json.equals("none")) {
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>(){}.getType());
         }
 
         //last location
@@ -1548,12 +1545,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void moveFavToElem(PersonElement fav) {
-        if (mapReady) {
-            if (!persons.contains(fav)) {
-                fav.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(fav.getPosition())));
-                fav.setNumber(persons.size() + 1);
+        if( mapReady ) {
+            if( !persons.contains(fav) ) {
+                fav.setMarker(mGoogleMap.addMarker(new MarkerOptions()
+                        .position(fav.getPosition())
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))));
+                fav.setNumber(persons.size()+1);
                 fav.favourite(true);
                 persons.add(fav);
+                updateMapElements();
             }
         } else {
             Log.e("MACIEK_DEBUG", "Map not ready!");
@@ -1565,8 +1565,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK_DEBUG", "currentActivity: " + favouritePersons.toString());
         intent.putParcelableArrayListExtra("Fav", favouritePersons);
         ArrayList<Integer> added = new ArrayList<>();
-        for (int i = 0; i < favouritePersons.size(); i++) {
-            if (persons.contains(favouritePersons.get(i))) {
+        for( int i = 0; i < favouritePersons.size(); i++ ) {
+            if( persons.contains(favouritePersons.get(i)) ) {
                 added.add(i);
             }
         }
@@ -1575,8 +1575,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void goToPerson(PersonElement p) {
-        if (mapReady) {
-            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(p.getMarker().getPosition(), 15));
+        if(mapReady) {
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(p.getMarker().getPosition(), 14));
             p.getMarker().showInfoWindow();
         }
     }
