@@ -205,8 +205,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
         requestPermissions();
         arrangeSliders();
-        setCategories();
         restoreData();
+        setCategories();
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
         loading.setVisibility(View.VISIBLE);
         checkUsersSettingGPS();
@@ -362,7 +362,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 float toX;
                 switch (motionEvent.getActionMasked()) {
                     case MotionEvent.ACTION_MOVE:
-                        if( !started ) {
+                        if (!started) {
                             startX = motionEvent.getRawX();
                             started = true;
                         }
@@ -376,7 +376,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         leftSlider.animate().x(toX).setDuration(0).start();
                         break;
                     case MotionEvent.ACTION_UP:
-                        if( motionEvent.getRawX() - startX < -0.1*leftSliderWidth ) {
+                        if (motionEvent.getRawX() - startX < -0.1 * leftSliderWidth) {
                             toX = -leftSliderWidth;
                             leftSliderOpened = false;
                         } else {
@@ -472,7 +472,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 float toX;
                 switch (motionEvent.getActionMasked()) {
                     case MotionEvent.ACTION_MOVE:
-                        if( !started ) {
+                        if (!started) {
                             startX = motionEvent.getRawX();
                             started = true;
                         }
@@ -486,7 +486,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         rightSlider.animate().x(toX).setDuration(0).start();
                         break;
                     case MotionEvent.ACTION_UP:
-                        if( motionEvent.getRawX() - startX > 0.1*rightSliderWidth ) {
+                        if (motionEvent.getRawX() - startX > 0.1 * rightSliderWidth) {
                             toX = screenWidth;
                             rightSliderOpened = false;
                         } else {
@@ -531,7 +531,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 } else {
                     switch (motionEvent.getActionMasked()) {
                         case MotionEvent.ACTION_DOWN:
-                            y =  motionEvent.getRawY() - view.getY();
+                            y = motionEvent.getRawY() - view.getY();
                             break;
                         case MotionEvent.ACTION_MOVE:
                             if (motionEvent.getRawY() - y < footerTop + footer.getHeight()) {
@@ -545,7 +545,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             break;
                         case MotionEvent.ACTION_UP:
                             if (footerOpened) {
-                                if( motionEvent.getRawY() - y > 0.1*footerSlider.getHeight() ) {
+                                if (motionEvent.getRawY() - y > 0.1 * footerSlider.getHeight()) {
                                     toY = getPixelsFromDp(512);
                                     footerOpened = false;
                                 } else {
@@ -553,7 +553,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                                     footerOpened = true;
                                 }
                             } else {
-                                if( motionEvent.getRawY() - y < 0.9*footerSlider.getHeight() ) {
+                                if (motionEvent.getRawY() - y < 0.9 * footerSlider.getHeight()) {
                                     toY = footerTop + footer.getHeight();
                                     footerOpened = true;
                                 } else {
@@ -577,6 +577,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
                 radiusText.setText(progress + "m");
+                if (centerCircle != null) {
+                    centerCircle.setRadius(progress);
+                }
                 updateList(places);
             }
 
@@ -681,13 +684,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                                             int position, long id) {
                         String placeID = autoCompleteIDsCopy.get(position);
                         String link = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + placeID + "&key=" + Constants.API_KEY;
+                        Log.v("LINKKK", link);
                         JsonObjectRequest placeDetailsRequest = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
                             @Override
                             public void onResponse(JSONObject response) {
                                 try {
                                     JSONObject positionObject = response.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
                                     LatLng position = new LatLng(positionObject.getDouble("lat"), positionObject.getDouble("lng"));
-                                    String address = response.getJSONObject("result").getString("formatted_address").replaceAll(", Polska", "");
+                                    String address = getAddressFromLatLng(position);
                                     addPerson(address, position);
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -869,7 +873,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 editMarker = null;
                 editPerson = null;
                 lastPosition = null;
-            }else if(editPerson != null){
+            } else if (editPerson != null) {
                 editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
                 editPerson = null;
             }
@@ -881,7 +885,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             for (CategoryElement ce : categories) {
                 try {
                     if (checkedCategories.contains(ce.getName())) {
-                        deletePlaces(ce.getName());
+                        deletePlaces(ce.getName(), false);
                         ce.setChecked(false);
                     }
                 } catch (JSONException e) {
@@ -899,19 +903,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case Constants.PLACE_PICKER_REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-                    if (mGoogleMap != null) {
-                        Place place = PlacePicker.getPlace(this, data);
-                        PersonElement r = new PersonElement(place.getAddress().toString(),
-                                persons.size() + 1,
-                                mGoogleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("TUTAJ " + persons.size())));
-                        persons.add(r);
-                        personAdapter.notifyDataSetChanged();
-                        updateMapElements();
-                    }
-                }
-                break;
             case Constants.REQUEST_CHECK_SETTINGS:
                 if (resultCode == RESULT_OK) {
                     // The user picked a contact.
@@ -925,12 +916,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (resultCode == RESULT_OK) {
                     ArrayList<Integer> positions = data.getIntegerArrayListExtra("positions");
                     Log.d("MACIEK_DEBUG", "map: " + positions.toString());
-                    for(int i = 0; i < favouritePersons.size(); i++) {
+                    for (int i = 0; i < favouritePersons.size(); i++) {
                         PersonElement p = favouritePersons.get(i);
-                        if(persons.contains(p) && !positions.contains(i)) {
+                        if (persons.contains(p) && !positions.contains(i)) {
                             p.getMarker().remove();
                             persons.remove(p);
-                        } else if(!persons.contains(p) && positions.contains(i)) {
+                        } else if (!persons.contains(p) && positions.contains(i)) {
                             moveFavToElem(favouritePersons.get(i));
                         }
                     }
@@ -944,22 +935,40 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void updateMapElements() {
-        if (persons.isEmpty()) {
+        if (!persons.isEmpty()) {
+            center = calculateMidPoint();
+        } else {
             if (userLocation != null) {
                 center = userLocation;
             } else {
                 center = lastLocation;
             }
-        } else {
-            center = calculateMidPoint();
         }
         if (centerCircle != null) {
             centerCircle.setCenter(center);
         } else {
-            centerCircle = mGoogleMap.addCircle(new CircleOptions().radius(10).center(center));
+            centerCircle = mGoogleMap.addCircle(new CircleOptions()
+                    .radius(radiusSeekBar.getProgress())
+                    .center(center)
+                    .strokeColor(Color.parseColor("#00aef4"))
+                    .fillColor(0x22146244)
+                    .strokeWidth(2));
         }
-        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLng(centerCircle.getCenter()));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 13));
 
+        //reset checked categories
+        if (checkedCategories != null) {
+            String c;
+            for (int i = 0; i < checkedCategories.size(); i++) {
+                c = checkedCategories.get(i);
+                try {
+                    deletePlaces(c, true);
+                    updatePlaces(c);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     private LatLng calculateMidPoint() {
@@ -992,22 +1001,23 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     private void setCategories() {
-        for (int i = 0; i < Constants.CATEGORIES.length; i++) {
-            if (i < 5) {
-                categories.add(new CategoryElement(Constants.CATEGORIES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[1]}));
-            } else if (i < 8) {
-                categories.add(new CategoryElement(Constants.CATEGORIES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[0]}));
-            } else if (i < 11) {
-                categories.add(new CategoryElement(Constants.CATEGORIES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[3]}));
-            } else if (i < 14) {
-                categories.add(new CategoryElement(Constants.CATEGORIES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[4]}));
-            } else {
-                categories.add(new CategoryElement(Constants.CATEGORIES[i], i, Constants.IMAGES[i], new String[]{Constants.CATEGORIES[2]}));
-            }
-        }
-
         ListView categoryList = (ListView) findViewById(R.id.list_places);
         categoryAdapter = new CategoryAdapter(this, R.layout.left_slider_item, categories, this);
+
+        for (int i = 0; i < Constants.CATEGORIES.length; i++) {
+            categories.add(new CategoryElement(Constants.CATEGORIES[i], i, Constants.IMAGES[i]));
+            if (Constants.CATEGORIES[i].equals(Constants.DEFAULT_CATEGORY)) {
+                categories.get(i).setChecked(true);
+                checkedCategories.add(categories.get(i).getName());
+                Log.v("CHECKED CATEGORIES: ", checkedCategories.toString());
+                categoryAdapter.notifyDataSetChanged();
+                try {
+                    updatePlaces(categories.get(i).getName());
+                } catch (JSONException e) {
+                    Log.v("JSON Eception", e.toString());
+                }
+            }
+        }
         categoryList.setAdapter(categoryAdapter);
     }
 
@@ -1035,6 +1045,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK-DEBUG", "Map ready!");
         mapReady = true;
         mGoogleMap = googleMap;
+
+        //update last location marker
+        userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(center));
+        userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+        updateMapElements();
 
         mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -1102,7 +1117,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         // go to last location
         if (!PreferenceManager.getDefaultSharedPreferences(this).getString("Latitude", "").isEmpty() && !PreferenceManager.getDefaultSharedPreferences(this).getString("Longitude", "").isEmpty()) {
             center = lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 14));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 13));
         }
     }
 
@@ -1127,14 +1142,30 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (checkedCategories != null) {
                 if (checkedCategories.contains(category)) {
                     if (isOnline()) {
+                        Log.v("ADD PLACES FROM ABOVE C", "OK");
                         // add places from one category
                         loading.setVisibility(View.VISIBLE);
+                        if (centerCircle != null) {
+                            center = centerCircle.getCenter();
+                        }
                         String url = getPlaceUrl(category.toLowerCase(), center);
                         setJsonArray(url, category);
                     }
                 } else {
+                    Log.v("DELETE", "OK");
                     // delete places from one category
-                    deletePlaces(category);
+                    deletePlaces(category, false);
+                }
+            } else {
+                Log.v("CHECKED CATEGORIES", "NULL");
+                if (isOnline()) {
+                    // checked places = null
+                    loading.setVisibility(View.VISIBLE);
+                    if (centerCircle != null) {
+                        center = centerCircle.getCenter();
+                    }
+                    String url = getPlaceUrl(category.toLowerCase(), center);
+                    setJsonArray(url, category);
                 }
             }
         }
@@ -1219,9 +1250,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         loading.setVisibility(View.INVISIBLE);
     }
 
-    public void deletePlaces(String category) throws JSONException {
-        if (queue != null) {
-            queue.cancelAll(Constants.TAG);
+    public void deletePlaces(String category, boolean reset) throws JSONException {
+        if (!reset) {
+            if (queue != null) {
+                queue.cancelAll(Constants.TAG);
+            }
         }
         Iterator<PlaceElement> i = places.iterator();
         while (i.hasNext()) {
@@ -1279,9 +1312,21 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public float getDistanceFromCenter(LatLng position) {
-        float[] results = new float[1];
-        Location.distanceBetween(position.latitude, position.longitude, center.latitude, center.longitude, results);
-        return results[0];
+        double earthRadius = 3958.75;
+        double latDiff = Math.toRadians(position.latitude - center.latitude);
+        double lngDiff = Math.toRadians(position.longitude - center.longitude);
+        double a = Math.sin(latDiff / 2) * Math.sin(latDiff / 2) +
+                Math.cos(Math.toRadians(center.latitude)) * Math.cos(Math.toRadians(position.latitude)) *
+                        Math.sin(lngDiff / 2) * Math.sin(lngDiff / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = earthRadius * c;
+
+        int meterConversion = 1609;
+
+        return (float) (distance * meterConversion);
+//        float[] results = new float[1];
+//        Location.distanceBetween(position.latitude, position.longitude, center.latitude, center.longitude, results);
+//        return results[0];
     }
 
     // Location
@@ -1402,11 +1447,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     center = userLocation;
                     PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Latitude", String.valueOf(latitude)).apply();
                     PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Longitude", String.valueOf(longitude)).apply();
+                    if (userLocationMarker != null) {
+                        userLocationMarker.remove();
+                    }
                     userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(center));
                     userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                    updateMapElements();
 
                     // move camera to user's location
-                    mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 14));
+                    mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
                     updateLocation = false;
                     mGoogleApiClient.disconnect();
                     loading.setVisibility(View.INVISIBLE);
@@ -1536,21 +1585,23 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         //favourites
         String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
         Log.d("MACIEK_DEBUG", json);
-        if(!json.equals("none")) {
-            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>(){}.getType());
+        if (!json.equals("none")) {
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
+            }.getType());
         }
 
         //last location
         lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "0.00")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "0.00")));
+        center = lastLocation;
     }
 
     public void moveFavToElem(PersonElement fav) {
-        if( mapReady ) {
-            if( !persons.contains(fav) ) {
+        if (mapReady) {
+            if (!persons.contains(fav)) {
                 fav.setMarker(mGoogleMap.addMarker(new MarkerOptions()
                         .position(fav.getPosition())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))));
-                fav.setNumber(persons.size()+1);
+                fav.setNumber(persons.size() + 1);
                 fav.favourite(true);
                 persons.add(fav);
                 updateMapElements();
@@ -1565,8 +1616,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK_DEBUG", "currentActivity: " + favouritePersons.toString());
         intent.putParcelableArrayListExtra("Fav", favouritePersons);
         ArrayList<Integer> added = new ArrayList<>();
-        for( int i = 0; i < favouritePersons.size(); i++ ) {
-            if( persons.contains(favouritePersons.get(i)) ) {
+        for (int i = 0; i < favouritePersons.size(); i++) {
+            if (persons.contains(favouritePersons.get(i))) {
                 added.add(i);
             }
         }
@@ -1575,7 +1626,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void goToPerson(PersonElement p) {
-        if(mapReady) {
+        if (mapReady) {
             mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(p.getMarker().getPosition(), 14));
             p.getMarker().showInfoWindow();
         }

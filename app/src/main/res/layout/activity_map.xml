@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_marginTop="10dp"
-            android:max="1500"
+            android:max="1700"
             android:progress="500" />
 
         <TextView

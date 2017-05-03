@@ -25,7 +25,8 @@ public class Constants {
     public static final int[] IMAGES = {R.drawable.place_restaurant, R.drawable.place_kebab, R.drawable.place_pizza, R.drawable.place_bar, R.drawable.place_cafe, R.drawable.place_bowling,
     R.drawable.place_rink, R.drawable.place_billiards, R.drawable.place_pool, R.drawable.place_tenis, R.drawable.place_sports_hall, R.drawable.place_park, R.drawable.place_cinema,
     R.drawable.place_shopping_centre};
-    public static final int RADIUS = 1000;
+    public static final String DEFAULT_CATEGORY = "Restauracja";
+    public static final int RADIUS = 1500;
     public static final String API_KEY = "AIzaSyDTmOH9Pi8frp-_JU9gZfUxN7yWdW7yNEM";
 
     // Tags

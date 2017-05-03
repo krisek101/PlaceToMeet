@@ -43,23 +43,10 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         }
         TextView addressView = (TextView) convertView.findViewById(R.id.right_slider_item_address);
         TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_number);
-        ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favourite);
 
         final PersonElement p = persons.get(position);
         addressView.setText(p.getAddress());
         numberView.setText(p.getNumber()+"");
-
-        if( p.isFavourite() )
-            favouriteStar.setImageResource(R.drawable.favourite_on);
-        else
-            favouriteStar.setImageResource(R.drawable.favourite_off);
-
-        favouriteStar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                changeFavourite(p);
-            }
-        });
 
         addressView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override

@@ -8,14 +8,12 @@ public class CategoryElement {
     private String name;
     private int id;
     private int img;
-    private List<String> categories;
     private boolean checked;
 
-    public CategoryElement(String name, int id, int img, String[] categories) {
+    public CategoryElement(String name, int id, int img) {
         this.name = name;
         this.id = id;
         this.img = img;
-        this.categories = Arrays.asList(categories);
         this.checked = false;
     }
 
@@ -41,14 +39,6 @@ public class CategoryElement {
 
     public void setImg(int img) {
         this.img = img;
-    }
-
-    public List<String> getCategories() {
-        return this.categories;
-    }
-
-    public void setCategories(List<String> categories) {
-        this.categories = categories;
     }
 
     public boolean isChecked() {
