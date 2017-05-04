@@ -49,6 +49,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.brgk.placetomeet.adapters.AutocompleteAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.models.CategoryElement;
 import com.brgk.placetomeet.contants.Constants;
@@ -58,6 +59,7 @@ import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.adapters.CategoryAdapter;
 import com.brgk.placetomeet.adapters.PersonAdapter;
 import com.brgk.placetomeet.adapters.PlaceAdapter;
+import com.brgk.placetomeet.models.RequestToQueue;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -70,9 +72,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -97,6 +97,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
 import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
@@ -106,12 +107,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     // Collections
     public List<PersonElement> persons = new ArrayList<>();
     public ArrayList<PersonElement> favouritePersons = new ArrayList<>();
+    public List<PersonElement> autoCompletePersons = new ArrayList<>();
     public List<CategoryElement> categories = new ArrayList<>();
     public List<String> checkedCategories = new ArrayList<>();
     public List<PlaceElement> places = new ArrayList<>();
-    public List<String> autoCompleteAddresses = new ArrayList<>();
-    public List<String> autoCompleteIDs = new ArrayList<>();
-    public List<String> autoCompleteIDsCopy;
     public List<PlaceElement> orderedPlaces;
 
     // Action Bar
@@ -132,6 +131,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public PersonElement editPerson = null;
     public LatLng lastPosition;
     public Marker editMarker;
+    public AutocompleteAdapter autocompleteAdapter;
 
     // Left slider
     private RelativeLayout leftSlider;
@@ -150,19 +150,18 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private LinearLayout footerSlider;
     private PlaceAdapter placeAdapter;
     private boolean footerShowed = false;
-    private float screenHeight;
     ListView placesList;
 
     // Map
     private GoogleMap mGoogleMap = null;
     private boolean mapReady = false;
     private Circle centerCircle;
-    private pl.droidsonroids.gif.GifTextView loading;
+    public pl.droidsonroids.gif.GifTextView loading;
 
     // Location
     private LocationRequest locationRequest;
     private GoogleApiClient mGoogleApiClient;
-    private LatLng center;
+    public LatLng center;
     private LatLng userLocation;
     private LatLng lastLocation;
     private boolean updateLocation = true;
@@ -175,7 +174,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private TextView radiusText;
 
     // Others
-    private RequestQueue queue;
+    public RequestQueue queue;
     private TextView internetInfoTextView;
     private GestureDetector gestureDetector;
 
@@ -616,7 +615,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         screenWidth = dm.widthPixels;
-        screenHeight = dm.heightPixels;
 
         //right slider
         rightHandleWidth = getPixelsFromDp(30);
@@ -630,7 +628,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         rightSlider.setX(rightSliderDefaultX);
         rightHandle.setX(rightHandleDefaultX);
 
-        //adapter for right slider
+        //autocompleteAdapter for right slider
         ListView personList = (ListView) findViewById(R.id.right_slider_persons);
         personAdapter = new PersonAdapter(this, R.layout.right_slider_item, persons, this);
         personList.setAdapter(personAdapter);
@@ -657,8 +655,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         View view = LayoutInflater.from(this).inflate(R.layout.action_bar, null);
         mActionBar.setCustomView(view);
 
+        if (!favouritePersons.isEmpty()) {
+            for (PersonElement favPerson : favouritePersons) {
+                autoCompletePersons.add(favPerson);
+            }
+        }
+
         addressField = (ClearableAutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
         addressField.setClearButton(getResources().getDrawable(R.drawable.clear));
+
         addressField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -667,46 +672,38 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.toString().length() >= 3) {
-                    if (person != null) {
-                        if (!persons.contains(person)) {
-                            person.getMarker().remove();
-                            person = null;
+                // delete just added person on map if exists
+                if (person != null) {
+                    if (!persons.contains(person)) {
+                        person.getMarker().remove();
+                        person = null;
+                    }
+                }
+
+                // clear all last results
+                autoCompletePersons.clear();
+
+                // update list from favourites
+                if (!favouritePersons.isEmpty()) {
+                    for (PersonElement favPerson : favouritePersons) {
+                        if (favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase())) {
+                            autoCompletePersons.add(favPerson);
                         }
                     }
-                    autoCompleteIDs.clear();
-                    autoCompleteAddresses.clear();
+                }
+
+                // update list from Google
+                if (s.toString().length() >= 2) {
                     updateAutoCompleteTextView(s.toString());
                 }
-                addressField.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view,
-                                            int position, long id) {
-                        String placeID = autoCompleteIDsCopy.get(position);
-                        String link = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + placeID + "&key=" + Constants.API_KEY;
-                        Log.v("LINKKK", link);
-                        JsonObjectRequest placeDetailsRequest = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                try {
-                                    JSONObject positionObject = response.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
-                                    LatLng position = new LatLng(positionObject.getDouble("lat"), positionObject.getDouble("lng"));
-                                    String address = getAddressFromLatLng(position);
-                                    addPerson(address, position);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
 
-                            }
-                        });
-                        placeDetailsRequest.setTag(Constants.TAG_PLACE_DETAILS);
-                        queue.add(placeDetailsRequest);
-                    }
-                });
+
+                // TODO: update list from last chosen
+
+                // set adapter
+//                autocompleteAdapter = new AutocompleteAdapter(MapActivity.this, R.layout.autocomplete_item, autoCompletePersons, MapActivity.this);
+//                addressField.setAdapter(autocompleteAdapter);
+//                autocompleteAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -717,60 +714,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void updateAutoCompleteTextView(String place) {
-        String link = getPlaceAutoCompleteUrl(place);
-        Log.v("LINK", link);
-        JsonObjectRequest jsonObjRequest = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    JSONArray ja = response.getJSONArray("predictions");
-                    for (int i = 0; i < ja.length(); i++) {
-                        JSONObject c = ja.getJSONObject(i);
-                        String description = c.getString("description");
-                        description = description.replaceAll(", Polska", "");
-                        String place_id = c.getString("place_id");
-                        autoCompleteAddresses.add(description);
-                        autoCompleteIDs.add(place_id);
-                    }
-                    autoCompleteIDsCopy = new ArrayList<>(autoCompleteIDs);
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, autoCompleteAddresses) {
-                        @Override
-                        @NonNull
-                        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-                            View view = super.getView(position,
-                                    convertView, parent);
-                            TextView text = (TextView) view
-                                    .findViewById(android.R.id.text1);
-                            text.setTextColor(Color.BLACK);
-                            return view;
-                        }
-                    };
-                    addressField.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
-                } catch (Exception e) {
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-            }
-        });
-        jsonObjRequest.setTag(Constants.TAG_AUTOCOMPLETE);
-        queue.add(jsonObjRequest);
-    }
-
-    public String getPlaceAutoCompleteUrl(String input) {
-        StringBuilder urlString = new StringBuilder();
-        urlString.append("https://maps.googleapis.com/maps/api/place/autocomplete/json");
-        urlString.append("?input=");
-        try {
-            urlString.append(URLEncoder.encode(input, "utf8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        urlString.append("&language=pl&components=country:pl");
-        urlString.append("&key=" + Constants.API_KEY);
-        return urlString.toString();
+        RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", this);
+        autocompleteRequest.setPlaceAutoCompleteUrl(place);
+        autocompleteRequest.doRequest();
     }
 
     public void showActionBar() {
@@ -791,7 +737,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mActionBar.setDisplayShowCustomEnabled(false);
     }
 
-    void hideKeyboard() {
+    public void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -806,8 +752,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     void showFooter() {
         //update height
-//        leftSlider.getLayoutParams().height = leftSlider.getMeasuredHeight() - footer.getHeight();
-//        rightSlider.getLayoutParams().height = rightSlider.getMeasuredHeight() - footer.getHeight();
         findViewById(R.id.sliders).getLayoutParams().height = findViewById(R.id.sliders).getMeasuredHeight() - footer.getHeight();
         //show footer
         footer.setVisibility(View.VISIBLE);
@@ -819,8 +763,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     void hideFooter() {
         //update height
-//        leftSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
-//        rightSlider.setLayoutParams(new RelativeLayout.LayoutParams(getPixelsFromDp(250), RelativeLayout.LayoutParams.MATCH_PARENT));
         findViewById(R.id.sliders).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
 
         //hide footer
@@ -1021,7 +963,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         categoryList.setAdapter(categoryAdapter);
     }
 
-    private void addPerson(String address, LatLng position) {
+    public void addPerson(String address, LatLng position) {
         if (editPerson != null) {
             if (lastPosition == null) {
                 lastPosition = editPerson.getPosition();
@@ -1030,7 +972,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
             editPerson.getMarker().remove();
             editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(position).title("OSOBA " + editPerson.getNumber())));
-            editPerson.setName("OSOBA " + editPerson.getNumber());
             editPerson.setAddress(address);
             editPerson.setPosition(position);
             editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
@@ -1122,7 +1063,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    private String getAddressFromLatLng(LatLng position) {
+    public String getAddressFromLatLng(LatLng position) {
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addressArray = new ArrayList<>();
         String addressBuilder = "";
@@ -1149,8 +1090,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         if (centerCircle != null) {
                             center = centerCircle.getCenter();
                         }
-                        String url = getPlaceUrl(category.toLowerCase(), center);
-                        setJsonArray(url, category);
+                        setJsonArray(category);
                     }
                 } else {
                     Log.v("DELETE", "OK");
@@ -1165,45 +1105,16 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     if (centerCircle != null) {
                         center = centerCircle.getCenter();
                     }
-                    String url = getPlaceUrl(category.toLowerCase(), center);
-                    setJsonArray(url, category);
+                    setJsonArray(category);
                 }
             }
         }
     }
 
-    public void setJsonArray(String link, final String category) {
-        Log.v("LINK", link);
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                double lat, lng;
-                LatLng position;
-                try {
-                    JSONArray ja = response.getJSONArray("results");
-                    for (int i = 0; i < ja.length(); i++) {
-                        JSONObject c = ja.getJSONObject(i);
-                        lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
-                        lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
-                        position = new LatLng(lat, lng);
-                        PlaceElement p = new PlaceElement(c, category, getDistanceFromCenter(position));
-                        if (!places.contains(p)) {
-                            places.add(p);
-                        }
-                    }
-                    updateList(places);
-                    loading.setVisibility(View.INVISIBLE);
-                } catch (Exception e) {
-                    Log.v("Error", e.toString());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-            }
-        });
-        jsonObjReq.setTag(Constants.TAG);
-        queue.add(jsonObjReq);
+    public void setJsonArray(String category) {
+        RequestToQueue placesRequest = new RequestToQueue(Constants.TAG_CATEGORY, category, this);
+        placesRequest.setCategoryUrl();
+        placesRequest.doRequest();
     }
 
     public void updateList(List<PlaceElement> places) {
@@ -1254,7 +1165,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public void deletePlaces(String category, boolean reset) throws JSONException {
         if (!reset) {
             if (queue != null) {
-                queue.cancelAll(Constants.TAG);
+                queue.cancelAll(Constants.TAG_CATEGORY);
             }
         }
         Iterator<PlaceElement> i = places.iterator();
@@ -1268,21 +1179,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         }
         updateList(places);
-    }
-
-    public String getPlaceUrl(String keyword, LatLng location) {
-        // EXAMPLE: https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword=restauracja&language=pl&location=51.23324223,20.32554332&radius=500&key=KEY
-        StringBuilder urlString = new StringBuilder();
-        urlString.append("https://maps.googleapis.com/maps/api/place/nearbysearch/json");
-        urlString.append("?keyword=");
-        try {
-            urlString.append(URLEncoder.encode(keyword, "utf8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        urlString.append("&language=pl&location=" + location.latitude + "," + location.longitude + "&radius=" + Constants.RADIUS);
-        urlString.append("&key=" + Constants.API_KEY);
-        return urlString.toString();
     }
 
     public void highlightMarker(PlaceElement place) {
@@ -1603,6 +1499,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         .position(fav.getPosition())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))));
                 fav.setNumber(persons.size() + 1);
+                fav.favourite(true);
                 persons.add(fav);
                 updateMapElements();
             }

@@ -3,6 +3,8 @@ package com.brgk.placetomeet.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.brgk.placetomeet.activities.MapActivity;
+import com.brgk.placetomeet.contants.Constants;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
@@ -14,6 +16,13 @@ public class PersonElement implements Parcelable {
     private transient Marker marker = null;
     private LatLng position;
     private boolean isFavourite = false;
+
+    public PersonElement(String address, String addressID, MapActivity mapActivity){
+        this.address = address;
+        RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", mapActivity);
+        placeDetailsRequest.setPlaceDetailsUrl(addressID, this);
+        placeDetailsRequest.doRequest();
+    }
 
     public PersonElement(String address, int number, Marker marker) {
         this.address = address;
