@@ -1,22 +1,26 @@
 package com.brgk.placetomeet.adapters;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.models.PersonElement;
-import com.brgk.placetomeet.R;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 import java.util.List;
@@ -26,7 +30,6 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     private Context context;
     private List<PersonElement> persons;
     private MapActivity activity;
-
 
     public PersonAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<PersonElement> persons, MapActivity activity ) {
         super(context, resource, persons);
@@ -42,21 +45,28 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
           convertView = LayoutInflater.from(context).inflate(R.layout.right_slider_item, null);
         }
         TextView addressView = (TextView) convertView.findViewById(R.id.right_slider_item_address);
-        TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_number);
+        TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
+        TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_avatar);
+        final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);
+
+        View touchField = convertView.findViewById(R.id.right_slider_item_container);
 
         final PersonElement p = persons.get(position);
         addressView.setText(p.getAddress());
+        nameView.setText(p.getName());
         numberView.setText(p.getNumber()+"");
 
-        addressView.setOnLongClickListener(new View.OnLongClickListener() {
+        favouriteStar.setImageResource(p.isFavourite() ? R.drawable.favourite_on : R.drawable.favourite_off);
+
+        touchField.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                openDialog(v, p);
+                openDialog(v, p, favouriteStar);
                 return false;
             }
         });
 
-        addressView.setOnClickListener(new View.OnClickListener() {
+        touchField.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.goToPerson(p);
@@ -66,18 +76,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         return convertView;
     }
 
-    private void changeFavourite(PersonElement p) {
-                p.changeFavouriteState();
-        if( !p.isFavourite() ) {
-            activity.favouritePersons.remove(p);
-        } else {
-            activity.favouritePersons.add(p);
-        }
-        notifyDataSetInvalidated();
-        activity.saveFav();
-    }
-
-    private void openDialog(View view, final PersonElement p) {
+    private void openDialog(View view, final PersonElement p, final ImageView favouriteStar) {
         PopupMenu popup = new PopupMenu(context, view);
         popup.getMenuInflater().inflate(R.menu.persons_popup_menu, popup.getMenu());
         if( p.isFavourite() ) {
@@ -90,7 +89,11 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             public boolean onMenuItemClick(MenuItem item) {
                 switch( item.getItemId() ) {
                     case R.id.persons_menu_fav:
-                        changeFavourite(p);
+                        if( p.isFavourite() ) {
+                            changeFavourite(p, favouriteStar);
+                        } else {
+                            askForName(p, favouriteStar);
+                        }
                         break;
                     case R.id.persons_menu_changeAddress:
                         changeAddress(p);
@@ -103,6 +106,49 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             }
         });
         popup.show();
+    }
+
+    private void askForName(final PersonElement p, final ImageView favouriteStar) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+        final EditText input = new EditText(context);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+
+        builder.setView(input);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String name = input.getText().toString();
+                if( name.equals("") ) {
+                    Toast.makeText(context, "Not valid text!", Toast.LENGTH_SHORT).show();
+                    askForName(p, favouriteStar);
+                } else {
+                    p.setName(name);
+                    changeFavourite(p, favouriteStar);
+                }
+            }
+        }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    private void changeFavourite(PersonElement p, ImageView favouriteStar) {
+        if( !p.isFavourite() ) {
+            activity.favouritePersons.add(p);
+            favouriteStar.setImageResource(R.drawable.favourite_on);
+        } else {
+            activity.favouritePersons.remove(p);
+            p.setDefaultName();
+            favouriteStar.setImageResource(R.drawable.favourite_off);
+        }
+        p.changeFavouriteState();
+        notifyDataSetInvalidated();
+        activity.saveFav();
     }
 
     private void removePerson(PersonElement p) {

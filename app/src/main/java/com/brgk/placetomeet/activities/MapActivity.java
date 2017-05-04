@@ -1030,6 +1030,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
             editPerson.getMarker().remove();
             editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(position).title("OSOBA " + editPerson.getNumber())));
+            editPerson.setName("OSOBA " + editPerson.getNumber());
             editPerson.setAddress(address);
             editPerson.setPosition(position);
             editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
@@ -1602,7 +1603,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         .position(fav.getPosition())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))));
                 fav.setNumber(persons.size() + 1);
-                fav.favourite(true);
                 persons.add(fav);
                 updateMapElements();
             }

@@ -35,11 +35,12 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
     @Override
     public View getView(final int position, @Nullable View convertView, @NonNull final ViewGroup parent) {
         if( convertView == null ) {
-          convertView = LayoutInflater.from(context).inflate(R.layout.favourite_person_item, null);
+            convertView = LayoutInflater.from(context).inflate(R.layout.favourite_person_item, null);
         }
         Switch item = (Switch) convertView.findViewById(R.id.favourite_person_switch);
         final PersonElement p = favs.get(position);
-        item.setText(p.getAddress());
+        Log.d("MACIEK_DEBUG", "name: " + p.getName());
+        item.setText(p.getName());
 
         if( parentActivity.added.contains(position) ) {
             item.setChecked(true);

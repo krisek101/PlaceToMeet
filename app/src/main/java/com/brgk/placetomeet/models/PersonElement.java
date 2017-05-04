@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.Marker;
 @SuppressWarnings("unused")
 public class PersonElement implements Parcelable {
     private String address;
+    private String name;
     private int number;
     private transient Marker marker = null;
     private LatLng position;
@@ -21,13 +22,17 @@ public class PersonElement implements Parcelable {
         if (marker != null) {
             position = marker.getPosition();
         }
+        setDefaultName();
     }
 
-    protected PersonElement(Parcel in) {
-        address = in.readString();
-        number = in.readInt();
-        position = in.readParcelable(LatLng.class.getClassLoader());
-        isFavourite = in.readByte() != 0;
+    public PersonElement(String address, String name, int number, Marker marker) {
+        this.address = address;
+        this.name = name;
+        this.number = number;
+        this.marker = marker;
+        if (marker != null) {
+            position = marker.getPosition();
+        }
     }
 
     public String getAddress() {
@@ -36,6 +41,18 @@ public class PersonElement implements Parcelable {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDefaultName() {
+        this.name = "Osoba " + getNumber();
     }
 
     public int getNumber() {
@@ -85,17 +102,26 @@ public class PersonElement implements Parcelable {
     }
 
     //PARCEL
-    @Override
-    public int describeContents() {
-        return 0;
+    protected PersonElement(Parcel in) {
+        address = in.readString();
+        name = in.readString();
+        number = in.readInt();
+        position = in.readParcelable(LatLng.class.getClassLoader());
+        isFavourite = in.readByte() != 0;
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(address);
+        dest.writeString(name);
         dest.writeInt(number);
         dest.writeParcelable(position, flags);
         dest.writeByte((byte) (isFavourite ? 1 : 0));
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<PersonElement> CREATOR = new Creator<PersonElement>() {
