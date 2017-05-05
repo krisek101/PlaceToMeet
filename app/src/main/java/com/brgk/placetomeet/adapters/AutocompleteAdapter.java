@@ -10,15 +10,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.models.PersonElement;
+import com.brgk.placetomeet.models.RequestToQueue;
 
 import java.util.List;
 
-public class AutocompleteAdapter extends ArrayAdapter<PersonElement>{
+public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
 
     private MapActivity mapActivity;
     private Context context;
@@ -33,15 +35,20 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement>{
 
     @NonNull
     @Override
-    public View getView(final int position, @Nullable View convertView, @NonNull final ViewGroup parent){
-        if( convertView == null ) {
+    public View getView(final int position, @Nullable View convertView, @NonNull final ViewGroup parent) {
+        if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.autocomplete_item, null);
         }
         final PersonElement person = persons.get(position);
 
         TextView address = (TextView) convertView.findViewById(R.id.autocomplete_address);
-        LinearLayout container = (LinearLayout) convertView.findViewById(R.id.autocomplete_person);
-        address.setText(person.getAddress());
+        //TextView name = (TextView) convertView.findViewById(R.id.autocomplete_name);
+        RelativeLayout container = (RelativeLayout) convertView.findViewById(R.id.autocomplete_person);
+        if (mapActivity.favouritePersons.contains(person) && !person.getName().isEmpty()) {
+            address.setText(person.getName());
+        }else{
+            address.setText(person.getAddress());
+        }
 
         container.setOnClickListener(new View.OnClickListener() {
             @Override

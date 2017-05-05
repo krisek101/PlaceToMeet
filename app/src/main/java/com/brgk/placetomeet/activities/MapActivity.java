@@ -108,6 +108,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public List<PersonElement> persons = new ArrayList<>();
     public ArrayList<PersonElement> favouritePersons = new ArrayList<>();
     public List<PersonElement> autoCompletePersons = new ArrayList<>();
+    public List<PersonElement> lastChosenPersons = new ArrayList<>();
     public List<CategoryElement> categories = new ArrayList<>();
     public List<String> checkedCategories = new ArrayList<>();
     public List<PlaceElement> places = new ArrayList<>();
@@ -243,7 +244,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onClick(View view) {
                 if (isAddingPerson) {
-                    // Confirmation
+                    // on confirmation icon click
                     hideKeyboard();
                     if (editPerson != null && editMarker != null) {
                         editMarker.remove();
@@ -253,6 +254,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         personAdapter.notifyDataSetChanged();
                         updateMapElements();
                         addressField.setText("");
+                        addLastChosenPerson(editPerson);
                         editPerson = null;
                     } else if (person != null) {
                         boolean exists = false;
@@ -268,6 +270,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                                 personAdapter.notifyDataSetChanged();
                                 updateMapElements();
                                 addressField.setText("");
+                                addLastChosenPerson(person);
                                 person = null;
                             }
                         } else {
@@ -280,7 +283,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     mActionBar.setDisplayHomeAsUpEnabled(false);
                     mActionBar.setDisplayShowHomeEnabled(false);
                 } else {
-                    // Adding person
+                    // on plus icon click
                     showActionBar();
                     isAddingPerson = true;
                     closeBothSliders();
@@ -611,6 +614,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         });
     }
 
+    void addLastChosenPerson(PersonElement personElement){
+        if(lastChosenPersons.size()>10) {
+            lastChosenPersons.remove(0);
+        }
+        lastChosenPersons.add(personElement);
+        saveLastChosen();
+    }
+
     void arrangeSliders() {
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -655,12 +666,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         View view = LayoutInflater.from(this).inflate(R.layout.action_bar, null);
         mActionBar.setCustomView(view);
 
-        if (!favouritePersons.isEmpty()) {
-            for (PersonElement favPerson : favouritePersons) {
-                autoCompletePersons.add(favPerson);
-            }
-        }
-
         addressField = (ClearableAutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
         addressField.setClearButton(getResources().getDrawable(R.drawable.clear));
 
@@ -686,19 +691,29 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 // update list from favourites
                 if (!favouritePersons.isEmpty()) {
                     for (PersonElement favPerson : favouritePersons) {
-                        if (favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase())) {
+                        if ((favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase()) || favPerson.getName().toLowerCase().contains(s.toString().toLowerCase())) && !autoCompletePersons.contains(favPerson)) {
                             autoCompletePersons.add(favPerson);
                         }
                     }
                 }
 
-                // update list from Google
-                if (s.toString().length() >= 2) {
-                    updateAutoCompleteTextView(s.toString());
+                // update list from last chosen
+                if(!lastChosenPersons.isEmpty()){
+                    for (PersonElement lastChosen : lastChosenPersons) {
+                        if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
+                            autoCompletePersons.add(lastChosen);
+                        }
+                    }
                 }
 
 
-                // TODO: update list from last chosen
+                // update list from Google
+                if (s.toString().length() >= 2) {
+                    RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", MapActivity.this);
+                    autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
+                    autocompleteRequest.doRequest();
+                }
+
 
                 // set adapter
 //                autocompleteAdapter = new AutocompleteAdapter(MapActivity.this, R.layout.autocomplete_item, autoCompletePersons, MapActivity.this);
@@ -711,12 +726,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
             }
         });
-    }
-
-    public void updateAutoCompleteTextView(String place) {
-        RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", this);
-        autocompleteRequest.setPlaceAutoCompleteUrl(place);
-        autocompleteRequest.doRequest();
     }
 
     public void showActionBar() {
@@ -1084,7 +1093,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (checkedCategories != null) {
                 if (checkedCategories.contains(category)) {
                     if (isOnline()) {
-                        Log.v("ADD PLACES FROM ABOVE C", "OK");
                         // add places from one category
                         loading.setVisibility(View.VISIBLE);
                         if (centerCircle != null) {
@@ -1093,14 +1101,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         setJsonArray(category);
                     }
                 } else {
-                    Log.v("DELETE", "OK");
                     // delete places from one category
                     deletePlaces(category, false);
                 }
             } else {
-                Log.v("CHECKED CATEGORIES", "NULL");
                 if (isOnline()) {
-                    // checked places = null
                     loading.setVisibility(View.VISIBLE);
                     if (centerCircle != null) {
                         center = centerCircle.getCenter();
@@ -1265,7 +1270,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
                         builder.build());
-        //builder.setAlwaysShow(true);
         result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
             @Override
             public void onResult(@NonNull LocationSettingsResult result2) {
@@ -1448,50 +1452,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    // Other
-    public boolean isOnline() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnectedOrConnecting();
-    }
-
-    int getPixelsFromDp(float sizeDp) {
-        float scale = getResources().getDisplayMetrics().density;
-        return (int) (sizeDp * scale + 0.5f);
-    }
-
-    public void closeBothSliders() {
-        if (leftSliderOpened || rightSliderOpened) {
-            rightSlider.animate().x(rightHandleDefaultX + rightHandleWidth).setDuration(100).start();
-            leftSlider.animate().x(leftHandleDefaultX - leftSliderWidth).setDuration(100).start();
-            rightHandle.animate().x(rightHandleDefaultX).setDuration(100).start();
-            leftHandle.animate().x(leftHandleDefaultX).setDuration(100).start();
-            leftSliderOpened = false;
-            rightSliderOpened = false;
-        }
-    }
-
-    public void saveFav() {
-        String json = new Gson().toJson(favouritePersons);
-        Log.d("MACIEK_DEBUG", json);
-        PreferenceManager.getDefaultSharedPreferences(this).edit().putString("Fav", json).apply();
-    }
-
-    void restoreData() {
-        //favourites
-        String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
-        Log.d("MACIEK_DEBUG", json);
-        if (!json.equals("none")) {
-            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
-            }.getType());
-        }
-
-        //last location
-        lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "0.00")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "0.00")));
-        center = lastLocation;
-    }
-
+    // Favourites
     public void moveFavToElem(PersonElement fav) {
         if (mapReady) {
             if (!persons.contains(fav)) {
@@ -1520,6 +1481,63 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
         intent.putIntegerArrayListExtra("Added", added);
         startActivityForResult(intent, Constants.REQUEST_FAVOURITES);
+    }
+
+    public void saveFav() {
+        String json = new Gson().toJson(favouritePersons);
+        Log.d("MACIEK_DEBUG", json);
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putString("Fav", json).apply();
+    }
+
+    // Last Chosen
+    private void saveLastChosen(){
+        String json = new Gson().toJson(lastChosenPersons);
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putString("LastChosen", json).apply();
+    }
+
+    // Other
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
+
+    int getPixelsFromDp(float sizeDp) {
+        float scale = getResources().getDisplayMetrics().density;
+        return (int) (sizeDp * scale + 0.5f);
+    }
+
+    public void closeBothSliders() {
+        if (leftSliderOpened || rightSliderOpened) {
+            rightSlider.animate().x(rightHandleDefaultX + rightHandleWidth).setDuration(100).start();
+            leftSlider.animate().x(leftHandleDefaultX - leftSliderWidth).setDuration(100).start();
+            rightHandle.animate().x(rightHandleDefaultX).setDuration(100).start();
+            leftHandle.animate().x(leftHandleDefaultX).setDuration(100).start();
+            leftSliderOpened = false;
+            rightSliderOpened = false;
+        }
+    }
+
+    void restoreData() {
+        //favourites
+        String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
+        Log.d("MACIEK_DEBUG", json);
+        if (!json.equals("none")) {
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
+            }.getType());
+        }
+
+        //last chosen
+        json = PreferenceManager.getDefaultSharedPreferences(this).getString("LastChosen", "none");
+        if (!json.equals("none")) {
+            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
+            }.getType());
+        }
+
+        //last location
+        lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "0.00")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "0.00")));
+        center = lastLocation;
     }
 
     public void goToPerson(PersonElement p) {
