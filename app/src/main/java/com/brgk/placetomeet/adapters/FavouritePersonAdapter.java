@@ -37,7 +37,7 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
         if( convertView == null ) {
             convertView = LayoutInflater.from(context).inflate(R.layout.favourite_person_item, null);
         }
-        Switch item = (Switch) convertView.findViewById(R.id.favourite_person_switch);
+        final Switch item = (Switch) convertView.findViewById(R.id.favourite_person_switch);
         final PersonElement p = favs.get(position);
         Log.d("MACIEK_DEBUG", "name: " + p.getName());
         item.setText(p.getName());
@@ -47,13 +47,14 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
             parentActivity.positions.add(position);
         }
 
-        item.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        item.setOnClickListener(new CompoundButton.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if( isChecked ) {
+            public void onClick(View v) {
+                Log.d("MACIEK_DEBUG", item.getText().toString() + "checked: " + item.isChecked());
+                if( item.isChecked() ) {
                     parentActivity.positions.add(position);
                 } else {
-                    parentActivity.positions.remove((Object) position);
+                    parentActivity.positions.remove((Integer) position);
                 }
             }
         });

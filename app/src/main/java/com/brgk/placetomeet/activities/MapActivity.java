@@ -925,17 +925,23 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private LatLng calculateMidPoint() {
         double xSum = 0, ySum = 0, zSum = 0;
         double xAvg, yAvg, zAvg;
-
+        int size = 0;
         for (PersonElement r : persons) {
-            Marker marker = r.getMarker();
-            double latRad = marker.getPosition().latitude * Math.PI / 180;
-            double lonRad = marker.getPosition().longitude * Math.PI / 180;
+            Log.d("MACIEK_DEBUG", "displayed: " + r.isDisplayed());
+            if( r.isDisplayed() ) {
+                Marker marker = r.getMarker();
+                double latRad = marker.getPosition().latitude * Math.PI / 180;
+                double lonRad = marker.getPosition().longitude * Math.PI / 180;
 
-            xSum += Math.cos(latRad) * Math.cos(lonRad);//x
-            ySum += Math.cos(latRad) * Math.sin(lonRad);               //y
-            zSum += Math.sin(latRad);                                //z
+                xSum += Math.cos(latRad) * Math.cos(lonRad);//x
+                ySum += Math.cos(latRad) * Math.sin(lonRad);//y
+                zSum += Math.sin(latRad);//z
+
+                size++;
+            }
+
         }
-        int size = persons.size();
+//        int size = persons.size();
         xAvg = xSum / size;
         yAvg = ySum / size;
         zAvg = zSum / size;

@@ -16,6 +16,7 @@ public class PersonElement implements Parcelable {
     private transient Marker marker = null;
     private LatLng position;
     private boolean isFavourite = false;
+    private boolean displayed = true;
 
     public PersonElement(String address, String addressID, MapActivity mapActivity){
         this.address = address;
@@ -108,6 +109,14 @@ public class PersonElement implements Parcelable {
 
     public void changeFavouriteState() {
         isFavourite = !isFavourite;
+    }
+
+    public boolean isDisplayed() {
+        return displayed;
+    }
+
+    public void displayed(boolean displayed) {
+        this.displayed = displayed;
     }
 
     //PARCEL
