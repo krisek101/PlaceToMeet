@@ -58,7 +58,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         p.setId(position + 1);
         if (!p.getPosition().equals(activity.userLocation) && !activity.favouritePersons.contains(p)) {
             p.setName("OSOBA " + (position + 1));
-        } else if(p.getPosition().equals(activity.userLocation)){
+        } else if (p.getPosition().equals(activity.userLocation)) {
             p.setName("Ja");
             p.getMarker().setTitle("Ja");
         }
@@ -69,19 +69,28 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         favouriteStar.setImageResource(p.isFavourite() ? R.drawable.favourite_on : R.drawable.favourite_off);
 
         personOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-             @Override
-             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                p.displayed(isChecked);
-                                p.getMarker().setVisible(isChecked);
-                                activity.updateMapElements();
-                          }
-         });
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                p.displayed(isChecked);
+                p.getMarker().setVisible(isChecked);
+                activity.updateMapElements();
+            }
+        });
 
         touchField.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 openDialog(v, p, favouriteStar);
                 return false;
+            }
+        });
+
+        personOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                p.displayed(isChecked);
+                p.getMarker().setVisible(isChecked);
+                activity.updateMapElements();
             }
         });
 

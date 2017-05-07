@@ -41,14 +41,6 @@ public class PersonElement implements Parcelable {
         }
     }
 
-    public boolean isDisplayed() {
-        return displayed;
-    }
-
-    public void displayed(boolean displayed) {
-        this.displayed = displayed;
-    }
-
     public String getAddress() {
         return address;
     }
@@ -113,6 +105,14 @@ public class PersonElement implements Parcelable {
 
     public void changeFavouriteState() {
         isFavourite = !isFavourite;
+    }
+
+    public boolean isDisplayed() {
+        return displayed;
+    }
+
+    public void displayed(boolean displayed) {
+        this.displayed = displayed;
     }
 
     //PARCEL
