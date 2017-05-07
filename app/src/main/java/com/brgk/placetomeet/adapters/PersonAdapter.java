@@ -13,8 +13,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,15 +50,32 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
         TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_avatar);
         final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);
+        Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
 
         View touchField = convertView.findViewById(R.id.right_slider_item_container);
 
         final PersonElement p = persons.get(position);
+        p.setId(position + 1);
+        if (!p.getPosition().equals(activity.userLocation) && !activity.favouritePersons.contains(p)) {
+            p.setName("OSOBA " + (position + 1));
+        } else if(p.getPosition().equals(activity.userLocation)){
+            p.setName("Ja");
+            p.getMarker().setTitle("Ja");
+        }
         addressView.setText(p.getAddress());
         nameView.setText(p.getName());
-        numberView.setText(p.getNumber() + "");
+        numberView.setText(String.valueOf(p.getId()));
 
         favouriteStar.setImageResource(p.isFavourite() ? R.drawable.favourite_on : R.drawable.favourite_off);
+
+        personOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+             @Override
+             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                p.displayed(isChecked);
+                                p.getMarker().setVisible(isChecked);
+                                activity.updateMapElements();
+                          }
+         });
 
         touchField.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -79,6 +98,14 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     private void openDialog(View view, final PersonElement p, final ImageView favouriteStar) {
         PopupMenu popup = new PopupMenu(context, view);
         popup.getMenuInflater().inflate(R.menu.persons_popup_menu, popup.getMenu());
+
+        // show only delete option for user-person
+        if (p.getPosition().equals(activity.userLocation)) {
+            popup.getMenu().getItem(0).setVisible(false);
+            popup.getMenu().getItem(1).setVisible(false);
+        }
+
+        // check if person is favourite
         if (p.isFavourite()) {
             popup.getMenu().getItem(0).setTitle("Usuń z ulubionych");
         } else {
@@ -133,6 +160,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
                     askForName(p, favouriteStar);
                 } else {
                     p.setName(name);
+                    p.getMarker().setTitle(name);
                     changeFavourite(p, favouriteStar);
                 }
             }
@@ -153,6 +181,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         } else {
             activity.favouritePersons.remove(p);
             p.setDefaultName();
+            p.getMarker().setTitle(p.getName());
             favouriteStar.setImageResource(R.drawable.favourite_off);
         }
         p.changeFavouriteState();
@@ -161,10 +190,16 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     }
 
     private void removePerson(PersonElement p) {
-        for (int i = persons.indexOf(p); i < persons.size(); i++) {
-            persons.get(i).decreaseNumber();
+        if (p.getPosition().equals(activity.userLocation)) {
+            p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+        } else {
+            p.getMarker().remove();
         }
-        p.getMarker().remove();
+        for (int i = persons.indexOf(p); i < persons.size(); i++) {
+            if (!persons.get(i).getPosition().equals(activity.userLocation)) {
+                persons.get(i).decreaseNumber();
+            }
+        }
         persons.remove(p);
         notifyDataSetChanged();
         activity.updateMapElements();

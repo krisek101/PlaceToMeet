@@ -4,10 +4,12 @@
 
     <item
         android:id="@+id/persons_menu_fav"
-        android:title="Dodaj do ulubionych" />
+        android:title="Dodaj do ulubionych"
+        android:visible="true"/>
     <item
         android:id="@+id/persons_menu_changeAddress"
-        android:title="Zmień adres" />
+        android:title="Zmień adres"
+        android:visible="true"/>
     <item
         android:id="@+id/persons_menu_delete"
         android:title="Usuń" />

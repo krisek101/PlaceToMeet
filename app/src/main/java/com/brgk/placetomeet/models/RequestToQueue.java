@@ -1,14 +1,8 @@
 package com.brgk.placetomeet.models;
 
-import android.graphics.Color;
-import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
 
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -24,7 +18,6 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 
 public class RequestToQueue {
 
@@ -41,6 +34,7 @@ public class RequestToQueue {
     }
 
     public void doRequest() {
+        Log.v("LINK", link);
         JsonObjectRequest jsonObjRequest = new JsonObjectRequest(com.android.volley.Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -93,7 +87,7 @@ public class RequestToQueue {
             JSONObject c = ja.getJSONObject(i);
             String address = c.getString("description").replaceAll(", Polska", "");
             String place_id = c.getString("place_id");
-            mapActivity.autoCompletePersons.add(new PersonElement(address, place_id, mapActivity));
+            mapActivity.autoCompletePersons.add(new PersonElement(address, place_id));
         }
         mapActivity.autocompleteAdapter = new AutocompleteAdapter(mapActivity, R.layout.autocomplete_item, mapActivity.autoCompletePersons, mapActivity);
         mapActivity.addressField.setAdapter(mapActivity.autocompleteAdapter);
@@ -103,6 +97,7 @@ public class RequestToQueue {
     private void onResponsePlaceDetails(JSONObject response) throws JSONException {
         JSONObject positionObject = response.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
         person.setPosition(new LatLng(positionObject.getDouble("lat"), positionObject.getDouble("lng")));
+        mapActivity.addPerson(person.getAddress(), person.getPosition());
     }
 
     public void setCategoryUrl() {

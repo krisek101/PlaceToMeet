@@ -3,8 +3,6 @@ package com.brgk.placetomeet.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.brgk.placetomeet.activities.MapActivity;
-import com.brgk.placetomeet.contants.Constants;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
@@ -12,21 +10,20 @@ import com.google.android.gms.maps.model.Marker;
 public class PersonElement implements Parcelable {
     private String address;
     private String name;
-    private int number;
+    private int id;
     private transient Marker marker = null;
     private LatLng position;
     private boolean isFavourite = false;
+    public String addressID;
+    private boolean displayed = true;
 
-    public PersonElement(String address, String addressID, MapActivity mapActivity){
+    public PersonElement(String address, String addressID) {
         this.address = address;
-        RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", mapActivity);
-        placeDetailsRequest.setPlaceDetailsUrl(addressID, this);
-        placeDetailsRequest.doRequest();
+        this.addressID = addressID;
     }
 
-    public PersonElement(String address, int number, Marker marker) {
+    public PersonElement(String address, Marker marker) {
         this.address = address;
-        this.number = number;
         this.marker = marker;
         if (marker != null) {
             position = marker.getPosition();
@@ -34,14 +31,22 @@ public class PersonElement implements Parcelable {
         setDefaultName();
     }
 
-    public PersonElement(String address, String name, int number, Marker marker) {
+    public PersonElement(String address, String name, Marker marker) {
         this.address = address;
         this.name = name;
-        this.number = number;
         this.marker = marker;
         if (marker != null) {
             position = marker.getPosition();
+            marker.setTitle(getName());
         }
+    }
+
+    public boolean isDisplayed() {
+        return displayed;
+    }
+
+    public void displayed(boolean displayed) {
+        this.displayed = displayed;
     }
 
     public String getAddress() {
@@ -61,25 +66,25 @@ public class PersonElement implements Parcelable {
     }
 
     public void setDefaultName() {
-        this.name = "Osoba " + getNumber();
+        this.name = "Osoba " + getId();
     }
 
-    public int getNumber() {
-        return number;
+    public int getId() {
+        return id;
     }
 
-    public void setNumber(int number) {
-        this.number = number;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void decreaseNumber() {
-        this.number--;
-        this.getMarker().setTitle("OSOBA " + number);
+        this.id--;
+        this.getMarker().setTitle("OSOBA " + id);
     }
 
     public void increaseNumber() {
-        this.number++;
-        this.getMarker().setTitle("OSOBA " + number);
+        this.id++;
+        this.getMarker().setTitle("OSOBA " + id);
     }
 
     public Marker getMarker() {
@@ -98,7 +103,7 @@ public class PersonElement implements Parcelable {
         this.marker = marker;
     }
 
-    public void favourite( boolean f ) {
+    public void favourite(boolean f) {
         isFavourite = f;
     }
 
@@ -114,7 +119,7 @@ public class PersonElement implements Parcelable {
     protected PersonElement(Parcel in) {
         address = in.readString();
         name = in.readString();
-        number = in.readInt();
+        id = in.readInt();
         position = in.readParcelable(LatLng.class.getClassLoader());
         isFavourite = in.readByte() != 0;
     }
@@ -123,7 +128,7 @@ public class PersonElement implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(address);
         dest.writeString(name);
-        dest.writeInt(number);
+        dest.writeInt(id);
         dest.writeParcelable(position, flags);
         dest.writeByte((byte) (isFavourite ? 1 : 0));
     }

@@ -31,10 +31,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -43,11 +40,7 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.brgk.placetomeet.adapters.AutocompleteAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
@@ -86,18 +79,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
 import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
@@ -128,11 +116,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private float rightTotalWidth;
     private boolean rightSliderOpened = false;
     private PersonAdapter personAdapter;
-    private PersonElement person = null;
+    public PersonElement person = null;
     public PersonElement editPerson = null;
     public LatLng lastPosition;
     public Marker editMarker;
     public AutocompleteAdapter autocompleteAdapter;
+    PersonElement user;
 
     // Left slider
     private RelativeLayout leftSlider;
@@ -163,7 +152,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private LocationRequest locationRequest;
     private GoogleApiClient mGoogleApiClient;
     public LatLng center;
-    private LatLng userLocation;
+    public LatLng userLocation;
     private LatLng lastLocation;
     private boolean updateLocation = true;
     private ImageView getMyLocationButton;
@@ -200,7 +189,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             buildGoogleApiClient();
             createLocationRequest();
         } else {
-            Log.v("Error", "Google Play Services unavailable");
+            Log.e("Google Play Services", "Unavailable");
         }
 
         requestPermissions();
@@ -208,10 +197,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         restoreData();
         setCategories();
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
-        loading.setVisibility(View.VISIBLE);
-        checkUsersSettingGPS();
         setupActionBar();
         setListeners();
+        checkUsersSettingGPS();
         guide();
     }
 
@@ -254,7 +242,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         personAdapter.notifyDataSetChanged();
                         updateMapElements();
                         addressField.setText("");
-                        addLastChosenPerson(editPerson);
+                        if (!lastChosenPersons.contains(editPerson)) {
+                            addLastChosenPerson(editPerson);
+                        }
                         editPerson = null;
                     } else if (person != null) {
                         boolean exists = false;
@@ -265,12 +255,16 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         }
                         if (!exists) {
                             if (mGoogleMap != null) {
-                                person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                                if(!person.equals(user)) {
+                                    person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                                }
                                 persons.add(person);
                                 personAdapter.notifyDataSetChanged();
                                 updateMapElements();
                                 addressField.setText("");
-                                addLastChosenPerson(person);
+                                if (!lastChosenPersons.contains(person)) {
+                                    addLastChosenPerson(person);
+                                }
                                 person = null;
                             }
                         } else {
@@ -607,15 +601,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     // adding person
                     String address = getAddressFromLatLng(userLocation);
                     addressField.setText(address);
-                    person = new PersonElement(address, persons.size() + 1, mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title("OSOBA " + (persons.size() + 1))));
-                    person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                    addPerson(address, userLocation);
                 }
             }
         });
     }
 
-    void addLastChosenPerson(PersonElement personElement){
-        if(lastChosenPersons.size()>10) {
+    void addLastChosenPerson(PersonElement personElement) {
+        if (lastChosenPersons.size() > 10) {
             lastChosenPersons.remove(0);
         }
         lastChosenPersons.add(personElement);
@@ -677,7 +670,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // delete just added person on map if exists
+                // delete last added person on map if exists
                 if (person != null) {
                     if (!persons.contains(person)) {
                         person.getMarker().remove();
@@ -692,15 +685,17 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (!favouritePersons.isEmpty()) {
                     for (PersonElement favPerson : favouritePersons) {
                         if ((favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase()) || favPerson.getName().toLowerCase().contains(s.toString().toLowerCase())) && !autoCompletePersons.contains(favPerson)) {
+                            favPerson.setId(persons.size() + 1);
                             autoCompletePersons.add(favPerson);
                         }
                     }
                 }
 
                 // update list from last chosen
-                if(!lastChosenPersons.isEmpty()){
+                if (!lastChosenPersons.isEmpty()) {
                     for (PersonElement lastChosen : lastChosenPersons) {
                         if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
+                            lastChosen.setId(persons.size() + 1);
                             autoCompletePersons.add(lastChosen);
                         }
                     }
@@ -713,19 +708,26 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
                     autocompleteRequest.doRequest();
                 }
+            }
 
-
-                // set adapter
+            // set adapter
 //                autocompleteAdapter = new AutocompleteAdapter(MapActivity.this, R.layout.autocomplete_item, autoCompletePersons, MapActivity.this);
 //                addressField.setAdapter(autocompleteAdapter);
 //                autocompleteAdapter.notifyDataSetChanged();
-            }
 
             @Override
             public void afterTextChanged(Editable editable) {
 
             }
         });
+    }
+
+    void setLoading(boolean load) {
+        if (load) {
+            loading.setVisibility(View.VISIBLE);
+        } else {
+            loading.setVisibility(View.INVISIBLE);
+        }
     }
 
     public void showActionBar() {
@@ -817,7 +819,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
             if (editPerson != null && lastPosition != null) {
                 editPerson.getMarker().remove();
-                editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(lastPosition).title("OSOBA " + editPerson.getNumber())));
+                editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(lastPosition).title(editPerson.getName())));
                 editPerson.setPosition(lastPosition);
                 editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
                 editMarker.remove();
@@ -913,6 +915,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             for (int i = 0; i < checkedCategories.size(); i++) {
                 c = checkedCategories.get(i);
                 try {
+                    Log.v("AAAAA", "BBBBB");
                     deletePlaces(c, true);
                     updatePlaces(c);
                 } catch (JSONException e) {
@@ -925,17 +928,23 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private LatLng calculateMidPoint() {
         double xSum = 0, ySum = 0, zSum = 0;
         double xAvg, yAvg, zAvg;
-
+        int size = 0;
         for (PersonElement r : persons) {
-            Marker marker = r.getMarker();
-            double latRad = marker.getPosition().latitude * Math.PI / 180;
-            double lonRad = marker.getPosition().longitude * Math.PI / 180;
+            Log.d("MACIEK_DEBUG", "displayed: " + r.isDisplayed());
+            if( r.isDisplayed() ) {
+                Marker marker = r.getMarker();
+                double latRad = marker.getPosition().latitude * Math.PI / 180;
+                double lonRad = marker.getPosition().longitude * Math.PI / 180;
 
-            xSum += Math.cos(latRad) * Math.cos(lonRad);//x
-            ySum += Math.cos(latRad) * Math.sin(lonRad);               //y
-            zSum += Math.sin(latRad);                                //z
+                xSum += Math.cos(latRad) * Math.cos(lonRad);//x
+                ySum += Math.cos(latRad) * Math.sin(lonRad);//y
+                zSum += Math.sin(latRad);//z
+
+                size++;
+            }
+
         }
-        int size = persons.size();
+//        int size = persons.size();
         xAvg = xSum / size;
         yAvg = ySum / size;
         zAvg = zSum / size;
@@ -976,18 +985,25 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         if (editPerson != null) {
             if (lastPosition == null) {
                 lastPosition = editPerson.getPosition();
-                Log.v("LAST POSITION", lastPosition.latitude + "");
-                editMarker = mGoogleMap.addMarker(new MarkerOptions().position(lastPosition).title("OSOBA " + editPerson.getNumber()));
+                editMarker = mGoogleMap.addMarker(new MarkerOptions().position(lastPosition));
+                editMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                editMarker.setTitle(editPerson.getName());
             }
             editPerson.getMarker().remove();
-            editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(position).title("OSOBA " + editPerson.getNumber())));
+            editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(position).title(editPerson.getName())));
+            editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             editPerson.setAddress(address);
             editPerson.setPosition(position);
-            editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         } else {
-            person = new PersonElement(address, persons.size() + 1, mGoogleMap.addMarker(new MarkerOptions().position(position).title("OSOBA " + (persons.size() + 1))));
+            person = new PersonElement(address, mGoogleMap.addMarker(new MarkerOptions().position(position).title("OSOBA " + (persons.size() + 1))));
             person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         }
+    }
+
+    public void addPerson(PersonElement p) {
+        p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(p.getPosition()).title(p.getName())));
+        p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+        person = p;
     }
 
     // Maps
@@ -996,11 +1012,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK-DEBUG", "Map ready!");
         mapReady = true;
         mGoogleMap = googleMap;
-
-        //update last location marker
-        userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(center));
-        userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-        updateMapElements();
 
         mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -1065,10 +1076,22 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         }, delay);
 
-        // go to last location
+        // get last location
         if (!PreferenceManager.getDefaultSharedPreferences(this).getString("Latitude", "").isEmpty() && !PreferenceManager.getDefaultSharedPreferences(this).getString("Longitude", "").isEmpty()) {
-            center = lastLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 13));
+            center = userLocation = new LatLng(Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Latitude", "No Latitude Value Stored")), Double.parseDouble(PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).getString("Longitude", "No Longitude Value Stored")));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
+
+            //update last location marker
+            userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation));
+            userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+            user = new PersonElement(getAddressFromLatLng(userLocation), "Ja", userLocationMarker);
+
+            // add user
+            persons.add(user);
+            personAdapter.notifyDataSetChanged();
+            updateMapElements();
+        } else {
+            user = null;
         }
     }
 
@@ -1081,9 +1104,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (addressArray != null) {
+        if (addressArray != null && !addressArray.isEmpty()) {
             addressBuilder += addressArray.get(0).getAddressLine(0) + ", ";
             addressBuilder += addressArray.get(0).getLocality();
+        }else{
+            addressBuilder = "Lokalizacja nieokreślona";
         }
         return addressBuilder;
     }
@@ -1306,6 +1331,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private void getLocation() {
         mGoogleApiClient.disconnect();
         if (mGoogleApiClient != null && isOnline()) {
+            setLoading(true);
             mGoogleApiClient.connect();
         }
     }
@@ -1335,25 +1361,38 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (isOnline() && updateLocation && mGoogleMap != null) {
                 Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
                 if (mLastLocation != null) {
-                    // delete old marker
-                    if (userLocationMarker != null) {
-                        userLocationMarker.remove();
-                        userLocationMarker = null;
-                    }
-
                     // set lat and lng
                     double latitude = mLastLocation.getLatitude();
                     double longitude = mLastLocation.getLongitude();
                     userLocation = new LatLng(latitude, longitude);
                     center = userLocation;
+
+                    // save last location
                     PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Latitude", String.valueOf(latitude)).apply();
                     PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Longitude", String.valueOf(longitude)).apply();
-                    if (userLocationMarker != null) {
-                        userLocationMarker.remove();
+
+                    if (user != null && userLocationMarker != null) {
+                        userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                        if (!user.getPosition().equals(userLocation)) {
+                            // on location changed
+                            user.getMarker().remove();
+                            userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title("Ja"));
+                            userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                            user.setMarker(userLocationMarker);
+                            user.setPosition(userLocation);
+                            user.setAddress(getAddressFromLatLng(userLocation));
+                            personAdapter.notifyDataSetChanged();
+                            updateMapElements();
+                        }
+                    } else {
+                        // if no location saved in Preferences
+                        userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title("Ja"));
+                        userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                        user = new PersonElement(getAddressFromLatLng(userLocation), "Ja", userLocationMarker);
+                        persons.add(user);
+                        personAdapter.notifyDataSetChanged();
+                        updateMapElements();
                     }
-                    userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(center));
-                    userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                    updateMapElements();
 
                     // move camera to user's location
                     mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
@@ -1458,8 +1497,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (!persons.contains(fav)) {
                 fav.setMarker(mGoogleMap.addMarker(new MarkerOptions()
                         .position(fav.getPosition())
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))));
-                fav.setNumber(persons.size() + 1);
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+                        .title(fav.getName())));
                 fav.favourite(true);
                 persons.add(fav);
                 updateMapElements();
@@ -1490,7 +1529,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     // Last Chosen
-    private void saveLastChosen(){
+    private void saveLastChosen() {
         String json = new Gson().toJson(lastChosenPersons);
         PreferenceManager.getDefaultSharedPreferences(this).edit().putString("LastChosen", json).apply();
     }
