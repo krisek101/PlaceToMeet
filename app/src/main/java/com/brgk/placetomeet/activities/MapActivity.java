@@ -146,6 +146,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private GoogleMap mGoogleMap = null;
     private boolean mapReady = false;
     private Circle centerCircle;
+    Circle centerOfCircle;
     public pl.droidsonroids.gif.GifTextView loading;
     private boolean byMapAdding = true;
 
@@ -595,7 +596,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         getMyLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                loading.setVisibility(View.VISIBLE);
+                setLoading(true);
                 updateLocation = true;
                 checkUsersSettingGPS();
                 if (isAddingPerson && userLocation != null) {
@@ -902,9 +903,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 center = lastLocation;
             }
         }
-
         if (centerCircle != null) {
             centerCircle.setCenter(center);
+            centerOfCircle.setCenter(center);
         } else {
             centerCircle = mGoogleMap.addCircle(new CircleOptions()
                     .radius(radiusSeekBar.getProgress())
@@ -912,6 +913,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     .strokeColor(Color.parseColor("#00aef4"))
                     .fillColor(0x22146244)
                     .strokeWidth(2));
+            centerOfCircle = mGoogleMap.addCircle(new CircleOptions()
+                    .radius(10)
+                    .center(center)
+                    .strokeWidth(0)
+                    .fillColor(Color.parseColor("#00aef4")));
         }
         mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 13));
 
@@ -1024,7 +1030,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             public void onMapClick(LatLng latLng) {
                 for (PlaceElement p : places) {
                     if (p.getMarker() != null) {
-                        p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
+                        try {
+                            p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                        } catch (IllegalArgumentException e){
+                            e.printStackTrace();
+                        }
                     }
                     p.setChecked(false);
                     placeAdapter.notifyDataSetChanged();
@@ -1126,7 +1136,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (checkedCategories.contains(category)) {
                     if (isOnline()) {
                         // add places from one category
-                        loading.setVisibility(View.VISIBLE);
+                        setLoading(true);
                         if (centerCircle != null) {
                             center = centerCircle.getCenter();
                         }
@@ -1138,7 +1148,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             } else {
                 if (isOnline()) {
-                    loading.setVisibility(View.VISIBLE);
+                    setLoading(true);
                     if (centerCircle != null) {
                         center = centerCircle.getCenter();
                     }
@@ -1159,26 +1169,23 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (!footerShowed) {
                 showFooter();
             }
-            int counter = 0;
+            List<PlaceElement> placesOnMap = new ArrayList<>();
             for (PlaceElement p : places) {
                 if (p.getMarker() != null) {
                     p.getMarker().remove();
                 }
-                if (p.getDistanceFromCenter() <= radiusSeekBar.getProgress()) {
-                    counter++;
-                    p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(p.getPosition()).title(p.getName())));
-                    p.setVisible(true);
-                }else{
-                    p.setVisible(false);
-                }
                 if (p.isChecked()) {
                     highlightMarker(p);
                 }
+                if (p.getDistanceFromCenter() <= radiusSeekBar.getProgress()) {
+                    p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(p.getPosition()).title(p.getName())));
+                    placesOnMap.add(p);
+                }
             }
 
-            footer.setText("Liczba znalezionych miejsc: " + counter);
+            footer.setText("Liczba znalezionych miejsc: " + placesOnMap.size());
             placesList = (ListView) findViewById(R.id.list_found_places);
-            placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, places, this);
+            placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, placesOnMap, this);
             placesList.setAdapter(placeAdapter);
 
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
@@ -1196,7 +1203,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             lpLoading.setMargins((int) screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
             loading.setLayoutParams(lpLoading);
         }
-        loading.setVisibility(View.INVISIBLE);
+        setLoading(false);
     }
 
     public void deletePlaces(String category, boolean reset) throws JSONException {
@@ -1405,7 +1412,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
                     updateLocation = false;
                     mGoogleApiClient.disconnect();
-                    loading.setVisibility(View.INVISIBLE);
+                    setLoading(false);
                     Log.v("LOCATION CHANGED", "LAT:" + latitude + ", LNG:" + longitude);
                 }
             }

@@ -31,7 +31,6 @@ public class PlaceElement {
     private Geocoder geocoder;
     private Context context;
     private boolean checked;
-    private boolean visible = true;
     private float distanceFromCenter;
 
     public PlaceElement(JSONObject place, String category, float distanceFromCenter){
@@ -155,14 +154,6 @@ public class PlaceElement {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public boolean isVisible() {
-        return visible;
-    }
-
-    public void setVisible(boolean visible) {
-        this.visible = visible;
     }
 
     public boolean isChecked() {
