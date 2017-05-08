@@ -83,6 +83,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -100,7 +101,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public List<CategoryElement> categories = new ArrayList<>();
     public List<String> checkedCategories = new ArrayList<>();
     public List<PlaceElement> places = new ArrayList<>();
-    public List<PlaceElement> orderedPlaces;
 
     // Action Bar
     private ActionBar mActionBar;
@@ -147,6 +147,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private boolean mapReady = false;
     private Circle centerCircle;
     public pl.droidsonroids.gif.GifTextView loading;
+    private boolean byMapAdding = true;
 
     // Location
     private LocationRequest locationRequest;
@@ -198,8 +199,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         setCategories();
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
         setupActionBar();
-        setListeners();
         checkUsersSettingGPS();
+        setListeners();
         guide();
     }
 
@@ -255,7 +256,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         }
                         if (!exists) {
                             if (mGoogleMap != null) {
-                                if(!person.equals(user)) {
+                                if (!person.equals(user)) {
                                     person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
                                 }
                                 persons.add(person);
@@ -671,42 +672,46 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 // delete last added person on map if exists
-                if (person != null) {
-                    if (!persons.contains(person)) {
-                        person.getMarker().remove();
-                        person = null;
-                    }
-                }
-
-                // clear all last results
-                autoCompletePersons.clear();
-
-                // update list from favourites
-                if (!favouritePersons.isEmpty()) {
-                    for (PersonElement favPerson : favouritePersons) {
-                        if ((favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase()) || favPerson.getName().toLowerCase().contains(s.toString().toLowerCase())) && !autoCompletePersons.contains(favPerson)) {
-                            favPerson.setId(persons.size() + 1);
-                            autoCompletePersons.add(favPerson);
+                if (byMapAdding) {
+                    if (person != null) {
+                        if (!persons.contains(person)) {
+                            person.getMarker().remove();
+                            person = null;
                         }
                     }
-                }
 
-                // update list from last chosen
-                if (!lastChosenPersons.isEmpty()) {
-                    for (PersonElement lastChosen : lastChosenPersons) {
-                        if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
-                            lastChosen.setId(persons.size() + 1);
-                            autoCompletePersons.add(lastChosen);
+                    // clear all last results
+                    autoCompletePersons.clear();
+
+                    // update list from favourites
+                    if (!favouritePersons.isEmpty()) {
+                        for (PersonElement favPerson : favouritePersons) {
+                            if ((favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase()) || favPerson.getName().toLowerCase().contains(s.toString().toLowerCase())) && !autoCompletePersons.contains(favPerson)) {
+                                favPerson.setId(persons.size() + 1);
+                                autoCompletePersons.add(favPerson);
+                            }
                         }
                     }
-                }
+
+                    // update list from last chosen
+                    if (!lastChosenPersons.isEmpty()) {
+                        for (PersonElement lastChosen : lastChosenPersons) {
+                            if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
+                                lastChosen.setId(persons.size() + 1);
+                                autoCompletePersons.add(lastChosen);
+                            }
+                        }
+                    }
 
 
-                // update list from Google
-                if (s.toString().length() >= 2) {
-                    RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", MapActivity.this);
-                    autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
-                    autocompleteRequest.doRequest();
+                    // update list from Google
+                    if (s.toString().length() >= 2) {
+                        RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", MapActivity.this);
+                        autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
+                        autocompleteRequest.doRequest();
+                    }
+                } else {
+                    byMapAdding = true;
                 }
             }
 
@@ -897,6 +902,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 center = lastLocation;
             }
         }
+
         if (centerCircle != null) {
             centerCircle.setCenter(center);
         } else {
@@ -931,7 +937,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         int size = 0;
         for (PersonElement r : persons) {
             Log.d("MACIEK_DEBUG", "displayed: " + r.isDisplayed());
-            if( r.isDisplayed() ) {
+            if (r.isDisplayed()) {
                 Marker marker = r.getMarker();
                 double latRad = marker.getPosition().latitude * Math.PI / 180;
                 double lonRad = marker.getPosition().longitude * Math.PI / 180;
@@ -989,8 +995,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 editMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
                 editMarker.setTitle(editPerson.getName());
             }
-            editPerson.getMarker().remove();
-            editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(position).title(editPerson.getName())));
+            editPerson.getMarker().setPosition(position);
+            editPerson.getMarker().setTitle(editPerson.getName());
             editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             editPerson.setAddress(address);
             editPerson.setPosition(position);
@@ -1035,8 +1041,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     isAddingPerson = true;
                 }
                 String address = getAddressFromLatLng(latLng);
-                addressField.setText(address);
                 addPerson(address, latLng);
+                byMapAdding = false;
+                addressField.setText(address);
             }
         });
 
@@ -1051,7 +1058,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             footerOpened = true;
                             footerSlider.animate().y(toY).setDuration(100).start();
                             footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
-                            placesList.setSelection(orderedPlaces.indexOf(place));
+                            placesList.setSelection(places.indexOf(place));
                         }
                     }
                 }
@@ -1107,7 +1114,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         if (addressArray != null && !addressArray.isEmpty()) {
             addressBuilder += addressArray.get(0).getAddressLine(0) + ", ";
             addressBuilder += addressArray.get(0).getLocality();
-        }else{
+        } else {
             addressBuilder = "Lokalizacja nieokreślona";
         }
         return addressBuilder;
@@ -1153,7 +1160,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 showFooter();
             }
             int counter = 0;
-            orderedPlaces = new ArrayList<>();
             for (PlaceElement p : places) {
                 if (p.getMarker() != null) {
                     p.getMarker().remove();
@@ -1161,17 +1167,18 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (p.getDistanceFromCenter() <= radiusSeekBar.getProgress()) {
                     counter++;
                     p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(p.getPosition()).title(p.getName())));
-                    orderedPlaces.add(0, p);
-                } else {
-                    orderedPlaces.add(p);
+                    p.setVisible(true);
+                }else{
+                    p.setVisible(false);
                 }
                 if (p.isChecked()) {
                     highlightMarker(p);
                 }
             }
-            footer.setText("Liczba zaznaczonych miejsc: " + counter + "/" + places.size());
+
+            footer.setText("Liczba znalezionych miejsc: " + counter);
             placesList = (ListView) findViewById(R.id.list_found_places);
-            placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, orderedPlaces, this);
+            placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, places, this);
             placesList.setAdapter(placeAdapter);
 
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
