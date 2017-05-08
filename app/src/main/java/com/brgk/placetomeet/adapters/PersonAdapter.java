@@ -8,12 +8,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.InputType;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Switch;
@@ -32,6 +32,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     private Context context;
     private List<PersonElement> persons;
     private MapActivity activity;
+    public SparseBooleanArray negativeStateMap = new SparseBooleanArray();
 
     public PersonAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<PersonElement> persons, MapActivity activity) {
         super(context, resource, persons);
@@ -50,7 +51,11 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
         TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_avatar);
         final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);
-        Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
+        final Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
+        personOnOff.setChecked(true);
+        if( negativeStateMap.get(position) ) {
+            personOnOff.setChecked(false);
+        }
 
         View touchField = convertView.findViewById(R.id.right_slider_item_container);
 
@@ -68,11 +73,27 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
 
         favouriteStar.setImageResource(p.isFavourite() ? R.drawable.favourite_on : R.drawable.favourite_off);
 
-        personOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//        personOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                p.displayed(isChecked);
+//                p.getMarker().setVisible(isChecked);
+//                activity.updateMapElements();
+//            }
+//        });
+
+        personOnOff.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                p.displayed(isChecked);
-                p.getMarker().setVisible(isChecked);
+            public void onClick(View view) {
+                if( personOnOff.isChecked() ) {
+                    negativeStateMap.delete(position);
+                    p.displayed(true);
+                    p.getMarker().setVisible(true);
+                } else {
+                    negativeStateMap.put(position, true);
+                    p.displayed(false);
+                    p.getMarker().setVisible(false);
+                }
                 activity.updateMapElements();
             }
         });
@@ -82,15 +103,6 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             public boolean onLongClick(View v) {
                 openDialog(v, p, favouriteStar);
                 return false;
-            }
-        });
-
-        personOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                p.displayed(isChecked);
-                p.getMarker().setVisible(isChecked);
-                activity.updateMapElements();
             }
         });
 
