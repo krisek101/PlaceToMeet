@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,13 +24,13 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
 
     private MapActivity mapActivity;
     private Context context;
-    private List<PersonElement> persons;
+    private List<PersonElement> autocompletePersons;
 
-    public AutocompleteAdapter(@NonNull Context context, @LayoutRes int resource, List<PersonElement> persons, MapActivity mapActivity) {
-        super(context, resource, persons);
+    public AutocompleteAdapter(@NonNull Context context, @LayoutRes int resource, List<PersonElement> autocompletePersons, MapActivity mapActivity) {
+        super(context, resource, autocompletePersons);
         this.context = context;
         this.mapActivity = mapActivity;
-        this.persons = persons;
+        this.autocompletePersons = autocompletePersons;
     }
 
     @NonNull
@@ -38,10 +39,10 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.autocomplete_item, null);
         }
-        final PersonElement person = persons.get(position);
+
+        final PersonElement person = autocompletePersons.get(position);
 
         TextView address = (TextView) convertView.findViewById(R.id.autocomplete_address);
-        //TextView name = (TextView) convertView.findViewById(R.id.autocomplete_name);
         RelativeLayout container = (RelativeLayout) convertView.findViewById(R.id.autocomplete_person);
         if (mapActivity.favouritePersons.contains(person) && !person.getName().isEmpty()) {
             address.setText(person.getName());

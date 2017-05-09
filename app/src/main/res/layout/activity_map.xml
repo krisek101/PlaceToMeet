@@ -14,26 +14,25 @@
         android:layout_alignParentEnd="true" />
 
     <ImageView
+        android:id="@+id/getMyLocationButton"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
         android:layout_marginEnd="10dp"
         android:layout_marginTop="10dp"
-        android:src="@drawable/location2"
-        android:id="@+id/getMyLocationButton"/>
+        android:src="@drawable/location2" />
 
     <pl.droidsonroids.gif.GifTextView
+        android:id="@+id/loading"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:background="@drawable/rolling"
-        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
         android:layout_marginEnd="10dp"
         android:layout_marginTop="10dp"
-        android:id="@+id/loading"
-        android:visibility="invisible"
-        />
+        android:background="@drawable/rolling"
+        android:visibility="invisible" />
 
     <RelativeLayout
         android:id="@+id/seek_bar_container"
@@ -77,18 +76,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/floatingActionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginBottom="25dp"
-            android:layout_marginEnd="25dp"
-            android:clickable="true"
-            app:fabSize="normal"
-            app:srcCompat="@drawable/ic_add_white_24dp" />
-
         <TextView
             android:id="@+id/right_handle"
             android:layout_width="30dp"
@@ -102,6 +89,18 @@
         <include
             android:id="@+id/right_container"
             layout="@layout/right_slider" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/floatingActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginBottom="25dp"
+            android:layout_marginEnd="25dp"
+            android:clickable="true"
+            app:fabSize="normal"
+            app:srcCompat="@drawable/ic_add_white_24dp" />
 
         <TextView
             android:id="@+id/left_handle"
@@ -131,7 +130,6 @@
         android:textSize="20sp"
         android:visibility="invisible" />
 
-    <include
-        layout="@layout/footer_slider" />
+    <include layout="@layout/footer_slider" />
 
 </RelativeLayout>

@@ -120,10 +120,11 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         PopupMenu popup = new PopupMenu(context, view);
         popup.getMenuInflater().inflate(R.menu.persons_popup_menu, popup.getMenu());
 
-        // show only delete option for user-person
+        // hide menu fo user-person
         if (p.getPosition().equals(activity.userLocation)) {
             popup.getMenu().getItem(0).setVisible(false);
             popup.getMenu().getItem(1).setVisible(false);
+            popup.getMenu().getItem(2).setVisible(false);
         }
 
         // check if person is favourite
@@ -234,6 +235,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         }
         activity.addressField.setText(p.getAddress());
         p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+        p.getMarker().showInfoWindow();
         activity.editPerson = p;
     }
 

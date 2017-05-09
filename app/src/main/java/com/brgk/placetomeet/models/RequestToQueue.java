@@ -111,6 +111,7 @@ public class RequestToQueue {
         }
         urlString.append("&language=pl&location=" + mapActivity.center.latitude + "," + mapActivity.center.longitude + "&radius=" + Constants.RADIUS);
         urlString.append("&key=" + Constants.API_KEY);
+        //urlString.append("&rankBy=distance");
         setLink(urlString.toString());
     }
 

@@ -26,10 +26,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -46,6 +44,7 @@ import com.brgk.placetomeet.adapters.AutocompleteAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.models.CategoryElement;
 import com.brgk.placetomeet.contants.Constants;
+import com.brgk.placetomeet.models.ListenerElement;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.models.PlaceElement;
 import com.brgk.placetomeet.R;
@@ -83,7 +82,6 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -108,13 +106,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public ClearableAutoCompleteTextView addressField;
 
     // Right slider
-    private RelativeLayout rightSlider;
-    private View rightHandle;
-    private float rightHandleDefaultX;
-    private float rightHandleWidth;
-    private float rightSliderWidth;
-    private float rightTotalWidth;
-    private boolean rightSliderOpened = false;
+    public RelativeLayout rightSlider;
+    public View rightHandle;
+    public float rightHandleDefaultX;
+    public float rightHandleWidth;
+    public float rightSliderWidth;
+    public float rightTotalWidth;
+    public boolean rightSliderOpened = false;
     private PersonAdapter personAdapter;
     public PersonElement person = null;
     public PersonElement editPerson = null;
@@ -124,20 +122,20 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     PersonElement user;
 
     // Left slider
-    private RelativeLayout leftSlider;
-    private View leftHandle;
-    private float leftHandleDefaultX;
-    private float leftSliderWidth;
-    private float leftTotalWidth;
-    private float screenWidth;
-    private boolean leftSliderOpened = false;
+    public RelativeLayout leftSlider;
+    public View leftHandle;
+    public float leftHandleDefaultX;
+    public float leftSliderWidth;
+    public float leftTotalWidth;
+    public float screenWidth;
+    public boolean leftSliderOpened = false;
     CategoryAdapter categoryAdapter;
 
     // Footer
-    private TextView footer;
-    private boolean footerOpened = false;
-    private float footerTop;
-    private LinearLayout footerSlider;
+    public TextView footer;
+    public boolean footerOpened = false;
+    public float footerTop;
+    public LinearLayout footerSlider;
     private PlaceAdapter placeAdapter;
     private boolean footerShowed = false;
     ListView placesList;
@@ -145,8 +143,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     // Map
     private GoogleMap mGoogleMap = null;
     private boolean mapReady = false;
-    private Circle centerCircle;
-    Circle centerOfCircle;
+    public Circle centerCircle;
+    public Circle centerOfCircle;
     public pl.droidsonroids.gif.GifTextView loading;
     private boolean byMapAdding = true;
 
@@ -163,12 +161,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     //Seek Bar
     private RelativeLayout seekBarContainer;
     private SeekBar radiusSeekBar;
-    private TextView radiusText;
+    public TextView radiusText;
 
     // Others
     public RequestQueue queue;
     private TextView internetInfoTextView;
-    private GestureDetector gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,7 +174,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
         //init
         footer = (TextView) findViewById(R.id.footer);
-        gestureDetector = new GestureDetector(this, new SingleTapConfirm());
         internetInfoTextView = (TextView) findViewById(R.id.internet_info);
         radiusSeekBar = (SeekBar) findViewById(R.id.radius_seekbar);
         radiusText = (TextView) findViewById(R.id.radius_text);
@@ -220,393 +216,86 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         sequence.start();
     }
 
-    void setListeners() {
-        //show favourites button
-        findViewById(R.id.show_fav).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showFav();
-            }
-        });
-
-        //floating button (add person or confirm)
-        findViewById(R.id.floatingActionButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isAddingPerson) {
-                    // on confirmation icon click
-                    hideKeyboard();
-                    if (editPerson != null && editMarker != null) {
-                        editMarker.remove();
-                        editMarker = null;
-                        lastPosition = null;
-                        editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+    public void onFloatingButtonClick() {
+        if (isAddingPerson) {
+            // on confirmation icon click
+            hideKeyboard();
+            if (editPerson != null && editMarker != null) {
+                editMarker.remove();
+                editMarker = null;
+                lastPosition = null;
+                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                personAdapter.notifyDataSetChanged();
+                updateMapElements();
+                addressField.setText("");
+                if (favouritePersons.contains(editPerson)) {
+                    saveFav();
+                }
+                if (!lastChosenPersons.contains(editPerson)) {
+                    addLastChosenPerson(editPerson);
+                }
+                editPerson = null;
+            } else if (person != null) {
+                boolean exists = false;
+                for (PersonElement p : persons) {
+                    if (p.getAddress().equals(person.getAddress())) {
+                        exists = true;
+                    }
+                }
+                if (!exists) {
+                    if (mGoogleMap != null) {
+                        if (!person.equals(user)) {
+                            person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                        }
+                        persons.add(person);
                         personAdapter.notifyDataSetChanged();
                         updateMapElements();
                         addressField.setText("");
-                        if (!lastChosenPersons.contains(editPerson)) {
-                            addLastChosenPerson(editPerson);
+                        if (!lastChosenPersons.contains(person)) {
+                            addLastChosenPerson(person);
                         }
-                        editPerson = null;
-                    } else if (person != null) {
-                        boolean exists = false;
-                        for (PersonElement p : persons) {
-                            if (p.getAddress().equals(person.getAddress())) {
-                                exists = true;
-                            }
-                        }
-                        if (!exists) {
-                            if (mGoogleMap != null) {
-                                if (!person.equals(user)) {
-                                    person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-                                }
-                                persons.add(person);
-                                personAdapter.notifyDataSetChanged();
-                                updateMapElements();
-                                addressField.setText("");
-                                if (!lastChosenPersons.contains(person)) {
-                                    addLastChosenPerson(person);
-                                }
-                                person = null;
-                            }
-                        } else {
-                            person.getMarker().remove();
-                        }
+                        person = null;
                     }
-                    isAddingPerson = false;
-                    ((FloatingActionButton) findViewById(R.id.floatingActionButton)).setImageResource(R.drawable.ic_add_white_24dp);
-                    hideActionBar();
-                    mActionBar.setDisplayHomeAsUpEnabled(false);
-                    mActionBar.setDisplayShowHomeEnabled(false);
                 } else {
-                    // on plus icon click
-                    showActionBar();
-                    isAddingPerson = true;
-                    closeBothSliders();
+                    person.getMarker().remove();
                 }
             }
-        });
+            isAddingPerson = false;
+            ((FloatingActionButton) findViewById(R.id.floatingActionButton)).setImageResource(R.drawable.ic_add_white_24dp);
+            hideActionBar();
+            mActionBar.setDisplayHomeAsUpEnabled(false);
+            mActionBar.setDisplayShowHomeEnabled(false);
+        } else {
+            // on plus icon click
+            showActionBar();
+            isAddingPerson = true;
+            closeBothSliders();
+        }
+    }
 
-        //left slider listener
-        View.OnTouchListener leftListener = new View.OnTouchListener() {
-            float x;
+    public void onGetMyLocationButtonClick() {
+        setLoading(true);
+        updateLocation = true;
+        checkUsersSettingGPS();
+        if (isAddingPerson && userLocation != null) {
+            // adding person
+            String address = getAddressFromLatLng(userLocation);
+            addressField.setText(address);
+            addPerson(address, userLocation);
+        }
+    }
 
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                float toX;
-                if (!rightSliderOpened) {
-                    if (gestureDetector.onTouchEvent(motionEvent)) {
-                        if (leftSliderOpened) {
-                            toX = leftHandleDefaultX;
-                            leftSliderOpened = false;
-                        } else {
-                            toX = leftSliderWidth;
-                            leftSliderOpened = true;
-                        }
-                        view.animate().x(toX).setDuration(100).start();
-                        leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
-                        return true;
-                    } else {
-                        switch (motionEvent.getActionMasked()) {
-                            case MotionEvent.ACTION_DOWN:
-                                x = view.getX() - motionEvent.getRawX();
-                                break;
-                            case MotionEvent.ACTION_MOVE:
-                                if ((x + motionEvent.getRawX()) > leftSliderWidth) {
-                                    toX = leftSliderWidth;
-                                } else {
-                                    toX = x + motionEvent.getRawX();
-                                }
-                                view.animate().x(toX).setDuration(0).start();
-                                leftSlider.animate().x(toX - leftSliderWidth).setDuration(0).start();
-                                break;
-                            case MotionEvent.ACTION_UP:
-                                if (leftSliderOpened) {
-                                    if ((x + motionEvent.getRawX()) < 0.9 * leftTotalWidth) {
-                                        toX = leftHandleDefaultX;
-                                        leftSliderOpened = false;
-                                    } else {
-                                        toX = leftSliderWidth;
-                                        leftSliderOpened = true;
-                                    }
-                                } else {
-                                    if ((x + motionEvent.getRawX()) > 0.1 * leftTotalWidth) {
-                                        toX = leftSliderWidth;
-                                        leftSliderOpened = true;
-                                    } else {
-                                        toX = leftHandleDefaultX;
-                                        leftSliderOpened = false;
-                                    }
-                                }
-                                view.animate().x(toX).setDuration(100).start();
-                                leftSlider.animate().x(toX - leftSliderWidth).setDuration(100).start();
-                                break;
-                            default:
-                                return false;
-                        }
-                    }
-                }
-                return true;
-            }
-        };
-        leftHandle.setOnTouchListener(leftListener);
-
-        View.OnTouchListener leftSliderListener = new View.OnTouchListener() {
-            float startX;
-            boolean started = false;
-
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                float toX;
-                switch (motionEvent.getActionMasked()) {
-                    case MotionEvent.ACTION_MOVE:
-                        if (!started) {
-                            startX = motionEvent.getRawX();
-                            started = true;
-                        }
-                        if ((motionEvent.getRawX() - startX) > 0) {
-                            toX = 0;
-                        } else {
-                            toX = motionEvent.getRawX() - startX;
-                        }
-
-                        leftHandle.animate().x(toX + leftSliderWidth).setDuration(0).start();
-                        leftSlider.animate().x(toX).setDuration(0).start();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        if (motionEvent.getRawX() - startX < -0.1 * leftSliderWidth) {
-                            toX = -leftSliderWidth;
-                            leftSliderOpened = false;
-                        } else {
-                            toX = 0;
-                            leftSliderOpened = true;
-                        }
-
-                        started = false;
-
-                        leftHandle.animate().x(toX + leftSliderWidth).setDuration(100).start();
-                        leftSlider.animate().x(toX).setDuration(100).start();
-                        break;
-                    default:
-                        return false;
-                }
-                return false;
-            }
-        };
-        findViewById(R.id.list_places).setOnTouchListener(leftSliderListener);
-
-
-        //right slider listener
-        View.OnTouchListener rightListener = new View.OnTouchListener() {
-            float x;
-
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                float toX;
-
-                if (!leftSliderOpened) {
-                    if (gestureDetector.onTouchEvent(motionEvent)) {
-                        if (rightSliderOpened) {
-                            toX = rightHandleDefaultX;
-                            rightSliderOpened = false;
-                        } else {
-                            toX = screenWidth - rightTotalWidth;
-                            rightSliderOpened = true;
-                        }
-                        view.animate().x(toX).setDuration(100).start();
-                        rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
-                        return true;
-                    } else {
-                        switch (motionEvent.getActionMasked()) {
-                            case MotionEvent.ACTION_DOWN:
-                                x = view.getX() - motionEvent.getRawX();
-                                break;
-                            case MotionEvent.ACTION_MOVE:
-                                if ((x + motionEvent.getRawX()) < (screenWidth - (rightTotalWidth))) {
-                                    toX = screenWidth - (rightTotalWidth);
-                                } else {
-                                    toX = x + motionEvent.getRawX();
-                                }
-                                view.animate().x(toX).setDuration(0).start();
-                                rightSlider.animate().x(toX + rightHandleWidth).setDuration(0).start();
-                                break;
-                            case MotionEvent.ACTION_UP:
-                                if (rightSliderOpened) {
-                                    if ((x + motionEvent.getRawX()) > (screenWidth - 0.9 * (rightTotalWidth))) {
-                                        toX = rightHandleDefaultX;
-                                        rightSliderOpened = false;
-                                    } else {
-                                        toX = screenWidth - rightTotalWidth;
-                                        rightSliderOpened = true;
-                                    }
-                                } else {
-                                    if ((x + motionEvent.getRawX()) < (screenWidth - 0.1 * (rightTotalWidth))) {
-                                        toX = screenWidth - rightTotalWidth;
-                                        rightSliderOpened = true;
-                                    } else {
-                                        toX = rightTotalWidth;
-                                        rightSliderOpened = false;
-                                    }
-                                }
-                                view.animate().x(toX).setDuration(100).start();
-                                rightSlider.animate().x(toX + rightHandleWidth).setDuration(100).start();
-                                break;
-                            default:
-                                return false;
-                        }
-                    }
-                }
-                return true;
-            }
-        };
-        rightHandle.setOnTouchListener(rightListener);
-
-        View.OnTouchListener rightSliderListener = new View.OnTouchListener() {
-            float startX;
-            boolean started = false;
-
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                float toX;
-                switch (motionEvent.getActionMasked()) {
-                    case MotionEvent.ACTION_MOVE:
-                        if (!started) {
-                            startX = motionEvent.getRawX();
-                            started = true;
-                        }
-                        if ((motionEvent.getRawX() - startX) < 0) {
-                            toX = screenWidth - rightSliderWidth;
-                        } else {
-                            toX = screenWidth - rightSliderWidth + motionEvent.getRawX() - startX;
-                        }
-
-                        rightHandle.animate().x(toX - rightHandleWidth).setDuration(0).start();
-                        rightSlider.animate().x(toX).setDuration(0).start();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        if (motionEvent.getRawX() - startX > 0.1 * rightSliderWidth) {
-                            toX = screenWidth;
-                            rightSliderOpened = false;
-                        } else {
-                            toX = screenWidth - rightSliderWidth;
-                            rightSliderOpened = true;
-                        }
-
-                        started = false;
-
-                        rightHandle.animate().x(toX - rightHandleWidth).setDuration(100).start();
-                        rightSlider.animate().x(toX).setDuration(100).start();
-                        break;
-                    default:
-                        return false;
-                }
-                return false;
-            }
-        };
-        findViewById(R.id.right_slider_persons).setOnTouchListener(rightSliderListener);
-        findViewById(R.id.show_fav).setOnTouchListener(rightSliderListener);
-
-        //footer listener
-        footer.setOnTouchListener(new View.OnTouchListener() {
-            float y;
-
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                float toY;
-                closeBothSliders();
-
-                if (gestureDetector.onTouchEvent(motionEvent)) {
-                    if (footerOpened) {
-                        toY = getPixelsFromDp(512);
-                        footerOpened = false;
-                    } else {
-                        toY = footerTop + footer.getHeight();
-                        footerOpened = true;
-                    }
-                    footerSlider.animate().y(toY).setDuration(100).start();
-                    view.animate().y(toY - footer.getHeight()).setDuration(100).start();
-                    return false;
-                } else {
-                    switch (motionEvent.getActionMasked()) {
-                        case MotionEvent.ACTION_DOWN:
-                            y = motionEvent.getRawY() - view.getY();
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            if (motionEvent.getRawY() - y < footerTop + footer.getHeight()) {
-                                toY = footerTop + footer.getHeight();
-                            } else {
-                                toY = motionEvent.getRawY() - y;
-                            }
-
-                            footerSlider.animate().y(toY).setDuration(0).start();
-                            view.animate().y(toY - footer.getHeight()).setDuration(0).start();
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            if (footerOpened) {
-                                if (motionEvent.getRawY() - y > 0.1 * footerSlider.getHeight()) {
-                                    toY = getPixelsFromDp(512);
-                                    footerOpened = false;
-                                } else {
-                                    toY = footerTop + footer.getHeight();
-                                    footerOpened = true;
-                                }
-                            } else {
-                                if (motionEvent.getRawY() - y < 0.9 * footerSlider.getHeight()) {
-                                    toY = footerTop + footer.getHeight();
-                                    footerOpened = true;
-                                } else {
-                                    toY = getPixelsFromDp(512);
-                                    footerOpened = false;
-                                }
-                            }
-                            footerSlider.animate().y(toY).setDuration(100).start();
-                            view.animate().y(toY - footer.getHeight()).setDuration(100).start();
-                            break;
-                        default:
-                            return false;
-                    }
-                }
-                return true;
-            }
-        });
-
-        //radius SeekBar listener
-        radiusSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
-                radiusText.setText(progress + "m");
-                if (centerCircle != null) {
-                    centerCircle.setRadius(progress);
-                }
-                updateList(places);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-        //get user's location listener
-        getMyLocationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setLoading(true);
-                updateLocation = true;
-                checkUsersSettingGPS();
-                if (isAddingPerson && userLocation != null) {
-                    // adding person
-                    String address = getAddressFromLatLng(userLocation);
-                    addressField.setText(address);
-                    addPerson(address, userLocation);
-                }
-            }
-        });
+    void setListeners() {
+        ListenerElement showFavouritesButton = new ListenerElement(findViewById(R.id.show_fav), this, "click");
+        ListenerElement floatingButtonListener = new ListenerElement(findViewById(R.id.floatingActionButton), this, "click");
+        ListenerElement leftHandleListener = new ListenerElement(leftHandle, this, "touch");
+        ListenerElement leftSliderListener = new ListenerElement(findViewById(R.id.list_places), this, "touch");
+        ListenerElement rightHandleListener = new ListenerElement(rightHandle, this, "touch");
+        ListenerElement rightSliderListener = new ListenerElement(findViewById(R.id.right_slider_persons), this, "touch");
+        ListenerElement showFavouritesSlideListener = new ListenerElement(findViewById(R.id.show_fav), this, "touch");
+        ListenerElement footerListener = new ListenerElement(footer, this, "touch");
+        ListenerElement seekBarListener = new ListenerElement(radiusSeekBar, this, "seekBarChange");
+        ListenerElement myLocationButton = new ListenerElement(getMyLocationButton, this, "click");
     }
 
     void addLastChosenPerson(PersonElement personElement) {
@@ -633,6 +322,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         rightSlider = (RelativeLayout) findViewById(R.id.right_container);
         rightSlider.setX(rightSliderDefaultX);
         rightHandle.setX(rightHandleDefaultX);
+        rightSlider.setZ(1000);
 
         //autocompleteAdapter for right slider
         ListView personList = (ListView) findViewById(R.id.right_slider_persons);
@@ -704,9 +394,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         }
                     }
 
-
                     // update list from Google
                     if (s.toString().length() >= 2) {
+                        if (queue != null) {
+                            queue.cancelAll(Constants.TAG_AUTOCOMPLETE);
+                        }
                         RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", MapActivity.this);
                         autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
                         autocompleteRequest.doRequest();
@@ -716,10 +408,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             }
 
-            // set adapter
-//                autocompleteAdapter = new AutocompleteAdapter(MapActivity.this, R.layout.autocomplete_item, autoCompletePersons, MapActivity.this);
-//                addressField.setAdapter(autocompleteAdapter);
-//                autocompleteAdapter.notifyDataSetChanged();
 
             @Override
             public void afterTextChanged(Editable editable) {
@@ -760,11 +448,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
-    }
-
-    void showKeyboard() {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(0, 0);
     }
 
     void showFooter() {
@@ -1007,6 +690,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             editPerson.setAddress(address);
             editPerson.setPosition(position);
         } else {
+            if (person != null) {
+                person.getMarker().remove();
+            }
             person = new PersonElement(address, mGoogleMap.addMarker(new MarkerOptions().position(position).title("OSOBA " + (persons.size() + 1))));
             person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         }
@@ -1024,23 +710,24 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK-DEBUG", "Map ready!");
         mapReady = true;
         mGoogleMap = googleMap;
-
-        mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                for (PlaceElement p : places) {
-                    if (p.getMarker() != null) {
-                        try {
-                            p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                        } catch (IllegalArgumentException e){
-                            e.printStackTrace();
+        if (places != null && !places.isEmpty()) {
+            mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                @Override
+                public void onMapClick(LatLng latLng) {
+                    for (PlaceElement p : places) {
+                        if (p.getMarker() != null) {
+                            try {
+                                p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                            } catch (IllegalArgumentException e) {
+                                e.printStackTrace();
+                            }
                         }
+                        p.setChecked(false);
+                        placeAdapter.notifyDataSetChanged();
                     }
-                    p.setChecked(false);
-                    placeAdapter.notifyDataSetChanged();
                 }
-            }
-        });
+            });
+        }
 
         mGoogleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
@@ -1522,7 +1209,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    void showFav() {
+    public void showFav() {
         Intent intent = new Intent(this, FavouritesActivity.class);
         Log.d("MACIEK_DEBUG", "currentActivity: " + favouritePersons.toString());
         intent.putParcelableArrayListExtra("Fav", favouritePersons);
@@ -1556,7 +1243,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    int getPixelsFromDp(float sizeDp) {
+    public int getPixelsFromDp(float sizeDp) {
         float scale = getResources().getDisplayMetrics().density;
         return (int) (sizeDp * scale + 0.5f);
     }
@@ -1600,12 +1287,5 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    private class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
 
-        @Override
-        public boolean onSingleTapUp(MotionEvent event) {
-            return true;
-        }
-
-    }
 }
