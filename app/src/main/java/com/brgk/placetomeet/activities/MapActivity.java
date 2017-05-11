@@ -41,6 +41,7 @@ import android.widget.TextView;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.brgk.placetomeet.adapters.AutocompleteAdapter;
+import com.brgk.placetomeet.adapters.MarkerInfoWindowAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.models.CategoryElement;
 import com.brgk.placetomeet.contants.Constants;
@@ -597,7 +598,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     .fillColor(0x22146244)
                     .strokeWidth(2));
             centerOfCircle = mGoogleMap.addCircle(new CircleOptions()
-                    .radius(10)
+                    .radius(radiusSeekBar.getProgress()/30)
                     .center(center)
                     .strokeWidth(0)
                     .fillColor(Color.parseColor("#00aef4")));
@@ -710,7 +711,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         Log.d("MACIEK-DEBUG", "Map ready!");
         mapReady = true;
         mGoogleMap = googleMap;
-        if (places != null && !places.isEmpty()) {
+        mGoogleMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
+
+        if (places != null) {
             mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                 @Override
                 public void onMapClick(LatLng latLng) {
@@ -747,15 +750,17 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                for (PlaceElement place : places) {
-                    if (place.getMarker() != null) {
-                        if (place.getMarker().equals(marker)) {
-                            tickPlaceOnList(marker);
-                            float toY = footerTop + footer.getHeight();
-                            footerOpened = true;
-                            footerSlider.animate().y(toY).setDuration(100).start();
-                            footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
-                            placesList.setSelection(places.indexOf(place));
+                if(places != null) {
+                    for (PlaceElement place : places) {
+                        if (place.getMarker() != null) {
+                            if (place.getMarker().equals(marker)) {
+                                tickPlaceOnList(marker);
+                                float toY = footerTop + footer.getHeight();
+                                footerOpened = true;
+                                footerSlider.animate().y(toY).setDuration(100).start();
+                                footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
+                                placesList.setSelection(places.indexOf(place));
+                            }
                         }
                     }
                 }
@@ -812,7 +817,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             addressBuilder += addressArray.get(0).getAddressLine(0) + ", ";
             addressBuilder += addressArray.get(0).getLocality();
         } else {
-            addressBuilder = "Lokalizacja nieokreślona";
+            addressBuilder = "Adres nieznany";
         }
         return addressBuilder;
     }
@@ -852,7 +857,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void updateList(List<PlaceElement> places) {
-        if (places.size() > 0) {
+        if (places.size() > 0 && mGoogleMap != null) {
             if (!footerShowed) {
                 showFooter();
             }
@@ -860,10 +865,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             for (PlaceElement p : places) {
                 if (p.getMarker() != null) {
                     p.getMarker().remove();
+                    p.setMarker(null);
                 }
                 if (p.isChecked()) {
                     highlightMarker(p);
                 }
+
                 if (p.getDistanceFromCenter() <= radiusSeekBar.getProgress()) {
                     p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(p.getPosition()).title(p.getName())));
                     placesOnMap.add(p);

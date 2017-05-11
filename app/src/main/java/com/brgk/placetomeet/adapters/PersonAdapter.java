@@ -2,13 +2,18 @@ package com.brgk.placetomeet.adapters;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.InputType;
+import android.text.method.ScrollingMovementMethod;
+import android.util.AttributeSet;
 import android.util.SparseBooleanArray;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,9 +52,10 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.right_slider_item, null);
         }
-        TextView addressView = (TextView) convertView.findViewById(R.id.right_slider_item_address);
-        TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
-        TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_avatar);
+        final TextView addressView = (TextView) convertView.findViewById(R.id.right_slider_item_address);
+        final TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
+        //TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_number);
+        ImageView avatar = (ImageView) convertView.findViewById(R.id.right_slider_item_avatar);
         final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);
         final Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
         personOnOff.setChecked(true);
@@ -64,12 +70,21 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         if (!p.getPosition().equals(activity.userLocation) && !activity.favouritePersons.contains(p)) {
             p.setName("OSOBA " + (position + 1));
         } else if (p.getPosition().equals(activity.userLocation)) {
+            avatar.setColorFilter(Color.parseColor("#33FF00"));
             p.setName("Ja");
             p.getMarker().setTitle("Ja");
+        } else if (activity.favouritePersons.contains(p)){
+            if(p.getImage() != 0){
+                avatar.setImageResource(p.getImage());
+            }else{
+                avatar.setColorFilter(Color.MAGENTA);
+            }
         }
+        addressView.setSelected(true);
+        nameView.setSelected(true);
         addressView.setText(p.getAddress());
         nameView.setText(p.getName());
-        numberView.setText(String.valueOf(p.getId()));
+        //numberView.setText(String.valueOf(p.getId()));
 
         favouriteStar.setImageResource(p.isFavourite() ? R.drawable.favourite_on : R.drawable.favourite_off);
 
@@ -98,17 +113,27 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             }
         });
 
-        touchField.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                openDialog(v, p, favouriteStar);
-                return false;
-            }
-        });
+        if (!p.getPosition().equals(activity.userLocation)) {
+            touchField.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    openDialog(v, p, favouriteStar);
+                    return false;
+                }
+            });
+        }
+
 
         touchField.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(addressView.isSelected()){
+                    addressView.setSelected(false);
+                    nameView.setSelected(false);
+                }else {
+                    addressView.setSelected(true);
+                    nameView.setSelected(true);
+                }
                 activity.goToPerson(p);
             }
         });
@@ -119,13 +144,6 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     private void openDialog(View view, final PersonElement p, final ImageView favouriteStar) {
         PopupMenu popup = new PopupMenu(context, view);
         popup.getMenuInflater().inflate(R.menu.persons_popup_menu, popup.getMenu());
-
-        // hide menu fo user-person
-        if (p.getPosition().equals(activity.userLocation)) {
-            popup.getMenu().getItem(0).setVisible(false);
-            popup.getMenu().getItem(1).setVisible(false);
-            popup.getMenu().getItem(2).setVisible(false);
-        }
 
         // check if person is favourite
         if (p.isFavourite()) {
@@ -161,8 +179,12 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         final AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
         final EditText input = new EditText(context);
+        final TextView title = new TextView(context);
+        title.setGravity(Gravity.CENTER);
+        title.setTextSize(20);
+        title.setText("Wpisz nazwę osoby");
         input.setInputType(InputType.TYPE_CLASS_TEXT);
-
+        builder.setCustomTitle(title);
         builder.setView(input);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override

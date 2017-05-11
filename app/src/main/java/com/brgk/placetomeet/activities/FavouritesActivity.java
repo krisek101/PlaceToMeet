@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.ListView;
 
 import com.brgk.placetomeet.R;
@@ -31,6 +32,9 @@ public class FavouritesActivity extends AppCompatActivity {
 
         ArrayList<PersonElement> favs = getIntent().getParcelableArrayListExtra("Fav");
         added = getIntent().getIntegerArrayListExtra("Added");
+        if(!favs.isEmpty()){
+            findViewById(R.id.no_favourites_info).setVisibility(View.INVISIBLE);
+        }
 
         Log.d("MACIEK_DEBUG", "otheractivity: " + favs.toString());
 

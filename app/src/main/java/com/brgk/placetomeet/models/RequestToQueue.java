@@ -109,9 +109,10 @@ public class RequestToQueue {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        urlString.append("&language=pl&location=" + mapActivity.center.latitude + "," + mapActivity.center.longitude + "&radius=" + Constants.RADIUS);
+        urlString.append("&language=pl&location=" + mapActivity.center.latitude + "," + mapActivity.center.longitude);
         urlString.append("&key=" + Constants.API_KEY);
-        //urlString.append("&rankBy=distance");
+        //urlString.append("&radius=" + Constants.RADIUS);
+        urlString.append("&rankby=distance");
         setLink(urlString.toString());
     }
 

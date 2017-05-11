@@ -8,6 +8,17 @@
     tools:layout_editor_absoluteY="81dp"
     tools:layout_editor_absoluteX="0dp">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_margin="5dp"
+        android:id="@+id/no_favourites_info"
+        android:text="Lista osób ulubionych jest pusta.\nAby dodać nową osobę, przytrzymaj palcem na wybranej osobie z listy uczestników spotkania i wybierz \'Dodaj do ulubionych\'."
+        android:visibility="visible"/>
+
     <ListView
         android:id="@+id/f"
         android:layout_width="match_parent"

@@ -40,6 +40,7 @@ public class ListenerElement {
                 parentActivity.radiusText.setText(progress + "m");
                 if (parentActivity.centerCircle != null) {
                     parentActivity.centerCircle.setRadius(progress);
+                    parentActivity.centerOfCircle.setRadius(progress/30);
                 }
                 parentActivity.updateList(parentActivity.places);
             }
