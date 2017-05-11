@@ -5,7 +5,7 @@
     android:id="@+id/right_slider_item_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/colorPlaces"
+    android:background="?attr/selectableItemBackground"
     android:orientation="horizontal">
 
     <ImageView

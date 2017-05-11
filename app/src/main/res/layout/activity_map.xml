@@ -35,6 +35,29 @@
         android:visibility="invisible" />
 
     <RelativeLayout
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/loading"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp">
+
+        <ToggleButton
+            android:id="@+id/rankby_button"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+
+            android:background="@drawable/rankby_selector"
+            android:checked="false"
+            android:textOff="@null"
+            android:textOn="@null" />
+    </RelativeLayout>
+
+
+
+    <RelativeLayout
         android:id="@+id/seek_bar_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -76,6 +99,27 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginBottom="25dp"
+            android:layout_marginEnd="25dp"
+            android:orientation="horizontal">
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/floatingActionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_weight="1"
+                android:clickable="true"
+                app:fabSize="normal"
+                app:srcCompat="@drawable/ic_add_white_24dp" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/right_handle"
             android:layout_width="30dp"
@@ -89,18 +133,6 @@
         <include
             android:id="@+id/right_container"
             layout="@layout/right_slider" />
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/floatingActionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginBottom="25dp"
-            android:layout_marginEnd="25dp"
-            android:clickable="true"
-            app:fabSize="normal"
-            app:srcCompat="@drawable/ic_add_white_24dp" />
 
         <TextView
             android:id="@+id/left_handle"

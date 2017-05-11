@@ -27,6 +27,8 @@ import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -37,21 +39,22 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.adapters.AutocompleteAdapter;
+import com.brgk.placetomeet.adapters.CategoryAdapter;
 import com.brgk.placetomeet.adapters.MarkerInfoWindowAdapter;
+import com.brgk.placetomeet.adapters.PersonAdapter;
+import com.brgk.placetomeet.adapters.PlaceAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
-import com.brgk.placetomeet.models.CategoryElement;
 import com.brgk.placetomeet.contants.Constants;
+import com.brgk.placetomeet.models.CategoryElement;
 import com.brgk.placetomeet.models.ListenerElement;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.models.PlaceElement;
-import com.brgk.placetomeet.R;
-import com.brgk.placetomeet.adapters.CategoryAdapter;
-import com.brgk.placetomeet.adapters.PersonAdapter;
-import com.brgk.placetomeet.adapters.PlaceAdapter;
 import com.brgk.placetomeet.models.RequestToQueue;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -148,6 +151,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public Circle centerOfCircle;
     public pl.droidsonroids.gif.GifTextView loading;
     private boolean byMapAdding = true;
+    private ToggleButton rankByButton;
 
     // Location
     private LocationRequest locationRequest;
@@ -323,7 +327,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         rightSlider = (RelativeLayout) findViewById(R.id.right_container);
         rightSlider.setX(rightSliderDefaultX);
         rightHandle.setX(rightHandleDefaultX);
-        rightSlider.setZ(1000);
+       // rightSlider.setZ(1000);
 
         //autocompleteAdapter for right slider
         ListView personList = (ListView) findViewById(R.id.right_slider_persons);
@@ -345,6 +349,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         footerTop = footer.getY();
         footerSlider = (LinearLayout) findViewById(R.id.footer_slider);
         footerSlider.setY(getPixelsFromDp(512));
+
+        //Rankby button
+        rankByButton = (ToggleButton) findViewById(R.id.rankby_button);
+        rankByButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                updateMapElements();
+            }
+        });
     }
 
     void setupActionBar() {
@@ -353,7 +366,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mActionBar.setCustomView(view);
 
         addressField = (ClearableAutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
-        addressField.setClearButton(getResources().getDrawable(R.drawable.clear));
+        addressField.setClearButton(getDrawable(R.drawable.clear));
 
         addressField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -474,20 +487,36 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.map_activity_menu, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            if (person != null) {
-                if (!persons.contains(person)) {
-                    person.getMarker().remove();
-                    person = null;
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                if (person != null) {
+                    if (!persons.contains(person)) {
+                        person.getMarker().remove();
+                        person = null;
+                    }
                 }
-            }
-            isAddingPerson = false;
-            hideActionBar();
-            mActionBar.setDisplayHomeAsUpEnabled(false);
-            mActionBar.setDisplayShowHomeEnabled(false);
+                isAddingPerson = false;
+                hideActionBar();
+                mActionBar.setDisplayHomeAsUpEnabled(false);
+                mActionBar.setDisplayShowHomeEnabled(false);
+                return true;
+            case R.id.main_menu_options:
+
+                return true;
+            case R.id.main_menu_quit:
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -557,8 +586,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 break;
             case Constants.REQUEST_FAVOURITES:
                 if (resultCode == RESULT_OK) {
+                    //remove favourites
+                    ArrayList<Integer> toBeDeleted = new ArrayList<>();
+                    for( int i : toBeDeleted ) {
+                        favouritePersons.remove(i);
+                    }
+                    //add selected favourites
                     ArrayList<Integer> positions = data.getIntegerArrayListExtra("positions");
-                    Log.d("MACIEK_DEBUG", "map: " + positions.toString());
                     for (int i = 0; i < favouritePersons.size(); i++) {
                         PersonElement p = favouritePersons.get(i);
                         if (persons.contains(p) && !positions.contains(i)) {
@@ -852,7 +886,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     public void setJsonArray(String category) {
         RequestToQueue placesRequest = new RequestToQueue(Constants.TAG_CATEGORY, category, this);
-        placesRequest.setCategoryUrl();
+        Log.d("MACIEK_DEBUG", "rankby: " + (rankByButton.isChecked() ? "distance" : "popular"));
+        placesRequest.setCategoryUrl(rankByButton.isChecked());
         placesRequest.doRequest();
     }
 

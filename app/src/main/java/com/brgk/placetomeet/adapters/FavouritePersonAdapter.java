@@ -4,9 +4,7 @@ import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,9 +17,7 @@ import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.FavouritesActivity;
 import com.brgk.placetomeet.models.PersonElement;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {

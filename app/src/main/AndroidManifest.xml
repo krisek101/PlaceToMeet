@@ -16,15 +16,18 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".activities.MapActivity"
-            android:label="@string/app_title">
+            android:label="@string/app_title"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".activities.FavouritesActivity"
-            android:label="@string/app_title">
+            android:label="@string/app_title"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".activities.SplashScreen"
-            android:label="@string/app_title">
+            android:label="@string/app_title"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
