@@ -100,7 +100,7 @@ public class RequestToQueue {
         mapActivity.addPerson(person.getAddress(), person.getPosition());
     }
 
-    public void setCategoryUrl() {
+    public void setCategoryUrl(boolean byDistance) {
         StringBuilder urlString = new StringBuilder();
         urlString.append("https://maps.googleapis.com/maps/api/place/nearbysearch/json");
         urlString.append("?keyword=");
@@ -111,8 +111,11 @@ public class RequestToQueue {
         }
         urlString.append("&language=pl&location=" + mapActivity.center.latitude + "," + mapActivity.center.longitude);
         urlString.append("&key=" + Constants.API_KEY);
-        //urlString.append("&radius=" + Constants.RADIUS);
-        urlString.append("&rankby=distance");
+        if( byDistance ) {
+            urlString.append("&rankby=distance");
+        } else {
+            urlString.append("&radius=" + Constants.RADIUS);
+        }
         setLink(urlString.toString());
     }
 
