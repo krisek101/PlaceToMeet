@@ -21,7 +21,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginEnd="10dp"
         android:layout_marginTop="10dp"
-        android:src="@drawable/location2" />
+        android:src="@drawable/location" />
 
     <pl.droidsonroids.gif.GifTextView
         android:id="@+id/loading"

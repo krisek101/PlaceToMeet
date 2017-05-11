@@ -56,6 +56,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         final TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
         //TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_number);
         ImageView avatar = (ImageView) convertView.findViewById(R.id.right_slider_item_avatar);
+        avatar.setColorFilter(Color.GRAY);
         final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);
         final Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
         personOnOff.setChecked(true);
@@ -70,14 +71,15 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         if (!p.getPosition().equals(activity.userLocation) && !activity.favouritePersons.contains(p)) {
             p.setName("OSOBA " + (position + 1));
         } else if (p.getPosition().equals(activity.userLocation)) {
-            avatar.setColorFilter(Color.parseColor("#33FF00"));
+            avatar.setColorFilter(Color.BLACK);
+            favouriteStar.setVisibility(View.INVISIBLE);
             p.setName("Ja");
             p.getMarker().setTitle("Ja");
         } else if (activity.favouritePersons.contains(p)){
             if(p.getImage() != 0){
                 avatar.setImageResource(p.getImage());
             }else{
-                avatar.setColorFilter(Color.MAGENTA);
+                avatar.clearColorFilter();
             }
         }
         addressView.setSelected(true);

@@ -32,6 +32,9 @@ public class PlaceElement {
     private Context context;
     private boolean checked;
     private float distanceFromCenter;
+    private String photo;
+    private String website;
+    private String phoneNumber;
 
     public PlaceElement(JSONObject place, String category, float distanceFromCenter){
         this.place = place;
@@ -170,6 +173,30 @@ public class PlaceElement {
 
     public void setDistanceFromCenter(int distanceFromCenter) {
         this.distanceFromCenter = distanceFromCenter;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     private String getAddressFromPosition(double latitudeNow, double longitudeNow) {

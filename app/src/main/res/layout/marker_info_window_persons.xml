@@ -37,6 +37,6 @@
         android:layout_height="10dp"
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/content"
-        android:src="@drawable/icona" />
+        android:src="@drawable/arrow" />
 
 </RelativeLayout>

@@ -66,13 +66,22 @@ public class RequestToQueue {
     private void onResponsePlaces(JSONObject response) throws JSONException {
         double lat, lng;
         LatLng position;
+        String photoReference="";
         JSONArray ja = response.getJSONArray("results");
         for (int i = 0; i < ja.length(); i++) {
             JSONObject c = ja.getJSONObject(i);
             lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
             lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
+            try {
+                photoReference = c.getJSONArray("photos").getJSONObject(0).getString("photo_reference");
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
             position = new LatLng(lat, lng);
             PlaceElement p = new PlaceElement(c, category, mapActivity.getDistanceFromCenter(position));
+            if(photoReference != null) {
+                p.setPhoto(photoReference);
+            }
             if (!mapActivity.places.contains(p)) {
                 mapActivity.places.add(p);
             }

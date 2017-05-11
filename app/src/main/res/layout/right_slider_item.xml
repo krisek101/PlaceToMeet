@@ -10,11 +10,13 @@
 
     <ImageView
         android:id="@+id/right_slider_item_avatar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_alignParentBottom="true"
         android:gravity="center"
-        android:src="@drawable/default_person" />
+        android:src="@drawable/default_person"
+        android:paddingTop="1dp"
+        android:paddingBottom="1dp"/>
 
     <!--<TextView-->
         <!--android:layout_width="wrap_content"-->
