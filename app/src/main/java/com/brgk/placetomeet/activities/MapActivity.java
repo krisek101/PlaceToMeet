@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -366,7 +367,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mActionBar.setCustomView(view);
 
         addressField = (ClearableAutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
-        addressField.setClearButton(getDrawable(R.drawable.clear));
+        addressField.setClearButton(ResourcesCompat.getDrawable(getResources(), R.drawable.clear, null));
 
         addressField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -587,10 +588,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             case Constants.REQUEST_FAVOURITES:
                 if (resultCode == RESULT_OK) {
                     //remove favourites
-                    ArrayList<Integer> toBeDeleted = new ArrayList<>();
-                    for( int i : toBeDeleted ) {
+                    ArrayList<Integer> toBeDeleted = data.getIntegerArrayListExtra("deletions");
+                    for( int i = toBeDeleted.size()-1; i >= 0; i-- ) {
                         favouritePersons.remove(i);
                     }
+                    saveFav();
                     //add selected favourites
                     ArrayList<Integer> positions = data.getIntegerArrayListExtra("positions");
                     for (int i = 0; i < favouritePersons.size(); i++) {
