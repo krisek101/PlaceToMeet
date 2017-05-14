@@ -31,7 +31,7 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
         this.context = context;
         this.parentActivity = parentActivity;
         this.favs = favs;
-        for( Integer i : parentActivity.added ) {
+        for( Integer i : parentActivity.positions ) {
             stateMap.put(i, true);
         }
     }

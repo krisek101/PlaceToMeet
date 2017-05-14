@@ -28,8 +28,6 @@ import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -53,7 +51,7 @@ import com.brgk.placetomeet.adapters.PlaceAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.contants.Constants;
 import com.brgk.placetomeet.models.CategoryElement;
-import com.brgk.placetomeet.models.ListenerElement;
+import com.brgk.placetomeet.models.ListenerHelper;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.models.PlaceElement;
 import com.brgk.placetomeet.models.RequestToQueue;
@@ -292,16 +290,17 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     void setListeners() {
-        ListenerElement showFavouritesButton = new ListenerElement(findViewById(R.id.show_fav), this, "click");
-        ListenerElement floatingButtonListener = new ListenerElement(findViewById(R.id.floatingActionButton), this, "click");
-        ListenerElement leftHandleListener = new ListenerElement(leftHandle, this, "touch");
-        ListenerElement leftSliderListener = new ListenerElement(findViewById(R.id.list_places), this, "touch");
-        ListenerElement rightHandleListener = new ListenerElement(rightHandle, this, "touch");
-        ListenerElement rightSliderListener = new ListenerElement(findViewById(R.id.right_slider_persons), this, "touch");
-        ListenerElement showFavouritesSlideListener = new ListenerElement(findViewById(R.id.show_fav), this, "touch");
-        ListenerElement footerListener = new ListenerElement(footer, this, "touch");
-        ListenerElement seekBarListener = new ListenerElement(radiusSeekBar, this, "seekBarChange");
-        ListenerElement myLocationButton = new ListenerElement(getMyLocationButton, this, "click");
+        ListenerHelper listenerHelper= new ListenerHelper(this);
+        listenerHelper.setListener(findViewById(R.id.show_fav),"click");
+        listenerHelper.setListener(findViewById(R.id.floatingActionButton),"click");
+        listenerHelper.setListener(leftHandle,"touch");
+        listenerHelper.setListener(findViewById(R.id.list_places),"touch");
+        listenerHelper.setListener(rightHandle,"touch");
+        listenerHelper.setListener(findViewById(R.id.right_slider_persons),"touch");
+        listenerHelper.setListener(findViewById(R.id.show_fav),"touch");
+        listenerHelper.setListener(footer,"touch");
+        listenerHelper.setListener(radiusSeekBar,"seekBarChange");
+        listenerHelper.setListener(getMyLocationButton,"click");
     }
 
     void addLastChosenPerson(PersonElement personElement) {
@@ -488,13 +487,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.map_activity_menu, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
@@ -508,12 +500,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 hideActionBar();
                 mActionBar.setDisplayHomeAsUpEnabled(false);
                 mActionBar.setDisplayShowHomeEnabled(false);
-                return true;
-            case R.id.main_menu_options:
-
-                return true;
-            case R.id.main_menu_quit:
-
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -590,8 +576,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     //remove favourites
                     ArrayList<Integer> toBeDeleted = data.getIntegerArrayListExtra("deletions");
                     for( int i = toBeDeleted.size()-1; i >= 0; i-- ) {
-                        favouritePersons.remove(i);
+                        int index = toBeDeleted.get(i);
+                        if( persons.contains(favouritePersons.get(index)) ) persons.remove(favouritePersons.get(index));
+                        favouritePersons.remove(index);
                     }
+                    updateMapElements();
                     saveFav();
                     //add selected favourites
                     ArrayList<Integer> positions = data.getIntegerArrayListExtra("positions");
@@ -1305,18 +1294,17 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     void restoreData() {
         //favourites
-        String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", "none");
+        String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", null);
+//        String json = [{"address":"Zaorskiego 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 4a","position":{"latitude":52.16212338072353,"longitude":21.019675098359585}},{"address":"aleja Komisji Edukacji Narodowej 48, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 5a","position":{"latitude":52.14250818646051,"longitude":21.055312603712085}},{"address":"Powsińska 13, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 6a","position":{"latitude":52.18253373437499,"longitude":21.067824102938175}},{"address":"Błonia Wilanowskie, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 7a","position":{"latitude":52.15192826938311,"longitude":21.076964400708675}},{"address":"Bukowińska 26C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 8a","position":{"latitude":52.18474976529246,"longitude":21.02487254887819}},{"address":"Południowa Obwodnica Warszawy, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 9a","position":{"latitude":52.1396523681538,"longitude":21.025453582406044}},{"address":"Taborowa 33C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 10a","position":{"latitude":52.1616472563183,"longitude":21.004199422895912}},{"address":"Bocheńska 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 11a","position":{"latitude":52.179068240920245,"longitude":21.030993014574047}},{"address":"aleja Komisji Edukacji Narodowej 60, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 12a","position":{"latitude":52.14914588299161,"longitude":21.048004254698753}},{"address":"Politechnika, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 13a","position":{"latitude":52.2176246,"longitude":21.0143614}},{"address":"Jana Rosoła 61B, Warszawa","displayed":true,"id":2,"image":0,"isFavourite":true,"name":"osoba 14a","position":{"latitude":52.15286405845385,"longitude":21.05514295399189}},{"address":"Marco Polo 1, Warszawa","displayed":true,"id":3,"image":0,"isFavourite":true,"name":"osoba 15a","position":{"latitude":52.14725561255478,"longitude":21.03886429220438}}]
         Log.d("MACIEK_DEBUG", json);
-        if (!json.equals("none")) {
-            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
-            }.getType());
+        if (json == null) {
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
         }
 
         //last chosen
         json = PreferenceManager.getDefaultSharedPreferences(this).getString("LastChosen", "none");
         if (!json.equals("none")) {
-            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
-            }.getType());
+            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
         }
 
         //last location

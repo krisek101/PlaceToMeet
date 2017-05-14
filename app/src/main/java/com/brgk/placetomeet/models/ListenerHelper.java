@@ -8,32 +8,31 @@ import android.widget.SeekBar;
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.MapActivity;
 
-public class ListenerElement {
+public class ListenerHelper {
 
-    private View viewElement;
-    private int id;
     private MapActivity parentActivity;
     private GestureDetector gestureDetector;
 
-    public ListenerElement(View viewElement, MapActivity parentActivity, String type) {
+    public ListenerHelper( MapActivity parentActivity ) {
         gestureDetector = new GestureDetector(parentActivity, new SingleTapConfirm());
-        this.viewElement = viewElement;
-        this.id = viewElement.getId();
         this.parentActivity = parentActivity;
+    }
+
+    public void setListener(View viewElement, String type) {
         switch (type) {
             case "click":
-                chooseClickListener();
+                chooseClickListener(viewElement);
                 break;
             case "touch":
-                chooseTouchListener();
+                chooseTouchListener(viewElement);
                 break;
             case "seekBarChange":
-                chooseSeekBarChangeListener();
+                chooseSeekBarChangeListener(viewElement);
                 break;
         }
     }
 
-    private void chooseSeekBarChangeListener(){
+    private void chooseSeekBarChangeListener(View viewElement){
         ((SeekBar) viewElement).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
@@ -57,7 +56,8 @@ public class ListenerElement {
         });
     }
 
-    private void chooseClickListener() {
+    private void chooseClickListener(View viewElement) {
+        final int id = viewElement.getId();
         viewElement.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -76,7 +76,8 @@ public class ListenerElement {
         });
     }
 
-    private void chooseTouchListener() {
+    private void chooseTouchListener(final View viewElement) {
+        final int id = viewElement.getId();
         View.OnTouchListener rightSliderListener = new View.OnTouchListener() {
             float startX;
             boolean started = false;

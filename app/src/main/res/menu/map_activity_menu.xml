@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <!--TODO: MainActivity menu items-->
-    <item android:id="@+id/main_menu_options"
-    android:title="OPCJE"/>
-    <item android:id="@+id/main_menu_quit"
-        android:title="WYJSCIE"/>
-</menu>
