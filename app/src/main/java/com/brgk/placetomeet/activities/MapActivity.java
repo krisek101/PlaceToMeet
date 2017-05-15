@@ -7,9 +7,6 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.graphics.Point;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -26,8 +23,6 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -56,10 +51,12 @@ import com.brgk.placetomeet.adapters.CategoryAdapter;
 import com.brgk.placetomeet.adapters.MarkerInfoWindowAdapter;
 import com.brgk.placetomeet.adapters.PersonAdapter;
 import com.brgk.placetomeet.adapters.PlaceAdapter;
-import com.brgk.placetomeet.adapters.RecyclerViewAdapter;
+import com.brgk.placetomeet.adapters.ReviewsAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.contants.Constants;
+import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.brgk.placetomeet.models.CategoryElement;
+import com.brgk.placetomeet.models.DownloadImageTask;
 import com.brgk.placetomeet.models.ListenerHelper;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.models.PlaceElement;
@@ -91,13 +88,12 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
 import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
@@ -295,7 +291,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         checkUsersSettingGPS();
         if (isAddingPerson && userLocation != null) {
             // adding person
-            String address = getAddressFromLatLng(userLocation);
+            String address = UsefulFunctions.getAddressFromLatLng(this, userLocation);
             addressField.setText(address);
             addPerson(address, userLocation);
         }
@@ -651,7 +647,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     .fillColor(0x22146244)
                     .strokeWidth(2));
             centerOfCircle = mGoogleMap.addCircle(new CircleOptions()
-                    .radius(radiusSeekBar.getProgress()/30)
+                    .radius(radiusSeekBar.getProgress() / 30)
                     .center(center)
                     .strokeWidth(0)
                     .fillColor(Color.parseColor("#00aef4")));
@@ -774,7 +770,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     showActionBar();
                     isAddingPerson = true;
                 }
-                String address = getAddressFromLatLng(latLng);
+                String address = UsefulFunctions.getAddressFromLatLng(MapActivity.this, latLng);
                 addPerson(address, latLng);
                 byMapAdding = false;
                 addressField.setText(address);
@@ -784,7 +780,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                if(places != null) {
+                if (places != null) {
                     for (PlaceElement place : places) {
                         if (place.getMarker() != null) {
                             if (place.getMarker().equals(marker)) {
@@ -831,7 +827,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             //update last location marker
             userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation));
             userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-            user = new PersonElement(getAddressFromLatLng(userLocation), "Ja", userLocationMarker);
+            user = new PersonElement(UsefulFunctions.getAddressFromLatLng(this, userLocation), "Ja", userLocationMarker);
 
             // add user
             persons.add(user);
@@ -843,6 +839,100 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void updatePlaceInfo(PlaceElement place) {
+        AlertDialog.Builder placeInfoWindow = new AlertDialog.Builder(MapActivity.this);
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View convertView = inflater.inflate(R.layout.place_details_window, null);
+        placeInfoWindow.setView(convertView);
+
+        TextView title = (TextView) convertView.findViewById(R.id.place_details_title);
+        RatingBar rating = (RatingBar) convertView.findViewById(R.id.place_details_rating);
+        TextView rating_text = (TextView) convertView.findViewById(R.id.place_details_rating_text);
+        TextView address = (TextView) convertView.findViewById(R.id.place_details_address);
+        TextView phoneNumber = (TextView) convertView.findViewById(R.id.place_details_phone_number);
+        TextView website = (TextView) convertView.findViewById(R.id.place_details_website);
+        Spinner openingHours = (Spinner) convertView.findViewById(R.id.place_details_opening_hours);
+        ImageView photo = (ImageView) convertView.findViewById(R.id.place_details_photo);
+        final TextView reviewsHandler = (TextView) convertView.findViewById(R.id.place_details_reviews_handler);
+        final ImageView reviewsArrow = (ImageView) convertView.findViewById(R.id.place_details_reviews_arrow);
+        RelativeLayout reviewsHandlerContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_reviews_handler_container);
+        final ListView reviewsList = (ListView) convertView.findViewById(R.id.place_details_reviews);
+
+        title.setText(place.getName());
+        rating.setRating((float) place.getRate());
+        rating_text.setText(String.valueOf(place.getRate()));
+        address.setText(place.getAddress());
+        if (place.getPhoneNumber() != null) {
+            phoneNumber.setText(place.getPhoneNumber());
+        } else {
+            phoneNumber.getLayoutParams().height = 0;
+        }
+        if (place.getWebsite() != null) {
+            website.setText(place.getWebsite());
+        } else {
+            website.getLayoutParams().height = 0;
+        }
+        if (place.getOpenHours() != null) {
+            int day = getNumDayOfWeek();
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, place.getOpenHours());
+            openingHours.setSelection(day);
+            openingHours.setAdapter(adapter);
+        } else {
+            openingHours.getLayoutParams().height = 0;
+            openingHours.setVisibility(View.INVISIBLE);
+        }
+
+        if (place.getPhotos() != null) {
+            String url = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=700&photoreference=" + place.getPhotos()[0] + "&key=" + Constants.API_KEY;
+            new DownloadImageTask(photo).execute(url);
+        } else {
+            photo.getLayoutParams().height = 0;
+        }
+
+        if (place.getReviews() != null) {
+            final List<JSONObject> reviews = new ArrayList<>();
+            for (int i = 0; i < place.getReviews().length(); i++) {
+                try {
+                    reviews.add((JSONObject) place.getReviews().get(i));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            final ReviewsAdapter reviewsAdapter = new ReviewsAdapter(this, R.layout.place_details_review, reviews);
+            final boolean[] reviewsOpened = {false};
+            reviewsArrow.setColorFilter(Color.WHITE);
+            final int num_rev = place.getReviews().length();
+            reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+            reviewsHandlerContainer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (reviewsOpened[0]) {
+                        reviewsArrow.animate().rotation(0).setDuration(100).start();
+                        reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+                        reviewsOpened[0] = false;
+                        reviewsList.getLayoutParams().height = 0;
+                        reviewsList.setVisibility(View.INVISIBLE);
+                    } else {
+                        reviewsArrow.animate().rotation(-90).setDuration(100).start();
+                        reviewsHandler.setText("Ukryj opinie (" + num_rev + ")");
+                        reviewsOpened[0] = true;
+                        reviewsList.setVisibility(View.VISIBLE);
+                        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        layoutParams.addRule(RelativeLayout.BELOW, R.id.place_details_reviews_handler_container);
+                        reviewsList.setLayoutParams(layoutParams);
+                        reviewsList.setAdapter(reviewsAdapter);
+                    }
+                }
+            });
+        } else {
+            reviewsHandlerContainer.setVisibility(View.INVISIBLE);
+            reviewsHandlerContainer.getLayoutParams().height = 0;
+        }
+
+        placeInfoWindow.show();
+        setLoading(false);
+    }
+
+    public int getNumDayOfWeek() {
         Calendar calendar = Calendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         int num_day;
@@ -869,60 +959,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 num_day = 0;
                 break;
         }
-
-        AlertDialog.Builder placeInfoWindow = new AlertDialog.Builder(MapActivity.this);
-        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View convertView = inflater.inflate(R.layout.place_details_window, null);
-        placeInfoWindow.setView(convertView);
-
-        TextView title = (TextView) convertView.findViewById(R.id.place_details_title);
-        RatingBar rating = (RatingBar) convertView.findViewById(R.id.place_details_rating);
-        TextView rating_text = (TextView) convertView.findViewById(R.id.place_details_rating_text);
-        TextView address = (TextView) convertView.findViewById(R.id.place_details_address);
-        TextView phoneNumber = (TextView) convertView.findViewById(R.id.place_details_phone_number);
-        TextView website = (TextView) convertView.findViewById(R.id.place_details_website);
-        Spinner openingHours = (Spinner) convertView.findViewById(R.id.place_details_opening_hours);
-        RecyclerView rv = (RecyclerView) convertView.findViewById(R.id.place_details_recycler_view);
-
-        title.setText(place.getName());
-        rating.setRating((float) place.getRate());
-        rating_text.setText(String.valueOf(place.getRate()));
-        address.setText(place.getAddress());
-        phoneNumber.setText(place.getPhoneNumber());
-        website.setText(place.getWebsite());
-        if (place.getOpenHours() != null) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, place.getOpenHours());
-            openingHours.setSelection(num_day);
-            openingHours.setAdapter(adapter);
-        } else {
-            openingHours.setVisibility(View.INVISIBLE);
-        }
-
-        if (place.getPhotos() != null) {
-            rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-            rv.setAdapter(new RecyclerViewAdapter(this, place.getPhotos()));
-        }
-
-        placeInfoWindow.show();
-        setLoading(false);
-    }
-
-    public String getAddressFromLatLng(LatLng position) {
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-        List<Address> addressArray = new ArrayList<>();
-        String addressBuilder = "";
-        try {
-            addressArray = geocoder.getFromLocation(position.latitude, position.longitude, 1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (addressArray != null && !addressArray.isEmpty()) {
-            addressBuilder += addressArray.get(0).getAddressLine(0) + ", ";
-            addressBuilder += addressArray.get(0).getLocality();
-        } else {
-            addressBuilder = "Adres nieznany";
-        }
-        return addressBuilder;
+        return num_day;
     }
 
     public void updatePlaces(String category) throws JSONException {
@@ -1192,7 +1229,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                             user.setMarker(userLocationMarker);
                             user.setPosition(userLocation);
-                            user.setAddress(getAddressFromLatLng(userLocation));
+                            user.setAddress(UsefulFunctions.getAddressFromLatLng(this, userLocation));
                             personAdapter.notifyDataSetChanged();
                             updateMapElements();
                         }
@@ -1200,7 +1237,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         // if no location saved in Preferences
                         userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title("Ja"));
                         userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                        user = new PersonElement(getAddressFromLatLng(userLocation), "Ja", userLocationMarker);
+                        user = new PersonElement(UsefulFunctions.getAddressFromLatLng(this, userLocation), "Ja", userLocationMarker);
                         persons.add(user);
                         personAdapter.notifyDataSetChanged();
                         updateMapElements();

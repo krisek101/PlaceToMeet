@@ -2,9 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#EEE"
     android:orientation="vertical"
-    android:padding="5dp"
-    android:background="#EEE">
+    android:padding="5dp">
 
     <TextView
         android:id="@+id/place_details_title"
@@ -16,19 +16,19 @@
         android:textSize="20sp" />
 
     <TextView
+        android:id="@+id/place_details_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/place_details_title"
-        android:id="@+id/place_details_address"
-        android:textSize="14sp"
+        android:layout_centerHorizontal="true"
         android:paddingBottom="5dp"
-        android:layout_centerHorizontal="true"/>
+        android:textSize="14sp" />
 
     <RelativeLayout
+        android:id="@+id/rating_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/place_details_address"
-        android:id="@+id/rating_container"
         android:layout_centerHorizontal="true">
 
         <RatingBar
@@ -36,54 +36,88 @@
             style="?android:attr/ratingBarStyleIndicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
             android:isIndicator="true"
-            android:stepSize="0.1"
-            android:layout_centerVertical="true" />
+            android:stepSize="0.1" />
 
         <TextView
             android:id="@+id/place_details_rating_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/place_details_rating"
-            android:textSize="24sp"
+            android:layout_centerVertical="true"
             android:layout_marginStart="5dp"
-            android:layout_centerVertical="true"/>
+            android:layout_toEndOf="@+id/place_details_rating"
+            android:textSize="24sp" />
     </RelativeLayout>
 
     <TextView
+        android:id="@+id/place_details_phone_number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/place_details_phone_number"
         android:layout_below="@+id/rating_container"
         android:layout_centerHorizontal="true"
-        android:textSize="16sp"
         android:autoLink="phone"
-        android:padding="7dp"/>
+        android:padding="7dp"
+        android:textSize="16sp" />
 
     <TextView
+        android:id="@+id/place_details_website"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/place_details_website"
-        android:autoLink="web"
         android:layout_below="@+id/place_details_phone_number"
         android:layout_centerHorizontal="true"
+        android:autoLink="web"
         android:gravity="center"
-        android:textSize="16sp"
-        android:paddingBottom="7dp"/>
+        android:paddingBottom="7dp"
+        android:textSize="16sp" />
 
     <Spinner
+        android:id="@+id/place_details_opening_hours"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/place_details_opening_hours"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/place_details_website" />
+        android:layout_below="@+id/place_details_website"
+        android:layout_centerHorizontal="true" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/place_details_recycler_view"
-        android:layout_width="fill_parent"
-        android:layout_height="140dp"
+    <ImageView
+        android:id="@+id/place_details_photo"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
         android:layout_below="@+id/place_details_opening_hours"
-        android:orientation="vertical"
-        android:scrollbars="none" />
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical" />
+
+    <RelativeLayout
+        android:id="@+id/place_details_reviews_handler_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/place_details_photo"
+        android:layout_marginTop="10dp"
+        android:background="#280c21"
+        android:gravity="center"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp">
+
+        <ImageView
+            android:id="@+id/place_details_reviews_arrow"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@+id/place_details_reviews_handler"
+            android:src="@drawable/arrow" />
+
+        <TextView
+            android:id="@+id/place_details_reviews_handler"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#fff"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/place_details_reviews"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/place_details_reviews_handler_container"/>
 
 </RelativeLayout>

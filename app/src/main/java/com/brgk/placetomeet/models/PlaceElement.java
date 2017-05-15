@@ -5,6 +5,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.util.Log;
 
+import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
@@ -60,7 +61,7 @@ public class PlaceElement {
             if (!place.isNull("vicinity")) {
                 address = place.getString("vicinity");
             } else {
-                getAddressFromPosition(position.latitude, position.longitude);
+                address = UsefulFunctions.getAddressFromLatLng(this.context, position);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -217,23 +218,4 @@ public class PlaceElement {
     public void setReviews(JSONArray reviews) {
         this.reviews = reviews;
     }
-
-    private String getAddressFromPosition(double latitudeNow, double longitudeNow) {
-        geocoder = new Geocoder(context, Locale.getDefault());
-        List<Address> addressArray = new ArrayList<>();
-        String addressBuilder = "";
-        try {
-            addressArray = geocoder.getFromLocation(latitudeNow, longitudeNow, 1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (addressArray != null) {
-            addressBuilder += addressArray.get(0).getAddressLine(0) + ", ";
-            addressBuilder += addressArray.get(0).getLocality() + ", ";
-            addressBuilder += addressArray.get(0).getCountryName();
-        }
-        Log.v("ADDRESS", addressBuilder);
-        return addressBuilder;
-    }
-
 }
