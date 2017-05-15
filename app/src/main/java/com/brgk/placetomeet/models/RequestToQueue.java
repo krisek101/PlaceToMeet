@@ -2,6 +2,7 @@ package com.brgk.placetomeet.models;
 
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -26,6 +27,7 @@ public class RequestToQueue {
     private MapActivity mapActivity;
     private String category;
     private PersonElement person;
+    private PlaceElement place;
 
     public RequestToQueue(String tag, String category, MapActivity mapActivity) {
         this.tag = tag;
@@ -66,22 +68,13 @@ public class RequestToQueue {
     private void onResponsePlaces(JSONObject response) throws JSONException {
         double lat, lng;
         LatLng position;
-        String photoReference="";
         JSONArray ja = response.getJSONArray("results");
         for (int i = 0; i < ja.length(); i++) {
             JSONObject c = ja.getJSONObject(i);
             lat = c.getJSONObject("geometry").getJSONObject("location").getDouble("lat");
             lng = c.getJSONObject("geometry").getJSONObject("location").getDouble("lng");
-            try {
-                photoReference = c.getJSONArray("photos").getJSONObject(0).getString("photo_reference");
-            }catch (JSONException e){
-                e.printStackTrace();
-            }
             position = new LatLng(lat, lng);
             PlaceElement p = new PlaceElement(c, category, mapActivity.getDistanceFromCenter(position));
-            if(photoReference != null) {
-                p.setPhoto(photoReference);
-            }
             if (!mapActivity.places.contains(p)) {
                 mapActivity.places.add(p);
             }
@@ -104,9 +97,43 @@ public class RequestToQueue {
     }
 
     private void onResponsePlaceDetails(JSONObject response) throws JSONException {
-        JSONObject positionObject = response.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
-        person.setPosition(new LatLng(positionObject.getDouble("lat"), positionObject.getDouble("lng")));
-        mapActivity.addPerson(person.getAddress(), person.getPosition());
+        if (person != null) {
+            JSONObject positionObject = response.getJSONObject("result").getJSONObject("geometry").getJSONObject("location");
+            person.setPosition(new LatLng(positionObject.getDouble("lat"), positionObject.getDouble("lng")));
+            mapActivity.addPerson(person.getAddress(), person.getPosition());
+        } else if (place != null) {
+            JSONObject placeInfo = response.getJSONObject("result");
+            if (!placeInfo.isNull("website")) {
+                place.setWebsite(placeInfo.getString("website"));
+            }
+            if (!placeInfo.isNull("formatted_phone_number")) {
+                place.setPhoneNumber(placeInfo.getString("formatted_phone_number"));
+            }
+            if (!placeInfo.isNull("reviews")) {
+                place.setReviews(placeInfo.getJSONArray("reviews"));
+            }
+            if (!placeInfo.isNull("opening_hours")) {
+                String openHours[] = new String[7];
+                for (int i = 0; i < 7; i++) {
+                    if (!placeInfo.getJSONObject("opening_hours").getJSONArray("weekday_text").getString(i).isEmpty()) {
+                        openHours[i] = placeInfo.getJSONObject("opening_hours").getJSONArray("weekday_text").getString(i);
+                    } else {
+                        openHours[i] = "null";
+                    }
+                }
+                place.setOpenHours(openHours);
+            }
+
+            if (!placeInfo.isNull("photos")) {
+                String photos[] = new String[placeInfo.getJSONArray("photos").length()];
+                for (int i = 0; i < placeInfo.getJSONArray("photos").length(); i++) {
+                    photos[i] = placeInfo.getJSONArray("photos").getJSONObject(i).getString("photo_reference");
+                }
+                place.setPhotos(photos);
+            }
+
+            mapActivity.updatePlaceInfo(place);
+        }
     }
 
     public void setCategoryUrl(boolean byDistance) {
@@ -120,7 +147,7 @@ public class RequestToQueue {
         }
         urlString.append("&language=pl&location=" + mapActivity.center.latitude + "," + mapActivity.center.longitude);
         urlString.append("&key=" + Constants.API_KEY);
-        if( byDistance ) {
+        if (byDistance) {
             urlString.append("&rankby=distance");
         } else {
             urlString.append("&radius=" + Constants.RADIUS);
@@ -131,6 +158,11 @@ public class RequestToQueue {
     public void setPlaceDetailsUrl(String placeID, PersonElement person) {
         setLink("https://maps.googleapis.com/maps/api/place/details/json?placeid=" + placeID + "&key=" + Constants.API_KEY);
         this.person = person;
+    }
+
+    public void setPlaceDetailsUrl(PlaceElement place) {
+        setLink("https://maps.googleapis.com/maps/api/place/details/json?language=pl&placeid=" + place.getId() + "&key=" + Constants.API_KEY);
+        this.place = place;
     }
 
     public void setPlaceAutoCompleteUrl(String input) {

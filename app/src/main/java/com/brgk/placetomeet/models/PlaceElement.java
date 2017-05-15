@@ -8,6 +8,7 @@ import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,31 +33,33 @@ public class PlaceElement {
     private Context context;
     private boolean checked;
     private float distanceFromCenter;
-    private String photo;
+    private String[] photos;
+    private String[] openHours;
     private String website;
     private String phoneNumber;
+    private JSONArray reviews;
 
-    public PlaceElement(JSONObject place, String category, float distanceFromCenter){
+    public PlaceElement(JSONObject place, String category, float distanceFromCenter) {
         this.place = place;
         this.category = category;
         this.distanceFromCenter = distanceFromCenter;
         this.getData();
     }
 
-    private void getData(){
+    private void getData() {
         try {
             position = new LatLng(place.getJSONObject("geometry").getJSONObject("location").getDouble("lat"), place.getJSONObject("geometry").getJSONObject("location").getDouble("lng"));
             id = place.getString("place_id");
             name = place.getString("name");
-            if(!place.isNull("rating")) {
+            if (!place.isNull("rating")) {
                 rate = place.getDouble("rating");
             }
-            if(!place.isNull("opening_hours")) {
+            if (!place.isNull("opening_hours")) {
                 openNow = place.getJSONObject("opening_hours").getBoolean("open_now");
             }
-            if(!place.isNull("vicinity")) {
+            if (!place.isNull("vicinity")) {
                 address = place.getString("vicinity");
-            }else{
+            } else {
                 getAddressFromPosition(position.latitude, position.longitude);
             }
         } catch (JSONException e) {
@@ -175,12 +178,12 @@ public class PlaceElement {
         this.distanceFromCenter = distanceFromCenter;
     }
 
-    public String getPhoto() {
-        return photo;
+    public String[] getPhotos() {
+        return photos;
     }
 
-    public void setPhoto(String photo) {
-        this.photo = photo;
+    public void setPhotos(String[] photos) {
+        this.photos = photos;
     }
 
     public String getWebsite() {
@@ -197,6 +200,22 @@ public class PlaceElement {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String[] getOpenHours() {
+        return openHours;
+    }
+
+    public void setOpenHours(String[] openHours) {
+        this.openHours = openHours;
+    }
+
+    public JSONArray getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(JSONArray reviews) {
+        this.reviews = reviews;
     }
 
     private String getAddressFromPosition(double latitudeNow, double longitudeNow) {

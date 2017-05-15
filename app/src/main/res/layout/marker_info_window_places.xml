@@ -11,13 +11,6 @@
         android:background="@drawable/info_window_rounded"
         android:padding="10dp">
 
-        <ImageView
-            android:id="@+id/photo"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="10dp" />
-
         <TextView
             android:id="@+id/title"
             android:layout_width="wrap_content"
@@ -25,7 +18,6 @@
             android:background="@color/colorPlaces"
             android:gravity="center"
             android:maxLines="3"
-            android:layout_below="@+id/photo"
             android:maxWidth="160dp"
             android:textColor="#000"
             android:textSize="16sp" />

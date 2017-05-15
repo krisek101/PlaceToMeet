@@ -53,9 +53,6 @@ public class MarkerInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
             }
         } else if(place != null){
             myContentsView = LayoutInflater.from(mapActivity.getApplicationContext()).inflate(R.layout.marker_info_window_places, null);
-//            ImageView photo = ((ImageView) myContentsView.findViewById(R.id.photo));
-//            new DownloadImageTask(photo)
-//                    .execute("https://maps.googleapis.com/maps/api/place/photo?maxwidth=70&photoreference=" + place.getPhoto() + "&key=" + Constants.API_KEY);
         }
 
         TextView title = ((TextView) myContentsView.findViewById(R.id.title));
@@ -66,8 +63,10 @@ public class MarkerInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
 
     private PersonElement searchPersonByMarker(Marker marker) {
         for (PersonElement p : mapActivity.persons) {
-            if (p.getMarker().equals(marker)) {
-                return p;
+            if(p.getMarker() != null) {
+                if (p.getMarker().equals(marker)) {
+                    return p;
+                }
             }
         }
         return null;
@@ -75,8 +74,10 @@ public class MarkerInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
 
     private PlaceElement searchPlaceByMarker(Marker marker) {
         for (PlaceElement p : mapActivity.places) {
-            if (p.getMarker().equals(marker)) {
-                return p;
+            if(p.getMarker() != null) {
+                if (p.getMarker().equals(marker)) {
+                    return p;
+                }
             }
         }
         return null;

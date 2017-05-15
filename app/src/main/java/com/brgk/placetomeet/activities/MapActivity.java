@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -20,23 +21,31 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -48,6 +57,7 @@ import com.brgk.placetomeet.adapters.CategoryAdapter;
 import com.brgk.placetomeet.adapters.MarkerInfoWindowAdapter;
 import com.brgk.placetomeet.adapters.PersonAdapter;
 import com.brgk.placetomeet.adapters.PlaceAdapter;
+import com.brgk.placetomeet.adapters.RecyclerViewAdapter;
 import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.contants.Constants;
 import com.brgk.placetomeet.models.CategoryElement;
@@ -85,6 +95,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -142,6 +153,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private PlaceAdapter placeAdapter;
     private boolean footerShowed = false;
     ListView placesList;
+    public float screenHeight;
 
     // Map
     private GoogleMap mGoogleMap = null;
@@ -290,17 +302,17 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     void setListeners() {
-        ListenerHelper listenerHelper= new ListenerHelper(this);
-        listenerHelper.setListener(findViewById(R.id.show_fav),"click");
-        listenerHelper.setListener(findViewById(R.id.floatingActionButton),"click");
-        listenerHelper.setListener(leftHandle,"touch");
-        listenerHelper.setListener(findViewById(R.id.list_places),"touch");
-        listenerHelper.setListener(rightHandle,"touch");
-        listenerHelper.setListener(findViewById(R.id.right_slider_persons),"touch");
-        listenerHelper.setListener(findViewById(R.id.show_fav),"touch");
-        listenerHelper.setListener(footer,"touch");
-        listenerHelper.setListener(radiusSeekBar,"seekBarChange");
-        listenerHelper.setListener(getMyLocationButton,"click");
+        ListenerHelper listenerHelper = new ListenerHelper(this);
+        listenerHelper.setListener(findViewById(R.id.show_fav), "click");
+        listenerHelper.setListener(findViewById(R.id.floatingActionButton), "click");
+        listenerHelper.setListener(leftHandle, "touch");
+        listenerHelper.setListener(findViewById(R.id.list_places), "touch");
+        listenerHelper.setListener(rightHandle, "touch");
+        listenerHelper.setListener(findViewById(R.id.right_slider_persons), "touch");
+        listenerHelper.setListener(findViewById(R.id.show_fav), "touch");
+        listenerHelper.setListener(footer, "touch");
+        listenerHelper.setListener(radiusSeekBar, "seekBarChange");
+        listenerHelper.setListener(getMyLocationButton, "click");
     }
 
     void addLastChosenPerson(PersonElement personElement) {
@@ -315,10 +327,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         screenWidth = dm.widthPixels;
+        screenHeight = dm.heightPixels;
 
         //right slider
         rightHandleWidth = getPixelsFromDp(30);
-
         rightSliderWidth = getPixelsFromDp(250);
         rightTotalWidth = rightSliderWidth + rightHandleWidth;
         float rightSliderDefaultX = screenWidth; // panel width
@@ -327,7 +339,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         rightSlider = (RelativeLayout) findViewById(R.id.right_container);
         rightSlider.setX(rightSliderDefaultX);
         rightHandle.setX(rightHandleDefaultX);
-       // rightSlider.setZ(1000);
 
         //autocompleteAdapter for right slider
         ListView personList = (ListView) findViewById(R.id.right_slider_persons);
@@ -366,7 +377,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mActionBar.setCustomView(view);
 
         addressField = (ClearableAutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
-        addressField.setClearButton(ResourcesCompat.getDrawable(getResources(), R.drawable.clear, null));
+        addressField.setClearButton(getDrawable(R.drawable.clear));
 
         addressField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -486,6 +497,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         seekBarContainer.setVisibility(View.INVISIBLE);
     }
 
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.map_activity_menu, menu);
+//        return true;
+//    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -501,6 +519,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 mActionBar.setDisplayHomeAsUpEnabled(false);
                 mActionBar.setDisplayShowHomeEnabled(false);
                 return true;
+//            case R.id.main_menu_options:
+//
+//                return true;
+//            case R.id.main_menu_quit:
+//
+//                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -575,9 +599,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (resultCode == RESULT_OK) {
                     //remove favourites
                     ArrayList<Integer> toBeDeleted = data.getIntegerArrayListExtra("deletions");
-                    for( int i = toBeDeleted.size()-1; i >= 0; i-- ) {
+                    for (int i = toBeDeleted.size() - 1; i >= 0; i--) {
                         int index = toBeDeleted.get(i);
-                        if( persons.contains(favouritePersons.get(index)) ) persons.remove(favouritePersons.get(index));
+                        if (persons.contains(favouritePersons.get(index)))
+                            persons.remove(favouritePersons.get(index));
                         favouritePersons.remove(index);
                     }
                     updateMapElements();
@@ -602,6 +627,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
+
     public void updateMapElements() {
         if (!persons.isEmpty()) {
             center = calculateMidPoint();
@@ -623,7 +649,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     .fillColor(0x22146244)
                     .strokeWidth(2));
             centerOfCircle = mGoogleMap.addCircle(new CircleOptions()
-                    .radius(radiusSeekBar.getProgress()/30)
+                    .radius(radiusSeekBar.getProgress() / 30)
                     .center(center)
                     .strokeWidth(0)
                     .fillColor(Color.parseColor("#00aef4")));
@@ -738,25 +764,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mGoogleMap = googleMap;
         mGoogleMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
 
-        if (places != null) {
-            mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-                @Override
-                public void onMapClick(LatLng latLng) {
-                    for (PlaceElement p : places) {
-                        if (p.getMarker() != null) {
-                            try {
-                                p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                            } catch (IllegalArgumentException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        p.setChecked(false);
-                        placeAdapter.notifyDataSetChanged();
-                    }
-                }
-            });
-        }
-
         mGoogleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
@@ -775,16 +782,20 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                if(places != null) {
+                if (places != null) {
                     for (PlaceElement place : places) {
                         if (place.getMarker() != null) {
                             if (place.getMarker().equals(marker)) {
-                                tickPlaceOnList(marker);
-                                float toY = footerTop + footer.getHeight();
-                                footerOpened = true;
-                                footerSlider.animate().y(toY).setDuration(100).start();
-                                footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
-                                placesList.setSelection(places.indexOf(place));
+//                                tickPlaceOnList(marker);
+//                                float toY = footerTop + footer.getHeight();
+//                                footerOpened = true;
+//                                footerSlider.animate().y(toY).setDuration(100).start();
+//                                footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
+//                                placesList.setSelection(places.indexOf(place));
+                                RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", MapActivity.this);
+                                placeDetailsRequest.setPlaceDetailsUrl(place);
+                                placeDetailsRequest.doRequest();
+                                setLoading(true);
                             }
                         }
                     }
@@ -827,6 +838,71 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         } else {
             user = null;
         }
+    }
+
+    public void updatePlaceInfo(PlaceElement place) {
+        Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int num_day;
+        switch (day) {
+            case Calendar.THURSDAY:
+                num_day = 1;
+                break;
+            case Calendar.WEDNESDAY:
+                num_day = 2;
+                break;
+            case Calendar.TUESDAY:
+                num_day = 3;
+                break;
+            case Calendar.FRIDAY:
+                num_day = 4;
+                break;
+            case Calendar.SATURDAY:
+                num_day = 5;
+                break;
+            case Calendar.SUNDAY:
+                num_day = 6;
+                break;
+            default:
+                num_day = 0;
+                break;
+        }
+
+        AlertDialog.Builder placeInfoWindow = new AlertDialog.Builder(MapActivity.this);
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View convertView = inflater.inflate(R.layout.place_details_window, null);
+        placeInfoWindow.setView(convertView);
+
+        TextView title = (TextView) convertView.findViewById(R.id.place_details_title);
+        RatingBar rating = (RatingBar) convertView.findViewById(R.id.place_details_rating);
+        TextView rating_text = (TextView) convertView.findViewById(R.id.place_details_rating_text);
+        TextView address = (TextView) convertView.findViewById(R.id.place_details_address);
+        TextView phoneNumber = (TextView) convertView.findViewById(R.id.place_details_phone_number);
+        TextView website = (TextView) convertView.findViewById(R.id.place_details_website);
+        Spinner openingHours = (Spinner) convertView.findViewById(R.id.place_details_opening_hours);
+        RecyclerView rv = (RecyclerView) convertView.findViewById(R.id.place_details_recycler_view);
+
+        title.setText(place.getName());
+        rating.setRating((float) place.getRate());
+        rating_text.setText(String.valueOf(place.getRate()));
+        address.setText(place.getAddress());
+        phoneNumber.setText(place.getPhoneNumber());
+        website.setText(place.getWebsite());
+        if (place.getOpenHours() != null) {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, place.getOpenHours());
+            openingHours.setSelection(num_day);
+            openingHours.setAdapter(adapter);
+        } else {
+            openingHours.setVisibility(View.INVISIBLE);
+        }
+
+        if (place.getPhotos() != null) {
+            rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+            rv.setAdapter(new RecyclerViewAdapter(this, place.getPhotos()));
+        }
+
+        placeInfoWindow.show();
+        setLoading(false);
     }
 
     public String getAddressFromLatLng(LatLng position) {
@@ -1277,8 +1353,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public int getPixelsFromDp(float sizeDp) {
-        float scale = getResources().getDisplayMetrics().density;
-        return (int) (sizeDp * scale + 0.5f);
+        return (int) (sizeDp * getResources().getDisplayMetrics().density);
+    }
+
+    public int getDpFromPixels(float sizePx) {
+        return (int) (sizePx / getResources().getDisplayMetrics().density);
     }
 
     public void closeBothSliders() {
@@ -1295,16 +1374,19 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     void restoreData() {
         //favourites
         String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", null);
-//        String json = [{"address":"Zaorskiego 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 4a","position":{"latitude":52.16212338072353,"longitude":21.019675098359585}},{"address":"aleja Komisji Edukacji Narodowej 48, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 5a","position":{"latitude":52.14250818646051,"longitude":21.055312603712085}},{"address":"Powsińska 13, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 6a","position":{"latitude":52.18253373437499,"longitude":21.067824102938175}},{"address":"Błonia Wilanowskie, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 7a","position":{"latitude":52.15192826938311,"longitude":21.076964400708675}},{"address":"Bukowińska 26C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 8a","position":{"latitude":52.18474976529246,"longitude":21.02487254887819}},{"address":"Południowa Obwodnica Warszawy, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 9a","position":{"latitude":52.1396523681538,"longitude":21.025453582406044}},{"address":"Taborowa 33C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 10a","position":{"latitude":52.1616472563183,"longitude":21.004199422895912}},{"address":"Bocheńska 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 11a","position":{"latitude":52.179068240920245,"longitude":21.030993014574047}},{"address":"aleja Komisji Edukacji Narodowej 60, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 12a","position":{"latitude":52.14914588299161,"longitude":21.048004254698753}},{"address":"Politechnika, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 13a","position":{"latitude":52.2176246,"longitude":21.0143614}},{"address":"Jana Rosoła 61B, Warszawa","displayed":true,"id":2,"image":0,"isFavourite":true,"name":"osoba 14a","position":{"latitude":52.15286405845385,"longitude":21.05514295399189}},{"address":"Marco Polo 1, Warszawa","displayed":true,"id":3,"image":0,"isFavourite":true,"name":"osoba 15a","position":{"latitude":52.14725561255478,"longitude":21.03886429220438}}]
+        //        String json = [{"address":"Zaorskiego 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 4a","position":{"latitude":52.16212338072353,"longitude":21.019675098359585}},{"address":"aleja Komisji Edukacji Narodowej 48, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 5a","position":{"latitude":52.14250818646051,"longitude":21.055312603712085}},{"address":"Powsińska 13, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 6a","position":{"latitude":52.18253373437499,"longitude":21.067824102938175}},{"address":"Błonia Wilanowskie, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 7a","position":{"latitude":52.15192826938311,"longitude":21.076964400708675}},{"address":"Bukowińska 26C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 8a","position":{"latitude":52.18474976529246,"longitude":21.02487254887819}},{"address":"Południowa Obwodnica Warszawy, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 9a","position":{"latitude":52.1396523681538,"longitude":21.025453582406044}},{"address":"Taborowa 33C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 10a","position":{"latitude":52.1616472563183,"longitude":21.004199422895912}},{"address":"Bocheńska 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 11a","position":{"latitude":52.179068240920245,"longitude":21.030993014574047}},{"address":"aleja Komisji Edukacji Narodowej 60, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 12a","position":{"latitude":52.14914588299161,"longitude":21.048004254698753}},{"address":"Politechnika, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 13a","position":{"latitude":52.2176246,"longitude":21.0143614}},{"address":"Jana Rosoła 61B, Warszawa","displayed":true,"id":2,"image":0,"isFavourite":true,"name":"osoba 14a","position":{"latitude":52.15286405845385,"longitude":21.05514295399189}},{"address":"Marco Polo 1, Warszawa","displayed":true,"id":3,"image":0,"isFavourite":true,"name":"osoba 15a","position":{"latitude":52.14725561255478,"longitude":21.03886429220438}}]
         Log.d("MACIEK_DEBUG", json);
+
         if (json == null) {
-            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
+            }.getType());
         }
 
         //last chosen
         json = PreferenceManager.getDefaultSharedPreferences(this).getString("LastChosen", "none");
         if (!json.equals("none")) {
-            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
+            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
+            }.getType());
         }
 
         //last location
