@@ -305,6 +305,7 @@ public class ListenerHelper {
             case R.id.footer:
                 viewElement.setOnTouchListener(new View.OnTouchListener() {
                     float y;
+                    int topOffset = parentActivity.getActionBarHeight() + parentActivity.getStatusBarHeight();
 
                     @Override
                     public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -313,7 +314,7 @@ public class ListenerHelper {
 
                         if (gestureDetector.onTouchEvent(motionEvent)) {
                             if (parentActivity.footerOpened) {
-                                toY = parentActivity.getPixelsFromDp(512);
+                                toY = parentActivity.screenHeight - topOffset;
                                 parentActivity.footerOpened = false;
                             } else {
                                 toY = parentActivity.footerTop + viewElement.getHeight();
@@ -340,7 +341,7 @@ public class ListenerHelper {
                                 case MotionEvent.ACTION_UP:
                                     if (parentActivity.footerOpened) {
                                         if (motionEvent.getRawY() - y > 0.1 * parentActivity.footerSlider.getHeight()) {
-                                            toY = parentActivity.getPixelsFromDp(512);
+                                            toY = parentActivity.screenHeight - topOffset; //parentActivity.getPixelsFromDp(512);
                                             parentActivity.footerOpened = false;
                                         } else {
                                             toY = parentActivity.footerTop + viewElement.getHeight();
@@ -351,7 +352,7 @@ public class ListenerHelper {
                                             toY = parentActivity.footerTop + viewElement.getHeight();
                                             parentActivity.footerOpened = true;
                                         } else {
-                                            toY = parentActivity.getPixelsFromDp(512);
+                                            toY = parentActivity.screenHeight - topOffset;
                                             parentActivity.footerOpened = false;
                                         }
                                     }

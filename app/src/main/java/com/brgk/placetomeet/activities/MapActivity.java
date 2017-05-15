@@ -5,8 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -21,6 +22,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -30,10 +32,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -119,6 +118,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public boolean isAddingPerson = false;
     public ClearableAutoCompleteTextView addressField;
 
+    public int screenWidth;
+    public int screenHeight;
+
     // Right slider
     public RelativeLayout rightSlider;
     public View rightHandle;
@@ -141,7 +143,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public float leftHandleDefaultX;
     public float leftSliderWidth;
     public float leftTotalWidth;
-    public float screenWidth;
     public boolean leftSliderOpened = false;
     CategoryAdapter categoryAdapter;
 
@@ -153,7 +154,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private PlaceAdapter placeAdapter;
     private boolean footerShowed = false;
     ListView placesList;
-    public float screenHeight;
 
     // Map
     private GoogleMap mGoogleMap = null;
@@ -359,7 +359,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         // footer
         footerTop = footer.getY();
         footerSlider = (LinearLayout) findViewById(R.id.footer_slider);
-        footerSlider.setY(getPixelsFromDp(512));
+        footerSlider.setY(screenHeight - getActionBarHeight() - getStatusBarHeight());
 
         //Rankby button
         rankByButton = (ToggleButton) findViewById(R.id.rankby_button);
@@ -377,7 +377,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mActionBar.setCustomView(view);
 
         addressField = (ClearableAutoCompleteTextView) view.findViewById(R.id.action_bar_address_field);
-        addressField.setClearButton(getDrawable(R.drawable.clear));
+        addressField.setClearButton(ResourcesCompat.getDrawable(getResources(), R.drawable.clear, null));
 
         addressField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -475,6 +475,22 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
+    public int getActionBarHeight() {
+        final TypedArray styledAttributes = getTheme().obtainStyledAttributes(
+                new int[] { android.R.attr.actionBarSize });
+        int result = (int) styledAttributes.getDimension(0, 0);
+        styledAttributes.recycle();
+        return result;
+    }
+
+    public int getStatusBarHeight() {
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return getResources().getDimensionPixelSize(resourceId);
+        }
+        return 0;
+    }
+
     void showFooter() {
         //update height
         findViewById(R.id.sliders).getLayoutParams().height = findViewById(R.id.sliders).getMeasuredHeight() - footer.getHeight();
@@ -497,13 +513,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         seekBarContainer.setVisibility(View.INVISIBLE);
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.map_activity_menu, menu);
-//        return true;
-//    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -519,12 +528,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 mActionBar.setDisplayHomeAsUpEnabled(false);
                 mActionBar.setDisplayShowHomeEnabled(false);
                 return true;
-//            case R.id.main_menu_options:
-//
-//                return true;
-//            case R.id.main_menu_quit:
-//
-//                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -599,9 +602,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (resultCode == RESULT_OK) {
                     //remove favourites
                     ArrayList<Integer> toBeDeleted = data.getIntegerArrayListExtra("deletions");
-                    for (int i = toBeDeleted.size() - 1; i >= 0; i--) {
+                    for( int i = toBeDeleted.size()-1; i >= 0; i-- ) {
                         int index = toBeDeleted.get(i);
-                        if (persons.contains(favouritePersons.get(index)))
+                        if( persons.contains(favouritePersons.get(index)) )
                             persons.remove(favouritePersons.get(index));
                         favouritePersons.remove(index);
                     }
@@ -627,7 +630,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-
     public void updateMapElements() {
         if (!persons.isEmpty()) {
             center = calculateMidPoint();
@@ -649,7 +651,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     .fillColor(0x22146244)
                     .strokeWidth(2));
             centerOfCircle = mGoogleMap.addCircle(new CircleOptions()
-                    .radius(radiusSeekBar.getProgress() / 30)
+                    .radius(radiusSeekBar.getProgress()/30)
                     .center(center)
                     .strokeWidth(0)
                     .fillColor(Color.parseColor("#00aef4")));
@@ -782,7 +784,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                if (places != null) {
+                if(places != null) {
                     for (PlaceElement place : places) {
                         if (place.getMarker() != null) {
                             if (place.getMarker().equals(marker)) {
@@ -985,7 +987,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             placesList.setAdapter(placeAdapter);
 
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
-            lp.setMargins((int) screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
+            lp.setMargins( screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
             getMyLocationButton.setLayoutParams(lp);
             RelativeLayout.LayoutParams lpLoading = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
             lpLoading.setMargins((int) screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
@@ -993,10 +995,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         } else {
             hideFooter();
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
-            lp.setMargins((int) screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
+            lp.setMargins( screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
             getMyLocationButton.setLayoutParams(lp);
             RelativeLayout.LayoutParams lpLoading = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
-            lpLoading.setMargins((int) screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
+            lpLoading.setMargins( screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
             loading.setLayoutParams(lpLoading);
         }
         setLoading(false);
@@ -1374,19 +1376,16 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     void restoreData() {
         //favourites
         String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", null);
-        //        String json = [{"address":"Zaorskiego 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 4a","position":{"latitude":52.16212338072353,"longitude":21.019675098359585}},{"address":"aleja Komisji Edukacji Narodowej 48, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 5a","position":{"latitude":52.14250818646051,"longitude":21.055312603712085}},{"address":"Powsińska 13, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 6a","position":{"latitude":52.18253373437499,"longitude":21.067824102938175}},{"address":"Błonia Wilanowskie, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 7a","position":{"latitude":52.15192826938311,"longitude":21.076964400708675}},{"address":"Bukowińska 26C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 8a","position":{"latitude":52.18474976529246,"longitude":21.02487254887819}},{"address":"Południowa Obwodnica Warszawy, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 9a","position":{"latitude":52.1396523681538,"longitude":21.025453582406044}},{"address":"Taborowa 33C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 10a","position":{"latitude":52.1616472563183,"longitude":21.004199422895912}},{"address":"Bocheńska 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 11a","position":{"latitude":52.179068240920245,"longitude":21.030993014574047}},{"address":"aleja Komisji Edukacji Narodowej 60, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 12a","position":{"latitude":52.14914588299161,"longitude":21.048004254698753}},{"address":"Politechnika, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 13a","position":{"latitude":52.2176246,"longitude":21.0143614}},{"address":"Jana Rosoła 61B, Warszawa","displayed":true,"id":2,"image":0,"isFavourite":true,"name":"osoba 14a","position":{"latitude":52.15286405845385,"longitude":21.05514295399189}},{"address":"Marco Polo 1, Warszawa","displayed":true,"id":3,"image":0,"isFavourite":true,"name":"osoba 15a","position":{"latitude":52.14725561255478,"longitude":21.03886429220438}}]
+//        String json = [{"address":"Zaorskiego 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 4a","position":{"latitude":52.16212338072353,"longitude":21.019675098359585}},{"address":"aleja Komisji Edukacji Narodowej 48, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 5a","position":{"latitude":52.14250818646051,"longitude":21.055312603712085}},{"address":"Powsińska 13, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 6a","position":{"latitude":52.18253373437499,"longitude":21.067824102938175}},{"address":"Błonia Wilanowskie, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 7a","position":{"latitude":52.15192826938311,"longitude":21.076964400708675}},{"address":"Bukowińska 26C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 8a","position":{"latitude":52.18474976529246,"longitude":21.02487254887819}},{"address":"Południowa Obwodnica Warszawy, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 9a","position":{"latitude":52.1396523681538,"longitude":21.025453582406044}},{"address":"Taborowa 33C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 10a","position":{"latitude":52.1616472563183,"longitude":21.004199422895912}},{"address":"Bocheńska 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 11a","position":{"latitude":52.179068240920245,"longitude":21.030993014574047}},{"address":"aleja Komisji Edukacji Narodowej 60, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 12a","position":{"latitude":52.14914588299161,"longitude":21.048004254698753}},{"address":"Politechnika, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 13a","position":{"latitude":52.2176246,"longitude":21.0143614}},{"address":"Jana Rosoła 61B, Warszawa","displayed":true,"id":2,"image":0,"isFavourite":true,"name":"osoba 14a","position":{"latitude":52.15286405845385,"longitude":21.05514295399189}},{"address":"Marco Polo 1, Warszawa","displayed":true,"id":3,"image":0,"isFavourite":true,"name":"osoba 15a","position":{"latitude":52.14725561255478,"longitude":21.03886429220438}}]
         Log.d("MACIEK_DEBUG", json);
-
-        if (json == null) {
-            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
-            }.getType());
+        if (json != null) {
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
         }
 
         //last chosen
         json = PreferenceManager.getDefaultSharedPreferences(this).getString("LastChosen", "none");
         if (!json.equals("none")) {
-            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
-            }.getType());
+            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
         }
 
         //last location
