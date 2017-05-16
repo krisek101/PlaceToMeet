@@ -7,13 +7,16 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -29,6 +32,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
@@ -49,6 +53,7 @@ import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.adapters.AutocompleteAdapter;
 import com.brgk.placetomeet.adapters.CategoryAdapter;
 import com.brgk.placetomeet.adapters.MarkerInfoWindowAdapter;
+import com.brgk.placetomeet.adapters.OpeningHoursAdapter;
 import com.brgk.placetomeet.adapters.PersonAdapter;
 import com.brgk.placetomeet.adapters.PlaceAdapter;
 import com.brgk.placetomeet.adapters.ReviewsAdapter;
@@ -473,7 +478,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     public int getActionBarHeight() {
         final TypedArray styledAttributes = getTheme().obtainStyledAttributes(
-                new int[] { android.R.attr.actionBarSize });
+                new int[]{android.R.attr.actionBarSize});
         int result = (int) styledAttributes.getDimension(0, 0);
         styledAttributes.recycle();
         return result;
@@ -598,9 +603,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (resultCode == RESULT_OK) {
                     //remove favourites
                     ArrayList<Integer> toBeDeleted = data.getIntegerArrayListExtra("deletions");
-                    for( int i = toBeDeleted.size()-1; i >= 0; i-- ) {
+                    for (int i = toBeDeleted.size() - 1; i >= 0; i--) {
                         int index = toBeDeleted.get(i);
-                        if( persons.contains(favouritePersons.get(index)) )
+                        if (persons.contains(favouritePersons.get(index)))
                             persons.remove(favouritePersons.get(index));
                         favouritePersons.remove(index);
                     }
@@ -838,7 +843,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    public void updatePlaceInfo(PlaceElement place) {
+    public void updatePlaceInfo(final PlaceElement place) {
         AlertDialog.Builder placeInfoWindow = new AlertDialog.Builder(MapActivity.this);
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View convertView = inflater.inflate(R.layout.place_details_window, null);
@@ -848,34 +853,163 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         RatingBar rating = (RatingBar) convertView.findViewById(R.id.place_details_rating);
         TextView rating_text = (TextView) convertView.findViewById(R.id.place_details_rating_text);
         TextView address = (TextView) convertView.findViewById(R.id.place_details_address);
-        TextView phoneNumber = (TextView) convertView.findViewById(R.id.place_details_phone_number);
-        TextView website = (TextView) convertView.findViewById(R.id.place_details_website);
-        Spinner openingHours = (Spinner) convertView.findViewById(R.id.place_details_opening_hours);
+        final ListView openingHours = (ListView) convertView.findViewById(R.id.place_details_opening_hours);
         ImageView photo = (ImageView) convertView.findViewById(R.id.place_details_photo);
         final TextView reviewsHandler = (TextView) convertView.findViewById(R.id.place_details_reviews_handler);
         final ImageView reviewsArrow = (ImageView) convertView.findViewById(R.id.place_details_reviews_arrow);
-        RelativeLayout reviewsHandlerContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_reviews_handler_container);
+        final RelativeLayout reviewsHandlerContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_reviews_handler_container);
         final ListView reviewsList = (ListView) convertView.findViewById(R.id.place_details_reviews);
+        final TextView openNow = (TextView) convertView.findViewById(R.id.place_details_open_status);
+        ImageView call = (ImageView) convertView.findViewById(R.id.place_details_call_icon);
+        ImageView website = (ImageView) convertView.findViewById(R.id.place_details_website_icon);
+        RelativeLayout ratingContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_rating_container);
+        RelativeLayout openContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_open_container);
+        final boolean[] reviewsOpened = {false};
+        final boolean[] hoursClicked = {false};
 
         title.setText(place.getName());
         rating.setRating((float) place.getRate());
         rating_text.setText(String.valueOf(place.getRate()));
         address.setText(place.getAddress());
         if (place.getPhoneNumber() != null) {
-            phoneNumber.setText(place.getPhoneNumber());
-        } else {
-            phoneNumber.getLayoutParams().height = 0;
+            call.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent callIntent = new Intent(Intent.ACTION_DIAL);
+                    callIntent.setData(Uri.parse("tel:"+place.getPhoneNumber()));
+                    startActivity(callIntent);
+                }
+            });
+            call.setOnTouchListener(new View.OnTouchListener() {
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+                            ImageView view = (ImageView) v;
+                            view.getDrawable().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
+                            view.invalidate();
+                            break;
+                        }
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_CANCEL: {
+                            ImageView view = (ImageView) v;
+                            view.getDrawable().clearColorFilter();
+                            view.invalidate();
+                            break;
+                        }
+                    }
+
+                    return false;
+                }
+            });
+        }else{
+            call.setVisibility(View.GONE);
         }
-        if (place.getWebsite() != null) {
-            website.setText(place.getWebsite());
+        if (place.getReviews() != null) {
+            final List<JSONObject> reviews = new ArrayList<>();
+            for (int i = 0; i < place.getReviews().length(); i++) {
+                try {
+                    reviews.add((JSONObject) place.getReviews().get(i));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            final ReviewsAdapter reviewsAdapter = new ReviewsAdapter(this, R.layout.place_details_review, reviews);
+            reviewsArrow.setColorFilter(Color.WHITE);
+            final int num_rev = place.getReviews().length();
+            reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+            reviewsHandlerContainer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (reviewsOpened[0]) {
+                        reviewsArrow.animate().rotation(0).setDuration(100).start();
+                        reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+                        reviewsOpened[0] = false;
+                        reviewsList.setVisibility(View.GONE);
+                    } else {
+                        reviewsArrow.animate().rotation(-90).setDuration(100).start();
+                        reviewsHandler.setText("Ukryj opinie (" + num_rev + ")");
+                        reviewsOpened[0] = true;
+                        reviewsList.setVisibility(View.VISIBLE);
+                        reviewsList.setAdapter(reviewsAdapter);
+                        openingHours.setVisibility(View.GONE);
+                        hoursClicked[0] = false;
+                    }
+                }
+            });
         } else {
-            website.getLayoutParams().height = 0;
+            reviewsHandlerContainer.setVisibility(View.INVISIBLE);
+            reviewsHandlerContainer.getLayoutParams().height = 0;
+        }
+
+        if (place.getWebsite() != null) {
+            website.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent callIntent = new Intent(Intent.ACTION_VIEW);
+                    callIntent.setData(Uri.parse(place.getWebsite()));
+                    startActivity(callIntent);
+                }
+            });
+            website.setOnTouchListener(new View.OnTouchListener() {
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+                            ImageView view = (ImageView) v;
+                            view.getDrawable().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
+                            view.invalidate();
+                            break;
+                        }
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_CANCEL: {
+                            ImageView view = (ImageView) v;
+                            view.getDrawable().clearColorFilter();
+                            view.invalidate();
+                            break;
+                        }
+                    }
+
+                    return false;
+                }
+            });
+        } else {
+            website.setVisibility(View.GONE);
         }
         if (place.getOpenHours() != null) {
-            int day = getNumDayOfWeek();
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, place.getOpenHours());
-            openingHours.setSelection(day);
-            openingHours.setAdapter(adapter);
+            if(place.isOpenNow()){
+                openNow.setText(R.string.open_now);
+                openNow.setTextColor(Color.parseColor("#FF20AB22"));
+            }else{
+                openNow.setText(R.string.closed_now);
+                openNow.setTextColor(Color.parseColor("#FFA91E1E"));
+            }
+            final OpeningHoursAdapter adapter = new OpeningHoursAdapter(this, R.layout.place_details_hours, place.getOpenHours());
+            openNow.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (hoursClicked[0]) {
+                        openingHours.setVisibility(View.GONE);
+                        hoursClicked[0] = false;
+                    } else {
+                        if(place.getReviews() != null) {
+                            int num_rev = place.getReviews().length();
+                            reviewsArrow.animate().rotation(0).setDuration(100).start();
+                            reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+                            reviewsOpened[0] = false;
+                            reviewsList.setVisibility(View.GONE);
+                        }
+                        openingHours.setVisibility(View.VISIBLE);
+                        openingHours.setAdapter(adapter);
+                        openingHours.setSelection(getNumDayOfWeek());
+                        hoursClicked[0] = true;
+                    }
+                }
+            });
         } else {
             openingHours.getLayoutParams().height = 0;
             openingHours.setVisibility(View.INVISIBLE);
@@ -888,46 +1022,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             photo.getLayoutParams().height = 0;
         }
 
-        if (place.getReviews() != null) {
-            final List<JSONObject> reviews = new ArrayList<>();
-            for (int i = 0; i < place.getReviews().length(); i++) {
-                try {
-                    reviews.add((JSONObject) place.getReviews().get(i));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            final ReviewsAdapter reviewsAdapter = new ReviewsAdapter(this, R.layout.place_details_review, reviews);
-            final boolean[] reviewsOpened = {false};
-            reviewsArrow.setColorFilter(Color.WHITE);
-            final int num_rev = place.getReviews().length();
-            reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
-            reviewsHandlerContainer.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (reviewsOpened[0]) {
-                        reviewsArrow.animate().rotation(0).setDuration(100).start();
-                        reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
-                        reviewsOpened[0] = false;
-                        reviewsList.getLayoutParams().height = 0;
-                        reviewsList.setVisibility(View.INVISIBLE);
-                    } else {
-                        reviewsArrow.animate().rotation(-90).setDuration(100).start();
-                        reviewsHandler.setText("Ukryj opinie (" + num_rev + ")");
-                        reviewsOpened[0] = true;
-                        reviewsList.setVisibility(View.VISIBLE);
-                        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-                        layoutParams.addRule(RelativeLayout.BELOW, R.id.place_details_reviews_handler_container);
-                        reviewsList.setLayoutParams(layoutParams);
-                        reviewsList.setAdapter(reviewsAdapter);
-                    }
-                }
-            });
-        } else {
-            reviewsHandlerContainer.setVisibility(View.INVISIBLE);
-            reviewsHandlerContainer.getLayoutParams().height = 0;
-        }
-
         placeInfoWindow.show();
         setLoading(false);
     }
@@ -937,13 +1031,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         int num_day;
         switch (day) {
-            case Calendar.THURSDAY:
+            case Calendar.TUESDAY:
                 num_day = 1;
                 break;
             case Calendar.WEDNESDAY:
                 num_day = 2;
                 break;
-            case Calendar.TUESDAY:
+            case Calendar.THURSDAY:
                 num_day = 3;
                 break;
             case Calendar.FRIDAY:
@@ -1024,7 +1118,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             placesList.setAdapter(placeAdapter);
 
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
-            lp.setMargins( screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
+            lp.setMargins(screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
             getMyLocationButton.setLayoutParams(lp);
             RelativeLayout.LayoutParams lpLoading = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
             lpLoading.setMargins((int) screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
@@ -1032,10 +1126,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         } else {
             hideFooter();
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
-            lp.setMargins( screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
+            lp.setMargins(screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
             getMyLocationButton.setLayoutParams(lp);
             RelativeLayout.LayoutParams lpLoading = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
-            lpLoading.setMargins( screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
+            lpLoading.setMargins(screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
             loading.setLayoutParams(lpLoading);
         }
         setLoading(false);
@@ -1395,10 +1489,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         return (int) (sizeDp * getResources().getDisplayMetrics().density);
     }
 
-    public int getDpFromPixels(float sizePx) {
-        return (int) (sizePx / getResources().getDisplayMetrics().density);
-    }
-
     public void closeBothSliders() {
         if (leftSliderOpened || rightSliderOpened) {
             rightSlider.animate().x(rightHandleDefaultX + rightHandleWidth).setDuration(100).start();
@@ -1416,13 +1506,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 //        String json = [{"address":"Zaorskiego 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 4a","position":{"latitude":52.16212338072353,"longitude":21.019675098359585}},{"address":"aleja Komisji Edukacji Narodowej 48, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 5a","position":{"latitude":52.14250818646051,"longitude":21.055312603712085}},{"address":"Powsińska 13, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 6a","position":{"latitude":52.18253373437499,"longitude":21.067824102938175}},{"address":"Błonia Wilanowskie, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 7a","position":{"latitude":52.15192826938311,"longitude":21.076964400708675}},{"address":"Bukowińska 26C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 8a","position":{"latitude":52.18474976529246,"longitude":21.02487254887819}},{"address":"Południowa Obwodnica Warszawy, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 9a","position":{"latitude":52.1396523681538,"longitude":21.025453582406044}},{"address":"Taborowa 33C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 10a","position":{"latitude":52.1616472563183,"longitude":21.004199422895912}},{"address":"Bocheńska 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 11a","position":{"latitude":52.179068240920245,"longitude":21.030993014574047}},{"address":"aleja Komisji Edukacji Narodowej 60, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 12a","position":{"latitude":52.14914588299161,"longitude":21.048004254698753}},{"address":"Politechnika, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 13a","position":{"latitude":52.2176246,"longitude":21.0143614}},{"address":"Jana Rosoła 61B, Warszawa","displayed":true,"id":2,"image":0,"isFavourite":true,"name":"osoba 14a","position":{"latitude":52.15286405845385,"longitude":21.05514295399189}},{"address":"Marco Polo 1, Warszawa","displayed":true,"id":3,"image":0,"isFavourite":true,"name":"osoba 15a","position":{"latitude":52.14725561255478,"longitude":21.03886429220438}}]
         Log.d("MACIEK_DEBUG", json);
         if (json != null) {
-            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
+            favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
+            }.getType());
         }
 
         //last chosen
         json = PreferenceManager.getDefaultSharedPreferences(this).getString("LastChosen", "none");
         if (!json.equals("none")) {
-            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {}.getType());
+            lastChosenPersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
+            }.getType());
         }
 
         //last location
@@ -1436,6 +1528,4 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             p.getMarker().showInfoWindow();
         }
     }
-
-
 }

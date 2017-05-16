@@ -3,4 +3,6 @@
     <string name="app_title">Znajdź idealne miejsce</string>
     <string name="search_field_hint">Szukaj tutaj…</string>
     <string name="action_bar_add_btn">Add Button Action Bar</string>
+    <string name="open_now">OPEN</string>
+    <string name="closed_now">CLOSED</string>
 </resources>

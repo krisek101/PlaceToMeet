@@ -21,70 +21,105 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/place_details_title"
         android:layout_centerHorizontal="true"
-        android:paddingBottom="5dp"
+        android:paddingBottom="10dp"
         android:textSize="14sp" />
 
     <RelativeLayout
-        android:id="@+id/rating_container"
+        android:id="@+id/actions_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/place_details_address"
         android:layout_centerHorizontal="true">
 
-        <RatingBar
-            android:id="@+id/place_details_rating"
-            style="?android:attr/ratingBarStyleIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:isIndicator="true"
-            android:stepSize="0.1" />
+        <ImageView
+            android:id="@+id/place_details_call_icon"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/telephone"
+            android:clickable="true"/>
 
-        <TextView
-            android:id="@+id/place_details_rating_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
+        <ImageView
+            android:id="@+id/place_details_website_icon"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:layout_marginStart="5dp"
-            android:layout_toEndOf="@+id/place_details_rating"
-            android:textSize="24sp" />
+            android:layout_toEndOf="@+id/place_details_call_icon"
+            android:src="@drawable/www"
+            android:clickable="true"/>
+
+        <RelativeLayout
+            android:id="@+id/place_details_rating_container"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_toEndOf="@+id/place_details_website_icon"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/circle">
+
+            <TextView
+                android:id="@+id/place_details_rating_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:textSize="24sp"
+                android:layout_marginTop="13dp"/>
+
+            <RatingBar
+                android:id="@+id/place_details_rating"
+                style="?android:attr/ratingBarStyleSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/place_details_rating_text"
+                android:isIndicator="true"
+                android:layout_marginTop="0dp"
+                android:stepSize="0.1"
+                android:scaleX="0.5"
+                android:scaleY="0.5"
+                android:transformPivotX="0dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="-25dp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_toEndOf="@+id/place_details_rating_container"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/circle"
+            android:id="@+id/place_details_open_container"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/place_details_open_status"
+                android:text="OPEN"
+                android:layout_centerVertical="true"
+                android:textStyle="bold"
+                android:layout_centerHorizontal="true"/>
+
+        </RelativeLayout>
+
     </RelativeLayout>
 
-    <TextView
-        android:id="@+id/place_details_phone_number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/rating_container"
-        android:layout_centerHorizontal="true"
-        android:autoLink="phone"
-        android:padding="7dp"
-        android:textSize="16sp" />
-
-    <TextView
-        android:id="@+id/place_details_website"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/place_details_phone_number"
-        android:layout_centerHorizontal="true"
-        android:autoLink="web"
-        android:gravity="center"
-        android:paddingBottom="7dp"
-        android:textSize="16sp" />
-
-    <Spinner
+    <ListView
         android:id="@+id/place_details_opening_hours"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/place_details_website"
-        android:layout_centerHorizontal="true" />
+        android:layout_below="@+id/actions_container"
+        android:layout_centerHorizontal="true"
+        android:visibility="invisible"
+        android:layout_marginTop="5dp"/>
 
     <ImageView
         android:id="@+id/place_details_photo"
         android:layout_width="match_parent"
-        android:layout_height="160dp"
+        android:layout_height="140dp"
         android:layout_below="@+id/place_details_opening_hours"
         android:layout_centerHorizontal="true"
-        android:orientation="vertical" />
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"/>
 
     <RelativeLayout
         android:id="@+id/place_details_reviews_handler_container"
@@ -118,6 +153,6 @@
         android:id="@+id/place_details_reviews"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/place_details_reviews_handler_container"/>
+        android:layout_below="@+id/place_details_reviews_handler_container" />
 
 </RelativeLayout>
