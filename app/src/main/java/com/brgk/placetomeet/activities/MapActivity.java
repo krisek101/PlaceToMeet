@@ -6,12 +6,15 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -83,6 +86,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
@@ -95,6 +99,12 @@ import com.google.gson.reflect.TypeToken;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
@@ -241,7 +251,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 editMarker.remove();
                 editMarker = null;
                 lastPosition = null;
-                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+//                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
                 personAdapter.notifyDataSetChanged();
                 updateMapElements();
                 addressField.setText("");
@@ -262,7 +273,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (!exists) {
                     if (mGoogleMap != null) {
                         if (!person.equals(user)) {
-                            person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+//                            person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                            person.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
                         }
                         persons.add(person);
                         personAdapter.notifyDataSetChanged();
@@ -555,13 +567,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 editPerson.getMarker().remove();
                 editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(lastPosition).title(editPerson.getName())));
                 editPerson.setPosition(lastPosition);
-                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+//                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
                 editMarker.remove();
                 editMarker = null;
                 editPerson = null;
                 lastPosition = null;
             } else if (editPerson != null) {
-                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+//                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
                 editPerson = null;
             }
             isAddingPerson = false;
@@ -1440,7 +1454,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (!persons.contains(fav)) {
                 fav.setMarker(mGoogleMap.addMarker(new MarkerOptions()
                         .position(fav.getPosition())
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+//                        .icon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))))
+//                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+                        .icon(getMarkerIcon(R.drawable.default_person))
                         .title(fav.getName())));
                 fav.favourite(true);
                 persons.add(fav);
@@ -1528,4 +1544,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             p.getMarker().showInfoWindow();
         }
     }
+
+    private BitmapDescriptor getMarkerIcon(int drawableId) {
+
+        return BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),drawableId)));
+    }
+
 }

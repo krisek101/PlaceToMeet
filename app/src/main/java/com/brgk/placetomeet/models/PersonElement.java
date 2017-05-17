@@ -16,7 +16,7 @@ public class PersonElement implements Parcelable {
     private boolean isFavourite = false;
     public String addressID;
     private boolean displayed = true;
-    private int image = 0;
+    private int imageResId = 0;
 
     public PersonElement(String address, String addressID) {
         this.address = address;
@@ -116,12 +116,12 @@ public class PersonElement implements Parcelable {
         this.displayed = displayed;
     }
 
-    public int getImage() {
-        return image;
+    public int getImageResId() {
+        return imageResId;
     }
 
-    public void setImage(int image) {
-        this.image = image;
+    public void setImageResId(int imageResId) {
+        this.imageResId = imageResId;
     }
 
     //PARCEL

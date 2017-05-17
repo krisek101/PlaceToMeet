@@ -326,7 +326,7 @@ public class ListenerHelper {
                         } else {
                             switch (motionEvent.getActionMasked()) {
                                 case MotionEvent.ACTION_DOWN:
-                                    y = motionEvent.getRawY() - view.getY() -view.getHeight();
+                                    y = motionEvent.getRawY() - view.getY() - view.getHeight();
                                     break;
                                 case MotionEvent.ACTION_MOVE:
                                     if (motionEvent.getRawY() - y < parentActivity.footerTop + viewElement.getHeight()) {

@@ -2,6 +2,8 @@ package com.brgk.placetomeet.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -17,10 +19,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.adapters.FavouritePersonAdapter;
+import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.brgk.placetomeet.models.PersonElement;
 
 import java.util.ArrayList;
@@ -46,7 +50,6 @@ public class FavouritesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favourites);
-
 
         favs = getIntent().getParcelableArrayListExtra("Fav");
         positions = getIntent().getIntegerArrayListExtra("Added");

@@ -1,7 +1,6 @@
 package com.brgk.placetomeet.adapters;
 
 import android.graphics.Color;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -9,8 +8,6 @@ import android.widget.TextView;
 
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.MapActivity;
-import com.brgk.placetomeet.contants.Constants;
-import com.brgk.placetomeet.models.DownloadImageTask;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.models.PlaceElement;
 import com.google.android.gms.maps.GoogleMap;
@@ -39,14 +36,14 @@ public class MarkerInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
             myContentsView = LayoutInflater.from(mapActivity.getApplicationContext()).inflate(R.layout.marker_info_window_persons, null);
             ImageView avatar = ((ImageView) myContentsView.findViewById(R.id.avatar));
             avatar.setColorFilter(Color.GRAY);
-            if (person.getImage() != 0) {
-                avatar.setImageResource(person.getImage());
+            if (person.getImageResId() != 0) {
+                avatar.setImageResource(person.getImageResId());
             }
             if (person.getPosition().equals(mapActivity.userLocation)) {
                 avatar.setColorFilter(Color.BLACK);
             } else if (mapActivity.favouritePersons.contains(person)) {
-                if (person.getImage() != 0) {
-                    avatar.setImageResource(person.getImage());
+                if (person.getImageResId() != 0) {
+                    avatar.setImageResource(person.getImageResId());
                 } else {
                     avatar.clearColorFilter();
                 }

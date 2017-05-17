@@ -3,15 +3,12 @@ package com.brgk.placetomeet.adapters;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.InputType;
-import android.text.method.ScrollingMovementMethod;
-import android.util.AttributeSet;
 import android.util.SparseBooleanArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -76,8 +73,8 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             p.setName("Ja");
             p.getMarker().setTitle("Ja");
         } else if (activity.favouritePersons.contains(p)){
-            if(p.getImage() != 0){
-                avatar.setImageResource(p.getImage());
+            if(p.getImageResId() != 0){
+                avatar.setImageResource(p.getImageResId());
             }else{
                 avatar.clearColorFilter();
             }
