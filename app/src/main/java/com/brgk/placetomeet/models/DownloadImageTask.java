@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 
 import com.brgk.placetomeet.R;
@@ -16,9 +17,15 @@ import java.net.URL;
 
 public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
     private final WeakReference<ImageView> imageViewReference;
+    private pl.droidsonroids.gif.GifTextView loading;
 
     public DownloadImageTask(ImageView imageView) {
         imageViewReference = new WeakReference<>(imageView);
+    }
+
+    public DownloadImageTask(ImageView imageView, pl.droidsonroids.gif.GifTextView loading) {
+        imageViewReference = new WeakReference<>(imageView);
+        this.loading = loading;
     }
 
     @Override
@@ -42,6 +49,9 @@ public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
             if (imageView != null) {
                 if (bitmap != null) {
                     imageView.setImageBitmap(bitmap);
+                    if(loading != null) {
+                        loading.setVisibility(View.GONE);
+                    }
                 }
             }
         }

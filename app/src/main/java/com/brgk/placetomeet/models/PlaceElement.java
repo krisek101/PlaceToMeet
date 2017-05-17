@@ -6,6 +6,7 @@ import android.location.Geocoder;
 import android.util.Log;
 
 import com.brgk.placetomeet.contants.UsefulFunctions;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 

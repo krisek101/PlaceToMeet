@@ -9,7 +9,10 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -40,6 +43,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -454,7 +458,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         });
     }
 
-    void setLoading(boolean load) {
+    public void setLoading(boolean load) {
         if (load) {
             loading.setVisibility(View.VISIBLE);
         } else {
@@ -515,7 +519,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         seekBarContainer.setVisibility(View.VISIBLE);
     }
 
-    void hideFooter() {
+    public void hideFooter() {
         //update height
         findViewById(R.id.sliders).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
 
@@ -796,6 +800,21 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             }
         });
 
+        mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if(places != null) {
+                    for (PlaceElement p : places) {
+                        if(p.getMarker() != null){
+                            p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
+                            p.setChecked(false);
+                        }
+                    }
+                    placeAdapter.notifyDataSetChanged();
+                }
+            }
+        });
+
         mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
@@ -803,12 +822,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     for (PlaceElement place : places) {
                         if (place.getMarker() != null) {
                             if (place.getMarker().equals(marker)) {
-//                                tickPlaceOnList(marker);
-//                                float toY = footerTop + footer.getHeight();
-//                                footerOpened = true;
-//                                footerSlider.animate().y(toY).setDuration(100).start();
-//                                footer.animate().y(toY - footer.getHeight()).setDuration(100).start();
-//                                placesList.setSelection(places.indexOf(place));
                                 RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", MapActivity.this);
                                 placeDetailsRequest.setPlaceDetailsUrl(place);
                                 placeDetailsRequest.doRequest();
@@ -858,7 +871,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void updatePlaceInfo(final PlaceElement place) {
-        AlertDialog.Builder placeInfoWindow = new AlertDialog.Builder(MapActivity.this);
+        final AlertDialog.Builder placeInfoWindow = new AlertDialog.Builder(MapActivity.this);
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View convertView = inflater.inflate(R.layout.place_details_window, null);
         placeInfoWindow.setView(convertView);
@@ -876,15 +889,25 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         final TextView openNow = (TextView) convertView.findViewById(R.id.place_details_open_status);
         ImageView call = (ImageView) convertView.findViewById(R.id.place_details_call_icon);
         ImageView website = (ImageView) convertView.findViewById(R.id.place_details_website_icon);
-        RelativeLayout ratingContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_rating_container);
+        ImageView exit = (ImageView) convertView.findViewById(R.id.place_details_exit);
         RelativeLayout openContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_open_container);
+        pl.droidsonroids.gif.GifTextView loading = (pl.droidsonroids.gif.GifTextView) convertView.findViewById(R.id.place_details_loading);
         final boolean[] reviewsOpened = {false};
         final boolean[] hoursClicked = {false};
 
+        final AlertDialog ad = placeInfoWindow.show();
+        ad.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         title.setText(place.getName());
         rating.setRating((float) place.getRate());
         rating_text.setText(String.valueOf(place.getRate()));
         address.setText(place.getAddress());
+        exit.setColorFilter(Color.BLACK);
+        exit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ad.cancel();
+            }
+        });
         if (place.getPhoneNumber() != null) {
             call.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -941,10 +964,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         reviewsArrow.animate().rotation(0).setDuration(100).start();
                         reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
                         reviewsOpened[0] = false;
+                        reviewsHandlerContainer.setBackground(ContextCompat.getDrawable(MapActivity.this, R.drawable.review_handler_rounded));
                         reviewsList.setVisibility(View.GONE);
                     } else {
                         reviewsArrow.animate().rotation(-90).setDuration(100).start();
                         reviewsHandler.setText("Ukryj opinie (" + num_rev + ")");
+                        reviewsHandlerContainer.setBackgroundColor(Color.parseColor("#280c21"));
                         reviewsOpened[0] = true;
                         reviewsList.setVisibility(View.VISIBLE);
                         reviewsList.setAdapter(reviewsAdapter);
@@ -995,6 +1020,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             website.setVisibility(View.GONE);
         }
         if (place.getOpenHours() != null) {
+            openContainer.setVisibility(View.VISIBLE);
             if(place.isOpenNow()){
                 openNow.setText(R.string.open_now);
                 openNow.setTextColor(Color.parseColor("#FF20AB22"));
@@ -1016,6 +1042,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
                             reviewsOpened[0] = false;
                             reviewsList.setVisibility(View.GONE);
+                            reviewsHandlerContainer.setBackground(ContextCompat.getDrawable(MapActivity.this, R.drawable.review_handler_rounded));
                         }
                         openingHours.setVisibility(View.VISIBLE);
                         openingHours.setAdapter(adapter);
@@ -1030,13 +1057,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
 
         if (place.getPhotos() != null) {
+            loading.setVisibility(View.VISIBLE);
             String url = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=700&photoreference=" + place.getPhotos()[0] + "&key=" + Constants.API_KEY;
-            new DownloadImageTask(photo).execute(url);
+            new DownloadImageTask(photo, loading).execute(url);
         } else {
             photo.getLayoutParams().height = 0;
         }
-
-        placeInfoWindow.show();
         setLoading(false);
     }
 
@@ -1116,17 +1142,16 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     p.getMarker().remove();
                     p.setMarker(null);
                 }
-                if (p.isChecked()) {
-                    highlightMarker(p);
-                }
-
                 if (p.getDistanceFromCenter() <= radiusSeekBar.getProgress()) {
                     p.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(p.getPosition()).title(p.getName())));
+                    if (p.isChecked()) {
+                        highlightMarker(p);
+                    }
                     placesOnMap.add(p);
                 }
             }
 
-            footer.setText("Liczba znalezionych miejsc: " + placesOnMap.size());
+            footer.setText(getString(R.string.footer_text,placesOnMap.size()));
             placesList = (ListView) findViewById(R.id.list_found_places);
             placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, placesOnMap, this);
             placesList.setAdapter(placeAdapter);
@@ -1135,7 +1160,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             lp.setMargins(screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
             getMyLocationButton.setLayoutParams(lp);
             RelativeLayout.LayoutParams lpLoading = new RelativeLayout.LayoutParams(getPixelsFromDp(30), getPixelsFromDp(30));
-            lpLoading.setMargins((int) screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
+            lpLoading.setMargins(screenWidth - getPixelsFromDp(40), getPixelsFromDp(60), getPixelsFromDp(10), 0);
             loading.setLayoutParams(lpLoading);
         } else {
             hideFooter();
@@ -1152,7 +1177,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public void deletePlaces(String category, boolean reset) throws JSONException {
         if (!reset) {
             if (queue != null) {
-                queue.cancelAll(Constants.TAG_CATEGORY);
+                //queue.cancelAll(Constants.TAG_CATEGORY);
             }
         }
         Iterator<PlaceElement> i = places.iterator();

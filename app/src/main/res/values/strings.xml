@@ -5,4 +5,5 @@
     <string name="action_bar_add_btn">Add Button Action Bar</string>
     <string name="open_now">OPEN</string>
     <string name="closed_now">CLOSED</string>
+    <string name="footer_text">Liczba znalezionych miejsc: %d</string>
 </resources>

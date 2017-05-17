@@ -16,6 +16,7 @@ import com.brgk.placetomeet.contants.Constants;
 import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.models.PlaceElement;
 import com.brgk.placetomeet.R;
+import com.brgk.placetomeet.models.RequestToQueue;
 
 import java.util.List;
 
@@ -92,6 +93,18 @@ public class PlaceAdapter extends ArrayAdapter<PlaceElement> {
                     holder.rating.setTextColor(Color.WHITE);
                     holder.address.setTextColor(Color.WHITE);
                     holder.placeName.setTextColor(Color.WHITE);
+                    RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", mapActivity);
+                    placeDetailsRequest.setPlaceDetailsUrl(place);
+                    placeDetailsRequest.doRequest();
+                    int topOffset = mapActivity.getActionBarHeight() + mapActivity.getStatusBarHeight();
+                    float toY = mapActivity.screenHeight - topOffset;
+                    mapActivity.footerOpened = false;
+                    mapActivity.footerSlider.animate().y(toY).setDuration(100).start();
+                    mapActivity.footer.animate().y(toY - mapActivity.footer.getHeight()).setDuration(100).start();
+                    mapActivity.setLoading(true);
+                    if(place.getMarker() != null) {
+                        place.getMarker().showInfoWindow();
+                    }
                 }
                 mapActivity.highlightMarker(place);
             }
