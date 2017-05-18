@@ -4,9 +4,17 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ListView;
 
+import com.brgk.placetomeet.adapters.CategoryAdapter;
 import com.brgk.placetomeet.contants.Constants;
 import com.brgk.placetomeet.R;
+import com.brgk.placetomeet.models.CategoryElement;
+
+import org.json.JSONException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SplashScreen extends Activity {
 
@@ -34,5 +42,4 @@ public class SplashScreen extends Activity {
             SplashScreen.this.finish();
         }
     }
-
 }

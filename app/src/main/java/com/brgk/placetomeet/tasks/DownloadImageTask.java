@@ -1,4 +1,4 @@
-package com.brgk.placetomeet.models;
+package com.brgk.placetomeet.tasks;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

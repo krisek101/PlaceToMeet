@@ -55,7 +55,6 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         }
         final TextView addressView = (TextView) convertView.findViewById(R.id.right_slider_item_address);
         final TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
-        //TextView numberView = (TextView) convertView.findViewById(R.id.right_slider_item_number);
         ImageView avatar = (ImageView) convertView.findViewById(R.id.right_slider_item_avatar);
         avatar.setColorFilter(Color.GRAY);
         final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);

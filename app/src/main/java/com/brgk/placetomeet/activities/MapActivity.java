@@ -6,23 +6,18 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -41,16 +36,13 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -68,7 +60,7 @@ import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.contants.Constants;
 import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.brgk.placetomeet.models.CategoryElement;
-import com.brgk.placetomeet.models.DownloadImageTask;
+import com.brgk.placetomeet.tasks.DownloadImageTask;
 import com.brgk.placetomeet.models.ListenerHelper;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.models.PlaceElement;
@@ -103,17 +95,10 @@ import com.google.gson.reflect.TypeToken;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
 import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
@@ -711,7 +696,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
                 size++;
             }
-
         }
 //        int size = persons.size();
         xAvg = xSum / size;
@@ -724,6 +708,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         double midLatDeg = midLat * 180 / Math.PI;
         double midLonDeg = midLon * 180 / Math.PI;
 
+        if(Double.isNaN(midLatDeg) || Double.isNaN(midLonDeg)){
+            if (userLocation != null) {
+                return userLocation;
+            } else {
+                return lastLocation;
+            }
+        }
         Log.d("MACIEK_DEBUG", "center: lat: " + midLatDeg + ", lon: " + midLonDeg);
 
         return new LatLng(midLatDeg, midLonDeg);
@@ -879,8 +870,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     internetInfoTextView.setVisibility(View.INVISIBLE);
                     if (!connected[0]) {
                         resetCheckedCategories();
-                        if(user != null){
-                            if(user.getAddress().equals("Adres nieznany")){
+                        if (user != null) {
+                            if (user.getAddress().equals("Adres nieznany")) {
                                 checkUsersSettingGPS();
                             }
                         }
@@ -969,8 +960,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 mapIntent.setPackage("com.google.android.apps.maps");
                 try {
                     startActivity(mapIntent);
-                }catch (Exception e){
-                    gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination_place_id="+ place.getId());
+                } catch (Exception e) {
+                    gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination_place_id=" + place.getId());
                     Intent callIntent = new Intent(Intent.ACTION_VIEW);
                     callIntent.setData(gmmIntentUri);
                     startActivity(callIntent);
@@ -986,7 +977,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 mapIntent.setPackage("com.google.android.apps.maps");
                 try {
                     startActivity(mapIntent);
-                }catch (Exception e){
+                } catch (Exception e) {
                     gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=" + place.getPosition().latitude + "," + place.getPosition().longitude + "&destination_place_id=" + place.getId());
                     Log.v("ADRES", gmmIntentUri.toString());
                     Intent callIntent = new Intent(Intent.ACTION_VIEW);
@@ -1371,29 +1362,21 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onResult(@NonNull LocationSettingsResult result2) {
                 final Status status = result2.getStatus();
-                // final LocationSettingsStates result3 = result2.getLocationSettingsStates();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
-                        // All location settings are satisfied. The client can
-                        // initialize location requests here.
+                        // OK
                         getLocation();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
+                        // ASK FOR GPS
                         try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
                             status.startResolutionForResult(
                                     MapActivity.this,
                                     Constants.REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException e) {
-                            // Ignore the error.
                         }
                         break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        // Location settings are not satisfied. However, we have no way
-                        // to fix the settings so we won't show the dialog.
                         break;
                 }
             }
@@ -1647,7 +1630,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         //favourites
         String json = PreferenceManager.getDefaultSharedPreferences(this).getString("Fav", null);
 //        String json = [{"address":"Zaorskiego 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 4a","position":{"latitude":52.16212338072353,"longitude":21.019675098359585}},{"address":"aleja Komisji Edukacji Narodowej 48, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 5a","position":{"latitude":52.14250818646051,"longitude":21.055312603712085}},{"address":"Powsińska 13, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 6a","position":{"latitude":52.18253373437499,"longitude":21.067824102938175}},{"address":"Błonia Wilanowskie, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 7a","position":{"latitude":52.15192826938311,"longitude":21.076964400708675}},{"address":"Bukowińska 26C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 8a","position":{"latitude":52.18474976529246,"longitude":21.02487254887819}},{"address":"Południowa Obwodnica Warszawy, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 9a","position":{"latitude":52.1396523681538,"longitude":21.025453582406044}},{"address":"Taborowa 33C, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 10a","position":{"latitude":52.1616472563183,"longitude":21.004199422895912}},{"address":"Bocheńska 1, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 11a","position":{"latitude":52.179068240920245,"longitude":21.030993014574047}},{"address":"aleja Komisji Edukacji Narodowej 60, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 12a","position":{"latitude":52.14914588299161,"longitude":21.048004254698753}},{"address":"Politechnika, Warszawa","displayed":true,"id":4,"image":0,"isFavourite":true,"name":"osoba 13a","position":{"latitude":52.2176246,"longitude":21.0143614}},{"address":"Jana Rosoła 61B, Warszawa","displayed":true,"id":2,"image":0,"isFavourite":true,"name":"osoba 14a","position":{"latitude":52.15286405845385,"longitude":21.05514295399189}},{"address":"Marco Polo 1, Warszawa","displayed":true,"id":3,"image":0,"isFavourite":true,"name":"osoba 15a","position":{"latitude":52.14725561255478,"longitude":21.03886429220438}}]
-        Log.d("MACIEK_DEBUG", json);
+//        Log.d("MACIEK_DEBUG", json);
         if (json != null) {
             favouritePersons = new Gson().fromJson(json, new TypeToken<ArrayList<PersonElement>>() {
             }.getType());
