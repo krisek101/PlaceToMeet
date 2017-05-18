@@ -17,6 +17,7 @@ public class PersonElement implements Parcelable {
     public String addressID;
     private boolean displayed = true;
     private int imageResId = 0;
+    private int distanceToCurrentPlace = 0;
 
     public PersonElement(String address, String addressID) {
         this.address = address;
@@ -68,6 +69,14 @@ public class PersonElement implements Parcelable {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getDistanceToCurrentPlace() {
+        return distanceToCurrentPlace;
+    }
+
+    public void setDistanceToCurrentPlace(int distanceToCurrentPlace) {
+        this.distanceToCurrentPlace = distanceToCurrentPlace;
     }
 
     public void decreaseNumber() {

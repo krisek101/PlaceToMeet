@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,8 +26,11 @@ import android.widget.Toast;
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.models.PersonElement;
+import com.brgk.placetomeet.models.PlaceElement;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.List;
 
 
@@ -56,6 +60,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         avatar.setColorFilter(Color.GRAY);
         final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);
         final Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
+        TextView distanceText = (TextView) convertView.findViewById(R.id.right_slider_item_distance);
         personOnOff.setChecked(true);
         if( negativeStateMap.get(position) ) {
             personOnOff.setChecked(false);
@@ -64,6 +69,26 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         View touchField = convertView.findViewById(R.id.right_slider_item_container);
 
         final PersonElement p = persons.get(position);
+
+        if(p.getDistanceToCurrentPlace() != 0){
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(activity.getPixelsFromDp(40), activity.getPixelsFromDp(35));
+            layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+            avatar.setLayoutParams(layoutParams);
+            distanceText.setVisibility(View.VISIBLE);
+            String distance;
+            if(p.getDistanceToCurrentPlace()<1000){
+                distance = p.getDistanceToCurrentPlace() + "m";
+            }else{
+                double wynik = (double)(p.getDistanceToCurrentPlace())/1000;
+                DecimalFormat toFromat = new DecimalFormat("#.##");
+                distance = (toFromat.format(wynik)) + "km";
+            }
+            distanceText.setText(distance);
+        }else{
+            RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(activity.getPixelsFromDp(50), activity.getPixelsFromDp(50));
+            avatar.setLayoutParams(layoutParams);
+            distanceText.setVisibility(View.GONE);
+        }
         p.setId(position + 1);
         if (!p.getPosition().equals(activity.userLocation) && !activity.favouritePersons.contains(p)) {
             p.setName("OSOBA " + (position + 1));
@@ -95,6 +120,8 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
 //                activity.updateMapElements();
 //            }
 //        });
+
+
 
         personOnOff.setOnClickListener(new View.OnClickListener() {
             @Override

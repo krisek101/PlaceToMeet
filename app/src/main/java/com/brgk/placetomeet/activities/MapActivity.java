@@ -113,6 +113,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
 import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
@@ -212,6 +213,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         queue = Volley.newRequestQueue(this);
         loading = (pl.droidsonroids.gif.GifTextView) findViewById(R.id.loading);
         getMyLocationButton = (ImageView) findViewById(R.id.getMyLocationButton);
+        rankByButton = (ToggleButton) findViewById(R.id.rankby_button);
 
         // location - preparation
         if (checkPlayServices()) {
@@ -256,7 +258,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 editMarker = null;
                 lastPosition = null;
 //                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
+                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.default_person))));
                 personAdapter.notifyDataSetChanged();
                 updateMapElements();
                 addressField.setText("");
@@ -278,7 +280,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     if (mGoogleMap != null) {
                         if (!person.equals(user)) {
 //                            person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-                            person.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
+                            person.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.default_person))));
                         }
                         persons.add(person);
                         personAdapter.notifyDataSetChanged();
@@ -312,7 +314,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         checkUsersSettingGPS();
         if (isAddingPerson && userLocation != null) {
             // adding person
-            String address = UsefulFunctions.getAddressFromLatLng(this, userLocation);
+            String address;
+            if (isOnline()) {
+                address = UsefulFunctions.getAddressFromLatLng(this, userLocation);
+            } else {
+                address = "Adres nieznany";
+            }
             addressField.setText(address);
             addPerson(address, userLocation);
         }
@@ -330,6 +337,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         listenerHelper.setListener(footer, "touch");
         listenerHelper.setListener(radiusSeekBar, "seekBarChange");
         listenerHelper.setListener(getMyLocationButton, "click");
+        listenerHelper.setListener(rankByButton, "click");
     }
 
     void addLastChosenPerson(PersonElement personElement) {
@@ -378,14 +386,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         footerSlider = (LinearLayout) findViewById(R.id.footer_slider);
         footerSlider.setY(screenHeight - getActionBarHeight() - getStatusBarHeight());
 
-        //Rankby button
-        rankByButton = (ToggleButton) findViewById(R.id.rankby_button);
-        rankByButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                updateMapElements();
-            }
-        });
+
     }
 
     void setupActionBar() {
@@ -404,8 +405,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // delete last added person on map if exists
                 if (byMapAdding) {
+                    // delete last added person on map if exists
                     if (person != null) {
                         if (!persons.contains(person)) {
                             person.getMarker().remove();
@@ -426,12 +427,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         }
                     }
 
-                    // update list from last chosen
+                    // update list from last selected
                     if (!lastChosenPersons.isEmpty()) {
                         for (PersonElement lastChosen : lastChosenPersons) {
-                            if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
-                                lastChosen.setId(persons.size() + 1);
-                                autoCompletePersons.add(lastChosen);
+                            if (lastChosen.getAddress() != null) {
+                                if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
+                                    lastChosen.setId(persons.size() + 1);
+                                    autoCompletePersons.add(lastChosen);
+                                }
                             }
                         }
                     }
@@ -572,14 +575,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 editPerson.setMarker(mGoogleMap.addMarker(new MarkerOptions().position(lastPosition).title(editPerson.getName())));
                 editPerson.setPosition(lastPosition);
 //                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
+                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.default_person))));
                 editMarker.remove();
                 editMarker = null;
                 editPerson = null;
                 lastPosition = null;
             } else if (editPerson != null) {
 //                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),R.drawable.default_person))));
+                editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.default_person))));
                 editPerson = null;
             }
             isAddingPerson = false;
@@ -610,11 +613,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         switch (requestCode) {
             case Constants.REQUEST_CHECK_SETTINGS:
                 if (resultCode == RESULT_OK) {
-                    // The user picked a contact.
-                    // The Intent's data Uri identifies which contact was selected.
-                    Log.w("resultCode == OK", "success");
                     getLocation();
-                    // Do something with the contact here (bigger example below)
                 }
                 break;
             case Constants.REQUEST_FAVOURITES:
@@ -677,13 +676,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
         mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 13));
 
-        //reset checked categories
+        resetCheckedCategories();
+    }
+
+    private void resetCheckedCategories() {
         if (checkedCategories != null) {
             String c;
             for (int i = 0; i < checkedCategories.size(); i++) {
                 c = checkedCategories.get(i);
                 try {
-                    Log.v("AAAAA", "BBBBB");
                     deletePlaces(c, true);
                     updatePlaces(c);
                 } catch (JSONException e) {
@@ -793,7 +794,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     showActionBar();
                     isAddingPerson = true;
                 }
-                String address = UsefulFunctions.getAddressFromLatLng(MapActivity.this, latLng);
+                String address;
+                if (isOnline()) {
+                    address = UsefulFunctions.getAddressFromLatLng(MapActivity.this, latLng);
+                } else {
+                    address = "Adres nieznany";
+                }
                 addPerson(address, latLng);
                 byMapAdding = false;
                 addressField.setText(address);
@@ -803,19 +809,48 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mGoogleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                if(places != null) {
+                if (places != null) {
                     for (PlaceElement p : places) {
-                        if(p.getMarker() != null){
+                        if (p.getMarker() != null) {
                             p.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
                             p.setChecked(false);
                         }
                     }
                     placeAdapter.notifyDataSetChanged();
                 }
+                for (PersonElement person : persons) {
+                    person.setDistanceToCurrentPlace(0);
+                }
+                personAdapter.notifyDataSetChanged();
             }
         });
 
-        mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+
+        mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                for (PlaceElement place : places) {
+                    if (place.getMarker() != null) {
+                        if (place.getMarker().equals(marker)) {
+                            for (PersonElement person : persons) {
+                                person.setDistanceToCurrentPlace((int) getDistanceFromCenter(marker.getPosition(), person.getPosition()));
+                            }
+                            break;
+                        } else {
+                            for (PersonElement person : persons) {
+                                person.setDistanceToCurrentPlace((int) getDistanceFromCenter(marker.getPosition(), person.getPosition()));
+                            }
+                        }
+                    }
+                }
+                personAdapter.notifyDataSetChanged();
+                return false;
+            }
+        });
+
+        mGoogleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener()
+
+        {
             @Override
             public void onInfoWindowClick(Marker marker) {
                 if (places != null) {
@@ -835,13 +870,24 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
         // check Internet status changes
         final Handler h = new Handler();
-        final int delay = 1000; //milliseconds
+        final int delay = 2000;
         final Runnable[] runnable = new Runnable[1];
+        final boolean[] connected = {true};
         h.postDelayed(new Runnable() {
             public void run() {
                 if (isOnline()) {
                     internetInfoTextView.setVisibility(View.INVISIBLE);
+                    if (!connected[0]) {
+                        resetCheckedCategories();
+                        if(user != null){
+                            if(user.getAddress().equals("Adres nieznany")){
+                                checkUsersSettingGPS();
+                            }
+                        }
+                        connected[0] = true;
+                    }
                 } else {
+                    connected[0] = false;
                     internetInfoTextView.setVisibility(View.VISIBLE);
                     h.removeCallbacks(runnable[0]);
                 }
@@ -859,7 +905,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             //update last location marker
             userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation));
             userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-            user = new PersonElement(UsefulFunctions.getAddressFromLatLng(this, userLocation), "Ja", userLocationMarker);
+            String address;
+            if (isOnline()) {
+                address = UsefulFunctions.getAddressFromLatLng(MapActivity.this, userLocation);
+            } else {
+                address = "Adres nieznany";
+            }
+            user = new PersonElement(address, "Ja", userLocationMarker);
 
             // add user
             persons.add(user);
@@ -892,6 +944,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         ImageView exit = (ImageView) convertView.findViewById(R.id.place_details_exit);
         RelativeLayout openContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_open_container);
         pl.droidsonroids.gif.GifTextView loading = (pl.droidsonroids.gif.GifTextView) convertView.findViewById(R.id.place_details_loading);
+        ImageView navigate = (ImageView) convertView.findViewById(R.id.place_details_navigate);
         final boolean[] reviewsOpened = {false};
         final boolean[] hoursClicked = {false};
 
@@ -908,12 +961,46 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 ad.cancel();
             }
         });
+        navigate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + place.getPosition().latitude + "," + place.getPosition().longitude);
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                try {
+                    startActivity(mapIntent);
+                }catch (Exception e){
+                    gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination_place_id="+ place.getId());
+                    Intent callIntent = new Intent(Intent.ACTION_VIEW);
+                    callIntent.setData(gmmIntentUri);
+                    startActivity(callIntent);
+                }
+            }
+        });
+
+        address.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + place.getPosition().latitude + "," + place.getPosition().longitude);
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                try {
+                    startActivity(mapIntent);
+                }catch (Exception e){
+                    gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=" + place.getPosition().latitude + "," + place.getPosition().longitude + "&destination_place_id=" + place.getId());
+                    Log.v("ADRES", gmmIntentUri.toString());
+                    Intent callIntent = new Intent(Intent.ACTION_VIEW);
+                    callIntent.setData(gmmIntentUri);
+                    startActivity(callIntent);
+                }
+            }
+        });
         if (place.getPhoneNumber() != null) {
             call.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     Intent callIntent = new Intent(Intent.ACTION_DIAL);
-                    callIntent.setData(Uri.parse("tel:"+place.getPhoneNumber()));
+                    callIntent.setData(Uri.parse("tel:" + place.getPhoneNumber()));
                     startActivity(callIntent);
                 }
             });
@@ -941,7 +1028,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     return false;
                 }
             });
-        }else{
+        } else {
             call.setVisibility(View.GONE);
         }
         if (place.getReviews() != null) {
@@ -1021,10 +1108,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
         if (place.getOpenHours() != null) {
             openContainer.setVisibility(View.VISIBLE);
-            if(place.isOpenNow()){
+            if (place.isOpenNow()) {
                 openNow.setText(R.string.open_now);
                 openNow.setTextColor(Color.parseColor("#FF20AB22"));
-            }else{
+            } else {
                 openNow.setText(R.string.closed_now);
                 openNow.setTextColor(Color.parseColor("#FFA91E1E"));
             }
@@ -1036,7 +1123,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         openingHours.setVisibility(View.GONE);
                         hoursClicked[0] = false;
                     } else {
-                        if(place.getReviews() != null) {
+                        if (place.getReviews() != null) {
                             int num_rev = place.getReviews().length();
                             reviewsArrow.animate().rotation(0).setDuration(100).start();
                             reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
@@ -1151,7 +1238,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             }
 
-            footer.setText(getString(R.string.footer_text,placesOnMap.size()));
+            footer.setText(getString(R.string.footer_text, placesOnMap.size()));
             placesList = (ListView) findViewById(R.id.list_found_places);
             placeAdapter = new PlaceAdapter(this, R.layout.footer_slider_item, placesOnMap, this);
             placesList.setAdapter(placeAdapter);
@@ -1233,9 +1320,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         int meterConversion = 1609;
 
         return (float) (distance * meterConversion);
-//        float[] results = new float[1];
-//        Location.distanceBetween(position.latitude, position.longitude, center.latitude, center.longitude, results);
-//        return results[0];
+    }
+
+    public float getDistanceFromCenter(LatLng from, LatLng to) {
+        float[] results = new float[1];
+        Location.distanceBetween(from.latitude, from.longitude, to.latitude, to.longitude, results);
+        return results[0];
     }
 
     // Location
@@ -1349,7 +1439,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     userLocation = new LatLng(latitude, longitude);
                     center = userLocation;
 
-                    // save last location
+                    // save current location
                     PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Latitude", String.valueOf(latitude)).apply();
                     PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext()).edit().putString("Longitude", String.valueOf(longitude)).apply();
 
@@ -1362,7 +1452,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                             user.setMarker(userLocationMarker);
                             user.setPosition(userLocation);
-                            user.setAddress(UsefulFunctions.getAddressFromLatLng(this, userLocation));
+                            String address;
+                            if (isOnline()) {
+                                address = UsefulFunctions.getAddressFromLatLng(MapActivity.this, userLocation);
+                            } else {
+                                address = "Adres nieznany";
+                            }
+                            user.setAddress(address);
                             personAdapter.notifyDataSetChanged();
                             updateMapElements();
                         }
@@ -1370,7 +1466,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         // if no location saved in Preferences
                         userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title("Ja"));
                         userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                        user = new PersonElement(UsefulFunctions.getAddressFromLatLng(this, userLocation), "Ja", userLocationMarker);
+                        String address;
+                        if (isOnline()) {
+                            address = UsefulFunctions.getAddressFromLatLng(MapActivity.this, userLocation);
+                        } else {
+                            address = "Adres nieznany";
+                        }
+                        user = new PersonElement(address, "Ja", userLocationMarker);
                         persons.add(user);
                         personAdapter.notifyDataSetChanged();
                         updateMapElements();
@@ -1572,7 +1674,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     private BitmapDescriptor getMarkerIcon(int drawableId) {
 
-        return BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(),drawableId)));
+        return BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), drawableId)));
     }
 
 }

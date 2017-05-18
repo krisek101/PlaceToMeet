@@ -49,7 +49,7 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
         }else{
             address.setText(person.getAddress());
         }
-
+        Log.v("DZIALAA", person.getAddress());
         container.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -26,20 +26,34 @@
         android:gravity="center"
         android:textSize="20sp" />
 
+    <RelativeLayout
+        android:id="@+id/place_details_address_container"
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/place_details_title"
+        android:gravity="center"
+        android:layout_centerHorizontal="true"
+        android:paddingBottom="15dp">
     <TextView
         android:id="@+id/place_details_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/place_details_title"
-        android:layout_centerHorizontal="true"
-        android:paddingBottom="15dp"
         android:textSize="14sp" />
+
+    <ImageView
+        android:id="@+id/place_details_navigate"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_toEndOf="@+id/place_details_address"
+        android:src="@drawable/navigate"
+        android:layout_marginStart="3dp" />
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/actions_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/place_details_address"
+        android:layout_below="@+id/place_details_address_container"
         android:layout_centerHorizontal="true">
 
         <ImageView

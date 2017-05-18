@@ -71,6 +71,9 @@ public class ListenerHelper {
                     case R.id.getMyLocationButton:
                         parentActivity.onGetMyLocationButtonClick();
                         break;
+                    case R.id.rankby_button:
+                        parentActivity.updateMapElements();
+                        break;
                 }
             }
         });
