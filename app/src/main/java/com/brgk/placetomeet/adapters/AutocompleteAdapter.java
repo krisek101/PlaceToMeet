@@ -26,9 +26,9 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
     private Context context;
     private List<PersonElement> autocompletePersons;
 
-    public AutocompleteAdapter(@NonNull Context context, @LayoutRes int resource, List<PersonElement> autocompletePersons, MapActivity mapActivity) {
-        super(context, resource, autocompletePersons);
-        this.context = context;
+    public AutocompleteAdapter(@LayoutRes int resource, List<PersonElement> autocompletePersons, MapActivity mapActivity) {
+        super(mapActivity.getBaseContext(), resource, autocompletePersons);
+        this.context = mapActivity.getBaseContext();
         this.mapActivity = mapActivity;
         this.autocompletePersons = autocompletePersons;
     }
@@ -43,10 +43,14 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
         final PersonElement person = autocompletePersons.get(position);
 
         TextView address = (TextView) convertView.findViewById(R.id.autocomplete_address);
+        TextView name = (TextView) convertView.findViewById(R.id.autocomplete_name);
         RelativeLayout container = (RelativeLayout) convertView.findViewById(R.id.autocomplete_person);
-        if (mapActivity.favouritePersons.contains(person) && !person.getName().isEmpty()) {
-            address.setText(person.getName());
+        if (mapActivity.favouritePersons.contains(person)) {
+            name.setVisibility(View.VISIBLE);
+            name.setText(person.getName());
+            address.setText(person.getAddress());
         }else{
+            name.setVisibility(View.GONE);
             address.setText(person.getAddress());
         }
         Log.v("DZIALAA", person.getAddress());

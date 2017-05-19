@@ -2,7 +2,6 @@ package com.brgk.placetomeet.models;
 
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -91,7 +90,8 @@ public class RequestToQueue {
             String place_id = c.getString("place_id");
             mapActivity.autoCompletePersons.add(new PersonElement(address, place_id));
         }
-        mapActivity.autocompleteAdapter = new AutocompleteAdapter(mapActivity, R.layout.autocomplete_item, mapActivity.autoCompletePersons, mapActivity);
+        Log.v("AUTOCOMPLETE PERSONS", mapActivity.autoCompletePersons.toString());
+        mapActivity.autocompleteAdapter = new AutocompleteAdapter(R.layout.autocomplete_item, mapActivity.autoCompletePersons, mapActivity);
         mapActivity.addressField.setAdapter(mapActivity.autocompleteAdapter);
         mapActivity.autocompleteAdapter.notifyDataSetChanged();
     }

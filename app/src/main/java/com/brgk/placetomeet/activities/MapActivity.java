@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -35,6 +36,8 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -295,7 +298,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     public void onGetMyLocationButtonClick() {
         setLoading(true);
-        updateLocation = true;
         checkUsersSettingGPS();
         if (isAddingPerson && userLocation != null) {
             // adding person
@@ -326,11 +328,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     void addLastChosenPerson(PersonElement personElement) {
-        if (lastChosenPersons.size() > 10) {
-            lastChosenPersons.remove(0);
+        if (!personElement.getAddress().equals("Adres nieznany")) {
+            if (lastChosenPersons.size() > 10) {
+                lastChosenPersons.remove(0);
+            }
+            lastChosenPersons.add(personElement);
+            saveLastChosen();
         }
-        lastChosenPersons.add(personElement);
-        saveLastChosen();
     }
 
     void arrangeSliders() {
@@ -402,6 +406,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     // clear all last results
                     autoCompletePersons.clear();
 
+
                     // update list from favourites
                     if (!favouritePersons.isEmpty()) {
                         for (PersonElement favPerson : favouritePersons) {
@@ -425,14 +430,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     }
 
                     // update list from Google
-                    if (s.toString().length() >= 2) {
-                        if (queue != null) {
-                            queue.cancelAll(Constants.TAG_AUTOCOMPLETE);
-                        }
-                        RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", MapActivity.this);
-                        autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
-                        autocompleteRequest.doRequest();
+                    if (queue != null) {
+                        queue.cancelAll(Constants.TAG_AUTOCOMPLETE);
                     }
+                    RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", MapActivity.this);
+                    autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
+                    autocompleteRequest.doRequest();
+
                 } else {
                     byMapAdding = true;
                 }
@@ -441,7 +445,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
             @Override
             public void afterTextChanged(Editable editable) {
-
             }
         });
     }
@@ -708,7 +711,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         double midLatDeg = midLat * 180 / Math.PI;
         double midLonDeg = midLon * 180 / Math.PI;
 
-        if(Double.isNaN(midLatDeg) || Double.isNaN(midLonDeg)){
+        if (Double.isNaN(midLatDeg) || Double.isNaN(midLonDeg)) {
             if (userLocation != null) {
                 return userLocation;
             } else {
@@ -807,7 +810,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             p.setChecked(false);
                         }
                     }
-                    placeAdapter.notifyDataSetChanged();
+                    if (placeAdapter != null) {
+                        placeAdapter.notifyDataSetChanged();
+                    }
                 }
                 for (PersonElement person : persons) {
                     person.setDistanceToCurrentPlace(0);
@@ -870,11 +875,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     internetInfoTextView.setVisibility(View.INVISIBLE);
                     if (!connected[0]) {
                         resetCheckedCategories();
-                        if (user != null) {
-                            if (user.getAddress().equals("Adres nieznany")) {
-                                checkUsersSettingGPS();
-                            }
-                        }
+                        resetPersonsAddresses();
                         connected[0] = true;
                     }
                 } else {
@@ -913,6 +914,17 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
+    public void resetPersonsAddresses() {
+        if (persons != null) {
+            for (PersonElement p : persons) {
+                if (p.getAddress().equals("Adres nieznany")) {
+                    p.setAddress(UsefulFunctions.getAddressFromLatLng(this, p.getPosition()));
+                }
+            }
+        }
+        checkUsersSettingGPS();
+    }
+
     public void updatePlaceInfo(final PlaceElement place) {
         final AlertDialog.Builder placeInfoWindow = new AlertDialog.Builder(MapActivity.this);
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -922,7 +934,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         TextView title = (TextView) convertView.findViewById(R.id.place_details_title);
         RatingBar rating = (RatingBar) convertView.findViewById(R.id.place_details_rating);
         TextView rating_text = (TextView) convertView.findViewById(R.id.place_details_rating_text);
-        TextView address = (TextView) convertView.findViewById(R.id.place_details_address);
+        final TextView address = (TextView) convertView.findViewById(R.id.place_details_address);
         final ListView openingHours = (ListView) convertView.findViewById(R.id.place_details_opening_hours);
         ImageView photo = (ImageView) convertView.findViewById(R.id.place_details_photo);
         final TextView reviewsHandler = (TextView) convertView.findViewById(R.id.place_details_reviews_handler);
@@ -935,7 +947,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         ImageView exit = (ImageView) convertView.findViewById(R.id.place_details_exit);
         RelativeLayout openContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_open_container);
         pl.droidsonroids.gif.GifTextView loading = (pl.droidsonroids.gif.GifTextView) convertView.findViewById(R.id.place_details_loading);
-        ImageView navigate = (ImageView) convertView.findViewById(R.id.place_details_navigate);
         final boolean[] reviewsOpened = {false};
         final boolean[] hoursClicked = {false};
 
@@ -950,22 +961,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             @Override
             public void onClick(View view) {
                 ad.cancel();
-            }
-        });
-        navigate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + place.getPosition().latitude + "," + place.getPosition().longitude);
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                try {
-                    startActivity(mapIntent);
-                } catch (Exception e) {
-                    gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination_place_id=" + place.getId());
-                    Intent callIntent = new Intent(Intent.ACTION_VIEW);
-                    callIntent.setData(gmmIntentUri);
-                    startActivity(callIntent);
-                }
             }
         });
 
@@ -986,6 +981,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             }
         });
+
         if (place.getPhoneNumber() != null) {
             call.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -1350,43 +1346,48 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     private void checkUsersSettingGPS() {
-        if (!mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.connect();
-        }
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
-                        builder.build());
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @Override
-            public void onResult(@NonNull LocationSettingsResult result2) {
-                final Status status = result2.getStatus();
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-                        // OK
-                        getLocation();
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // ASK FOR GPS
-                        try {
-                            status.startResolutionForResult(
-                                    MapActivity.this,
-                                    Constants.REQUEST_CHECK_SETTINGS);
-                        } catch (IntentSender.SendIntentException e) {
-                        }
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        break;
-                }
+        if(isOnline()) {
+            if (!mGoogleApiClient.isConnected()) {
+                mGoogleApiClient.connect();
             }
-        });
+            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                    .addLocationRequest(locationRequest);
+            PendingResult<LocationSettingsResult> result =
+                    LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
+                            builder.build());
+            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                @Override
+                public void onResult(@NonNull LocationSettingsResult result2) {
+                    final Status status = result2.getStatus();
+                    switch (status.getStatusCode()) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+                            // OK
+                            getLocation();
+                            break;
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            // ASK FOR GPS
+                            try {
+                                status.startResolutionForResult(
+                                        MapActivity.this,
+                                        Constants.REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException e) {
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            break;
+                    }
+                }
+            });
+        }else{
+            setLoading(false);
+        }
     }
 
     private void getLocation() {
         mGoogleApiClient.disconnect();
         if (mGoogleApiClient != null && isOnline()) {
             setLoading(true);
+            updateLocation = true;
             mGoogleApiClient.connect();
         }
     }

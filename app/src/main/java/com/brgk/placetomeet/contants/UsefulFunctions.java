@@ -38,8 +38,10 @@ public class UsefulFunctions {
                 e.printStackTrace();
             }
             if (addressArray != null && !addressArray.isEmpty()) {
-                addressBuilder += addressArray.get(0).getAddressLine(0) + ", ";
-                addressBuilder += addressArray.get(0).getLocality();
+                addressBuilder += addressArray.get(0).getAddressLine(0);
+                if(!addressArray.get(0).getLocality().equals("null")) {
+                    addressBuilder +=  ", " + addressArray.get(0).getLocality();
+                }
             } else {
                 addressBuilder = null;
                 failed++;

@@ -6,6 +6,20 @@
     android:layout_height="match_parent"
     tools:context="com.brgk.placetomeet.activities.MapActivity">
 
+    <!--<RelativeLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:background="#EEE"-->
+        <!--android:id="@+id/search_container"-->
+        <!--android:visibility="gone">-->
+
+        <!--<ListView-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:id="@+id/search_container_last_selected" />-->
+
+    <!--</RelativeLayout>-->
+
     <fragment
         android:id="@+id/mapFragment"
         android:name="com.google.android.gms.maps.MapFragment"
