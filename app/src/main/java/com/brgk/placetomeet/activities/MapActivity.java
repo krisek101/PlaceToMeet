@@ -610,8 +610,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     ArrayList<Integer> toBeDeleted = data.getIntegerArrayListExtra("deletions");
                     for (int i = toBeDeleted.size() - 1; i >= 0; i--) {
                         int index = toBeDeleted.get(i);
-                        if (persons.contains(favouritePersons.get(index)))
-                            persons.remove(favouritePersons.get(index));
+                        PersonElement p = favouritePersons.get(index);
+                        p.getMarker().remove();
+                        if (persons.contains(p)) {
+                            persons.remove(p);
+                        }
                         favouritePersons.remove(index);
                     }
                     updateMapElements();

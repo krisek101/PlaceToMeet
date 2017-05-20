@@ -343,7 +343,7 @@ public class ListenerHelper {
                                     break;
                                 case MotionEvent.ACTION_UP:
                                     if (parentActivity.footerOpened) {
-                                        if (motionEvent.getRawY() - y > 0.1 * parentActivity.footerSlider.getHeight()) {
+                                        if (motionEvent.getRawY() - y > 0.05 * parentActivity.footerSlider.getHeight()) {
                                             toY = parentActivity.screenHeight - topOffset; //parentActivity.getPixelsFromDp(512);
                                             parentActivity.footerOpened = false;
                                         } else {
@@ -351,7 +351,7 @@ public class ListenerHelper {
                                             parentActivity.footerOpened = true;
                                         }
                                     } else {
-                                        if (motionEvent.getRawY() - y < 0.9 * parentActivity.footerSlider.getHeight()) {
+                                        if (motionEvent.getRawY() - y < 0.95 * parentActivity.footerSlider.getHeight()) {
                                             toY = parentActivity.footerTop + viewElement.getHeight();
                                             parentActivity.footerOpened = true;
                                         } else {

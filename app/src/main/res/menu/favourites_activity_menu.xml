@@ -5,7 +5,4 @@
     <item android:id="@+id/remove_fav"
         android:title="Usuń"
         app:showAsAction="ifRoom|withText"/>
-    <item android:id="@+id/add_fav"
-        android:title="Dodaj"
-        app:showAsAction="ifRoom|withText"/>
 </menu>

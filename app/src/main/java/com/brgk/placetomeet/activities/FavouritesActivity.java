@@ -2,8 +2,6 @@ package com.brgk.placetomeet.activities;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -19,12 +17,10 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.adapters.FavouritePersonAdapter;
-import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.brgk.placetomeet.models.PersonElement;
 
 import java.util.ArrayList;
@@ -39,11 +35,15 @@ public class FavouritesActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        setResult();
+        finish();
+    }
+
+    private void setResult() {
         Intent result = new Intent();
         result.putIntegerArrayListExtra("positions", positions);
         result.putIntegerArrayListExtra("deletions", toBeDeleted);
         setResult(RESULT_OK, result);
-        finish();
     }
 
     @Override
@@ -64,20 +64,23 @@ public class FavouritesActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.favourites_activity_menu, menu);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Ulubione");
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch( item.getItemId() ) {
-            case R.id.add_fav:
-
-                break;
             case R.id.remove_fav:
                 ArrayList<PersonElement> favs = getIntent().getParcelableArrayListExtra("Fav");
                 removeAdapter = new removeFavoriteAdapter(this, R.layout.remove_favourite_item, favs);
                 l.setAdapter(removeAdapter);
                 startActionMode(new ActionModeCallback());
+                break;
+            case android.R.id.home:
+                setResult();
+                finish();
                 break;
             default: return super.onOptionsItemSelected(item);
         }
@@ -115,7 +118,7 @@ public class FavouritesActivity extends AppCompatActivity {
             return convertView;
         }
 
-        public SparseBooleanArray getStates() {
+        private SparseBooleanArray getStates() {
             return stateArray;
         }
     }
@@ -151,7 +154,6 @@ public class FavouritesActivity extends AppCompatActivity {
                         }
                     }
                 }
-//                setListDefaultAdapter();
                 mode.finish();
                 return true;
             } else {
