@@ -16,7 +16,7 @@
         android:gravity="center"
         android:layout_margin="5dp"
         android:id="@+id/no_favourites_info"
-        android:text="Lista osób ulubionych jest pusta.\nAby dodać nową osobę, przytrzymaj palcem na wybranej osobie z listy uczestników spotkania i wybierz \'Dodaj do ulubionych\'."
+        android:text="Lista ulubionych osób jest pusta"
         android:visibility="visible"/>
 
     <ListView

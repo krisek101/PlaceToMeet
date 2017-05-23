@@ -212,13 +212,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
 
         requestPermissions();
-        arrangeSliders();
         restoreData();
+        arrangeSliders();
+        setListeners();
         setCategories();
         ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
         setupActionBar();
         checkUsersSettingGPS();
-        setListeners();
         guide();
     }
 
@@ -374,7 +374,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         footerTop = footer.getY();
         footerSlider = (LinearLayout) findViewById(R.id.footer_slider);
         footerSlider.setY(screenHeight - getActionBarHeight() - getStatusBarHeight());
-
 
     }
 
@@ -611,7 +610,9 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     for (int i = toBeDeleted.size() - 1; i >= 0; i--) {
                         int index = toBeDeleted.get(i);
                         PersonElement p = favouritePersons.get(index);
-                        p.getMarker().remove();
+                        if (p.getMarker() != null) {
+                            p.getMarker().remove();
+                        }
                         if (persons.contains(p)) {
                             persons.remove(p);
                         }
@@ -1349,7 +1350,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     private void checkUsersSettingGPS() {
-        if(isOnline()) {
+        if (isOnline()) {
             if (!mGoogleApiClient.isConnected()) {
                 mGoogleApiClient.connect();
             }
@@ -1381,7 +1382,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     }
                 }
             });
-        }else{
+        } else {
             setLoading(false);
         }
     }
