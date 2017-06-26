@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/info_window_rounded"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:id="@+id/place_details_container">
 
     <ImageView
         android:id="@+id/place_details_exit"

@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -36,8 +35,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -186,6 +183,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     // Others
     public RequestQueue queue;
     private TextView internetInfoTextView;
+    private int counterLoader = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -237,6 +235,20 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         sequence.start();
     }
 
+    public void cancelLoader() {
+        counterLoader--;
+        Log.v("CANCEL LOADER ", counterLoader + "");
+        if(counterLoader == 0) {
+            loading.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public void startLoader() {
+        counterLoader++;
+        Log.v("START LOADER ", counterLoader + "");
+        loading.setVisibility(View.VISIBLE);
+    }
+
     public void onFloatingButtonClick() {
         if (isAddingPerson) {
             // on confirmation icon click
@@ -260,7 +272,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             } else if (person != null) {
                 boolean exists = false;
                 for (PersonElement p : persons) {
-                    if (p.getAddress().equals(person.getAddress())) {
+                    if (p.getPosition().equals(person.getPosition())) {
                         exists = true;
                     }
                 }
@@ -297,19 +309,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void onGetMyLocationButtonClick() {
-        setLoading(true);
-        checkUsersSettingGPS();
-        if (isAddingPerson && userLocation != null) {
-            // adding person
-            String address;
-            if (isOnline()) {
-                address = UsefulFunctions.getAddressFromLatLng(this, userLocation);
-            } else {
-                address = "Adres nieznany";
-            }
-            addressField.setText(address);
-            addPerson(address, userLocation);
+        if (centerCircle != null) {
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 13));
         }
+        checkUsersSettingGPS();
     }
 
     void setListeners() {
@@ -446,14 +449,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             public void afterTextChanged(Editable editable) {
             }
         });
-    }
-
-    public void setLoading(boolean load) {
-        if (load) {
-            loading.setVisibility(View.VISIBLE);
-        } else {
-            loading.setVisibility(View.INVISIBLE);
-        }
     }
 
     public void showActionBar() {
@@ -829,19 +824,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                for (PlaceElement place : places) {
-                    if (place.getMarker() != null) {
-                        if (place.getMarker().equals(marker)) {
-                            for (PersonElement person : persons) {
-                                person.setDistanceToCurrentPlace((int) getDistanceFromCenter(marker.getPosition(), person.getPosition()));
-                            }
-                            break;
-                        } else {
-                            for (PersonElement person : persons) {
-                                person.setDistanceToCurrentPlace((int) getDistanceFromCenter(marker.getPosition(), person.getPosition()));
-                            }
-                        }
-                    }
+                for (PersonElement person : persons) {
+                    person.setDistanceToCurrentPlace((int) getDistanceFromCenter(marker.getPosition(), person.getPosition()));
                 }
                 personAdapter.notifyDataSetChanged();
                 return false;
@@ -860,7 +844,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                                 RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", MapActivity.this);
                                 placeDetailsRequest.setPlaceDetailsUrl(place);
                                 placeDetailsRequest.doRequest();
-                                setLoading(true);
                             }
                         }
                     }
@@ -940,7 +923,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         TextView rating_text = (TextView) convertView.findViewById(R.id.place_details_rating_text);
         final TextView address = (TextView) convertView.findViewById(R.id.place_details_address);
         final ListView openingHours = (ListView) convertView.findViewById(R.id.place_details_opening_hours);
-        ImageView photo = (ImageView) convertView.findViewById(R.id.place_details_photo);
+        final ImageView photo = (ImageView) convertView.findViewById(R.id.place_details_photo);
         final TextView reviewsHandler = (TextView) convertView.findViewById(R.id.place_details_reviews_handler);
         final ImageView reviewsArrow = (ImageView) convertView.findViewById(R.id.place_details_reviews_arrow);
         final RelativeLayout reviewsHandlerContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_reviews_handler_container);
@@ -950,7 +933,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         ImageView website = (ImageView) convertView.findViewById(R.id.place_details_website_icon);
         ImageView exit = (ImageView) convertView.findViewById(R.id.place_details_exit);
         RelativeLayout openContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_open_container);
-        pl.droidsonroids.gif.GifTextView loading = (pl.droidsonroids.gif.GifTextView) convertView.findViewById(R.id.place_details_loading);
+        pl.droidsonroids.gif.GifTextView loadingPhoto = (pl.droidsonroids.gif.GifTextView) convertView.findViewById(R.id.place_details_loading);
         final boolean[] reviewsOpened = {false};
         final boolean[] hoursClicked = {false};
 
@@ -1135,13 +1118,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
 
         if (place.getPhotos() != null) {
-            loading.setVisibility(View.VISIBLE);
+            loadingPhoto.setVisibility(View.VISIBLE);
             String url = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=700&photoreference=" + place.getPhotos()[0] + "&key=" + Constants.API_KEY;
-            new DownloadImageTask(photo, loading).execute(url);
+            new DownloadImageTask(photo, loadingPhoto, this).execute(url);
         } else {
             photo.getLayoutParams().height = 0;
         }
-        setLoading(false);
     }
 
     public int getNumDayOfWeek() {
@@ -1180,7 +1162,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (checkedCategories.contains(category)) {
                     if (isOnline()) {
                         // add places from one category
-                        setLoading(true);
                         if (centerCircle != null) {
                             center = centerCircle.getCenter();
                         }
@@ -1192,7 +1173,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             } else {
                 if (isOnline()) {
-                    setLoading(true);
                     if (centerCircle != null) {
                         center = centerCircle.getCenter();
                     }
@@ -1249,7 +1229,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             lpLoading.setMargins(screenWidth - getPixelsFromDp(40), getPixelsFromDp(10), getPixelsFromDp(10), 0);
             loading.setLayoutParams(lpLoading);
         }
-        setLoading(false);
     }
 
     public void deletePlaces(String category, boolean reset) throws JSONException {
@@ -1281,19 +1260,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 }
             } else {
                 place.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker());
-            }
-        }
-    }
-
-    public void tickPlaceOnList(Marker marker) {
-        for (PlaceElement p : places) {
-            if (p.getMarker() != null) {
-                if (p.getMarker().equals(marker)) {
-                    p.setChecked(true);
-                    highlightMarker(p);
-                    placeAdapter.notifyDataSetChanged();
-                    break;
-                }
             }
         }
     }
@@ -1382,15 +1348,13 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     }
                 }
             });
-        } else {
-            setLoading(false);
         }
     }
 
     private void getLocation() {
         mGoogleApiClient.disconnect();
         if (mGoogleApiClient != null && isOnline()) {
-            setLoading(true);
+            startLoader();
             updateLocation = true;
             mGoogleApiClient.connect();
         }
@@ -1466,11 +1430,15 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         updateMapElements();
                     }
 
-                    // move camera to user's location
-                    mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
+                    // move Camera
+                    if (centerCircle != null) {
+                        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerCircle.getCenter(), 13));
+                    } else {
+                        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 13));
+                    }
                     updateLocation = false;
                     mGoogleApiClient.disconnect();
-                    setLoading(false);
+                    cancelLoader();
                     Log.v("LOCATION CHANGED", "LAT:" + latitude + ", LNG:" + longitude);
                 }
             }
@@ -1664,5 +1632,4 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
         return BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), drawableId)));
     }
-
 }

@@ -61,7 +61,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         final Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
         TextView distanceText = (TextView) convertView.findViewById(R.id.right_slider_item_distance);
         personOnOff.setChecked(true);
-        if( negativeStateMap.get(position) ) {
+        if (negativeStateMap.get(position)) {
             personOnOff.setChecked(false);
         }
 
@@ -69,21 +69,24 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
 
         final PersonElement p = persons.get(position);
 
-        if(p.getDistanceToCurrentPlace() != 0){
+        if (p.getDistanceToCurrentPlace() != 0) {
             RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(activity.getPixelsFromDp(40), activity.getPixelsFromDp(35));
             layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
             avatar.setLayoutParams(layoutParams);
             distanceText.setVisibility(View.VISIBLE);
             String distance;
-            if(p.getDistanceToCurrentPlace()<1000){
+            if (p.getDistanceToCurrentPlace() < 1000) {
                 distance = p.getDistanceToCurrentPlace() + "m";
-            }else{
-                double wynik = (double)(p.getDistanceToCurrentPlace())/1000;
-                DecimalFormat toFromat = new DecimalFormat("#.##");
-                distance = (toFromat.format(wynik)) + "km";
+            } else {
+                double result = (double) (p.getDistanceToCurrentPlace()) / 1000;
+                DecimalFormat toFormat = new DecimalFormat("#.##");
+                distance = (toFormat.format(result)) + "km";
+                if (p.getDistanceToCurrentPlace() >= 100000) {
+                    distance = ">100km";
+                }
             }
             distanceText.setText(distance);
-        }else{
+        } else {
             RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(activity.getPixelsFromDp(50), activity.getPixelsFromDp(50));
             avatar.setLayoutParams(layoutParams);
             distanceText.setVisibility(View.GONE);
@@ -96,10 +99,10 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             favouriteStar.setVisibility(View.INVISIBLE);
             p.setName("Ja");
             p.getMarker().setTitle("Ja");
-        } else if (activity.favouritePersons.contains(p)){
-            if(p.getImageResId() != 0){
+        } else if (activity.favouritePersons.contains(p)) {
+            if (p.getImageResId() != 0) {
                 avatar.setImageResource(p.getImageResId());
-            }else{
+            } else {
                 avatar.clearColorFilter();
             }
         }
@@ -107,25 +110,13 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         nameView.setSelected(true);
         addressView.setText(p.getAddress());
         nameView.setText(p.getName());
-        //numberView.setText(String.valueOf(p.getId()));
 
         favouriteStar.setImageResource(p.isFavourite() ? R.drawable.favourite_on : R.drawable.favourite_off);
-
-//        personOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                p.displayed(isChecked);
-//                p.getMarker().setVisible(isChecked);
-//                activity.updateMapElements();
-//            }
-//        });
-
-
 
         personOnOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if( personOnOff.isChecked() ) {
+                if (personOnOff.isChecked()) {
                     negativeStateMap.delete(position);
                     p.displayed(true);
                     p.getMarker().setVisible(true);
@@ -152,10 +143,10 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         touchField.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(addressView.isSelected()){
+                if (addressView.isSelected()) {
                     addressView.setSelected(false);
                     nameView.setSelected(false);
-                }else {
+                } else {
                     addressView.setSelected(true);
                     nameView.setSelected(true);
                 }

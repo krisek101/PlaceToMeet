@@ -37,10 +37,14 @@ public class UsefulFunctions {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (addressArray != null && !addressArray.isEmpty()) {
-                addressBuilder += addressArray.get(0).getAddressLine(0);
-                if(!addressArray.get(0).getLocality().equals("null")) {
-                    addressBuilder +=  ", " + addressArray.get(0).getLocality();
+            if (addressArray != null) {
+                if(!addressArray.isEmpty()) {
+                    if (addressArray.get(0) != null) {
+                        addressBuilder += addressArray.get(0).getAddressLine(0);
+                        if (addressArray.get(0).getLocality() != null) {
+                            addressBuilder += ", " + addressArray.get(0).getLocality();
+                        }
+                    }
                 }
             } else {
                 addressBuilder = null;

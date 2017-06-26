@@ -101,7 +101,6 @@ public class PlaceAdapter extends ArrayAdapter<PlaceElement> {
                     mapActivity.footerOpened = false;
                     mapActivity.footerSlider.animate().y(toY).setDuration(100).start();
                     mapActivity.footer.animate().y(toY - mapActivity.footer.getHeight()).setDuration(100).start();
-                    mapActivity.setLoading(true);
                     if(place.getMarker() != null) {
                         place.getMarker().showInfoWindow();
                     }

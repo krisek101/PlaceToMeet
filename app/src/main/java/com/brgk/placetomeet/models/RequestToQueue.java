@@ -36,6 +36,7 @@ public class RequestToQueue {
 
     public void doRequest() {
         Log.v("LINK", link);
+        mapActivity.startLoader();
         JsonObjectRequest jsonObjRequest = new JsonObjectRequest(com.android.volley.Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -51,6 +52,7 @@ public class RequestToQueue {
                             onResponsePlaceDetails(response);
                             break;
                     }
+                    mapActivity.cancelLoader();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -79,7 +81,6 @@ public class RequestToQueue {
             }
         }
         mapActivity.updateList(mapActivity.places);
-        mapActivity.loading.setVisibility(View.INVISIBLE);
     }
 
     private void onResponseAutocomplete(JSONObject response) throws JSONException {
