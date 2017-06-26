@@ -60,6 +60,7 @@ import com.brgk.placetomeet.contants.ClearableAutoCompleteTextView;
 import com.brgk.placetomeet.contants.Constants;
 import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.brgk.placetomeet.models.CategoryElement;
+import com.brgk.placetomeet.models.LoaderHelper;
 import com.brgk.placetomeet.tasks.DownloadImageTask;
 import com.brgk.placetomeet.models.ListenerHelper;
 import com.brgk.placetomeet.models.PersonElement;
@@ -183,7 +184,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     // Others
     public RequestQueue queue;
     private TextView internetInfoTextView;
-    private int counterLoader = 0;
+    public LoaderHelper loaderHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -209,6 +210,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             Log.e("Google Play Services", "Unavailable");
         }
 
+        setLoaders();
         requestPermissions();
         restoreData();
         arrangeSliders();
@@ -235,18 +237,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         sequence.start();
     }
 
-    public void cancelLoader() {
-        counterLoader--;
-        Log.v("CANCEL LOADER ", counterLoader + "");
-        if(counterLoader == 0) {
-            loading.setVisibility(View.INVISIBLE);
-        }
-    }
-
-    public void startLoader() {
-        counterLoader++;
-        Log.v("START LOADER ", counterLoader + "");
-        loading.setVisibility(View.VISIBLE);
+    public void setLoaders(){
+        loaderHelper = new LoaderHelper(this);
+        loaderHelper.setLoader(Constants.LOADER_PLACES);
+        loaderHelper.setLoader(Constants.LOADER_PLACE_DETAILS);
+        loaderHelper.setLoader(Constants.LOADER_LOCATION);
     }
 
     public void onFloatingButtonClick() {
@@ -331,7 +326,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     void addLastChosenPerson(PersonElement personElement) {
-        if (!personElement.getAddress().equals("Adres nieznany")) {
+        if (!personElement.getAddress().equals("Adres nieznany") && !lastChosenPersons.contains(personElement)) {
             if (lastChosenPersons.size() > 10) {
                 lastChosenPersons.remove(0);
             }
@@ -438,12 +433,10 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     RequestToQueue autocompleteRequest = new RequestToQueue(Constants.TAG_AUTOCOMPLETE, "", MapActivity.this);
                     autocompleteRequest.setPlaceAutoCompleteUrl(s.toString());
                     autocompleteRequest.doRequest();
-
                 } else {
                     byMapAdding = true;
                 }
             }
-
 
             @Override
             public void afterTextChanged(Editable editable) {
@@ -613,8 +606,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         }
                         favouritePersons.remove(index);
                     }
-                    updateMapElements();
                     saveFav();
+
                     //add selected favourites
                     ArrayList<Integer> positions = data.getIntegerArrayListExtra("positions");
                     for (int i = 0; i < favouritePersons.size(); i++) {
@@ -626,6 +619,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             moveFavToElem(favouritePersons.get(i));
                         }
                     }
+
+                    updateMapElements();
                     personAdapter.notifyDataSetChanged();
                 }
                 break;
@@ -1354,7 +1349,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private void getLocation() {
         mGoogleApiClient.disconnect();
         if (mGoogleApiClient != null && isOnline()) {
-            startLoader();
+            loaderHelper.startLoading(Constants.LOADER_LOCATION);
             updateLocation = true;
             mGoogleApiClient.connect();
         }
@@ -1438,7 +1433,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     }
                     updateLocation = false;
                     mGoogleApiClient.disconnect();
-                    cancelLoader();
+                    loaderHelper.cancelLoading(Constants.LOADER_LOCATION);
                     Log.v("LOCATION CHANGED", "LAT:" + latitude + ", LNG:" + longitude);
                 }
             }

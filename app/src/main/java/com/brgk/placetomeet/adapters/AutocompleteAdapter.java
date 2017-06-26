@@ -4,11 +4,11 @@ import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -44,23 +44,33 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
 
         TextView address = (TextView) convertView.findViewById(R.id.autocomplete_address);
         TextView name = (TextView) convertView.findViewById(R.id.autocomplete_name);
+        ImageView icon = (ImageView) convertView.findViewById(R.id.autocomplete_icon);
         RelativeLayout container = (RelativeLayout) convertView.findViewById(R.id.autocomplete_person);
+
         if (mapActivity.favouritePersons.contains(person)) {
             name.setVisibility(View.VISIBLE);
             name.setText(person.getName());
             address.setText(person.getAddress());
-        }else{
+            icon.setVisibility(View.VISIBLE);
+            icon.setImageResource(R.drawable.favourite_on);
+        } else {
+            icon.setVisibility(View.GONE);
             name.setVisibility(View.GONE);
             address.setText(person.getAddress());
         }
-        Log.v("DZIALAA", person.getAddress());
+
+        if(mapActivity.lastChosenPersons.contains(person)){
+            icon.setVisibility(View.VISIBLE);
+            icon.setImageResource(R.drawable.recently_selected);
+        }
+
         container.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mapActivity.addressField.setText(person.getAddress());
-                if(mapActivity.favouritePersons.contains(person) || mapActivity.lastChosenPersons.contains(person)){
+                if (mapActivity.favouritePersons.contains(person) || mapActivity.lastChosenPersons.contains(person)) {
                     mapActivity.addPerson(person);
-                }else {
+                } else {
                     RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", mapActivity);
                     placeDetailsRequest.setPlaceDetailsUrl(person.addressID, person);
                     placeDetailsRequest.doRequest();

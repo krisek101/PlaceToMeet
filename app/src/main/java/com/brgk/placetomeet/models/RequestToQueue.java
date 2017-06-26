@@ -1,7 +1,6 @@
 package com.brgk.placetomeet.models;
 
 import android.util.Log;
-import android.view.View;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -36,7 +35,15 @@ public class RequestToQueue {
 
     public void doRequest() {
         Log.v("LINK", link);
-        mapActivity.startLoader();
+        switch (tag) {
+            case Constants.TAG_CATEGORY:
+                mapActivity.loaderHelper.startLoading(Constants.LOADER_PLACES);
+                break;
+            case Constants.TAG_PLACE_DETAILS:
+                mapActivity.loaderHelper.startLoading(Constants.LOADER_PLACE_DETAILS);
+                break;
+        }
+
         JsonObjectRequest jsonObjRequest = new JsonObjectRequest(com.android.volley.Request.Method.GET, link, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -44,15 +51,16 @@ public class RequestToQueue {
                     switch (tag) {
                         case Constants.TAG_CATEGORY:
                             onResponsePlaces(response);
+                            mapActivity.loaderHelper.cancelLoading(Constants.LOADER_PLACES);
                             break;
                         case Constants.TAG_AUTOCOMPLETE:
                             onResponseAutocomplete(response);
                             break;
                         case Constants.TAG_PLACE_DETAILS:
                             onResponsePlaceDetails(response);
+                            mapActivity.loaderHelper.cancelLoading(Constants.LOADER_PLACE_DETAILS);
                             break;
                     }
-                    mapActivity.cancelLoader();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -89,7 +97,15 @@ public class RequestToQueue {
             JSONObject c = ja.getJSONObject(i);
             String address = c.getString("description").replaceAll(", Polska", "");
             String place_id = c.getString("place_id");
-            mapActivity.autoCompletePersons.add(new PersonElement(address, place_id));
+            boolean exists = false;
+            for(PersonElement pe : mapActivity.autoCompletePersons){
+                if(pe.getAddress().equals(address)){
+                    exists = true;
+                }
+            }
+            if(!exists) {
+                mapActivity.autoCompletePersons.add(new PersonElement(address, place_id));
+            }
         }
         Log.v("AUTOCOMPLETE PERSONS", mapActivity.autoCompletePersons.toString());
         mapActivity.autocompleteAdapter = new AutocompleteAdapter(R.layout.autocomplete_item, mapActivity.autoCompletePersons, mapActivity);

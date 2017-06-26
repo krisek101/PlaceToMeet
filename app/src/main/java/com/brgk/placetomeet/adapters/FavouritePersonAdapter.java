@@ -31,7 +31,7 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
         this.context = context;
         this.parentActivity = parentActivity;
         this.favs = favs;
-        for( Integer i : parentActivity.positions ) {
+        for (Integer i : parentActivity.positions) {
             stateMap.put(i, true);
         }
     }
@@ -45,7 +45,7 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
     public View getView(final int position, @Nullable View convertView, @NonNull final ViewGroup parent) {
         final ViewHolder holder;
 
-        if( convertView == null ) {
+        if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.favourite_person_item, null);
             holder = new ViewHolder();
             holder.mSwitch = (Switch) convertView.findViewById(R.id.favourite_person_switch);
@@ -57,9 +57,9 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
         holder.mSwitch.setText(p.getName());
         holder.mSwitch.setChecked(false);
 
-        if( stateMap.get(position) ) {
+        if (stateMap.get(position)) {
             holder.mSwitch.setChecked(true);
-            if( !parentActivity.positions.contains(position)) {
+            if (!parentActivity.positions.contains(position)) {
                 parentActivity.positions.add(position);
             }
         }
@@ -68,8 +68,8 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
             @Override
             public void onClick(View v) {
                 Log.d("MACIEK_DEBUG", holder.mSwitch.getText().toString() + "checked: " + holder.mSwitch.isChecked());
-                if( holder.mSwitch.isChecked() ) {
-                    if( !parentActivity.positions.contains(position)) {
+                if (holder.mSwitch.isChecked()) {
+                    if (!parentActivity.positions.contains(position)) {
                         parentActivity.positions.add(position);
                     }
                     stateMap.put(position, true);

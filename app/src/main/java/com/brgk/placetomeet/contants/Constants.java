@@ -34,6 +34,11 @@ public class Constants {
     public static final String TAG_AUTOCOMPLETE = "AutocompleteTag";
     public static final String TAG_PLACE_DETAILS = "PlaceDetailsTag";
 
+    // Loaders
+    public static final String LOADER_PLACES = "loaderPlaces";
+    public static final String LOADER_PLACE_DETAILS = "loaderPlaceDetails";
+    public static final String LOADER_LOCATION = "loaderLocation";
+
     // Others
     public static final int SPLASH_TIME = 1000;
 }
