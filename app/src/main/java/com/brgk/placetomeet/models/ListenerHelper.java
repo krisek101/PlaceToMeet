@@ -370,6 +370,14 @@ public class ListenerHelper {
                     }
                 });
                 break;
+            case R.id.footer_slider:
+                viewElement.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+                        return true;
+                    }
+                });
+                break;
         }
     }
 

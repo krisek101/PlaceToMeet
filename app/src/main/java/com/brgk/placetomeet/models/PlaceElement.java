@@ -5,7 +5,9 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.util.Log;
 
+import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.contants.UsefulFunctions;
+import com.brgk.placetomeet.tasks.GeocoderTask;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -62,7 +64,7 @@ public class PlaceElement {
             if (!place.isNull("vicinity")) {
                 address = place.getString("vicinity");
             } else {
-                address = UsefulFunctions.getAddressFromLatLng(this.context, position);
+                new GeocoderTask(this.context, position, "placeAddress", this).execute();
             }
         } catch (JSONException e) {
             e.printStackTrace();

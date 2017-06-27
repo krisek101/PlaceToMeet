@@ -25,39 +25,6 @@ import java.util.Locale;
 
 public class UsefulFunctions {
 
-    public static String getAddressFromLatLng(Context context, LatLng position) {
-        Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-        List<Address> addressArray = new ArrayList<>();
-        String addressBuilder = null;
-        int failed = 0;
-        while (addressBuilder == null && failed < 2) {
-            addressBuilder = "";
-            try {
-                addressArray = geocoder.getFromLocation(position.latitude, position.longitude, 1);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (addressArray != null) {
-                if(!addressArray.isEmpty()) {
-                    if (addressArray.get(0) != null) {
-                        addressBuilder += addressArray.get(0).getAddressLine(0);
-                        if (addressArray.get(0).getLocality() != null) {
-                            addressBuilder += ", " + addressArray.get(0).getLocality();
-                        }
-                    }
-                }
-            } else {
-                addressBuilder = null;
-                failed++;
-            }
-        }
-        if (failed >= 2) {
-            return "Adres nieznany";
-        } else {
-            return addressBuilder;
-        }
-    }
-
     public static Bitmap buildMarkerIcon(Resources res, Bitmap bmp) {
         final int size = 512;
         int radius = 192;
@@ -83,4 +50,10 @@ public class UsefulFunctions {
         return result;
     }
 
+    public static boolean isOnline(Context c) {
+        ConnectivityManager cm =
+                (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
 }
