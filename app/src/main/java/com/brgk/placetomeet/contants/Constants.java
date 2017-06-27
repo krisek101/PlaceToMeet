@@ -27,7 +27,7 @@ public class Constants {
     R.drawable.place_shopping_centre};
     public static final String DEFAULT_CATEGORY = "Restauracja";
     public static final int RADIUS = 1500;
-    public static final String API_KEY = "AIzaSyDTmOH9Pi8frp-_JU9gZfUxN7yWdW7yNEM";
+    public static final String API_KEY = "AIzaSyDflSpLotdTPuGtyeZEPNHHNZGVDsft040";
 
     // Tags
     public static final String TAG_CATEGORY = "CategoryTag";

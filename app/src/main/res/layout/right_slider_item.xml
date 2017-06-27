@@ -40,7 +40,7 @@
         android:layout_width="1dp"
         android:layout_height="50dp"
         android:layout_toEndOf="@+id/right_slider_item_avatar_container"
-        android:background="#414141" />
+        android:background="#FFD1D1D1" />
 
     <LinearLayout
         android:layout_width="match_parent"

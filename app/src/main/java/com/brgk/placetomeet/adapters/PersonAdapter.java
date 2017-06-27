@@ -26,11 +26,9 @@ import android.widget.Toast;
 import com.brgk.placetomeet.R;
 import com.brgk.placetomeet.activities.MapActivity;
 import com.brgk.placetomeet.models.PersonElement;
-import com.brgk.placetomeet.models.PlaceElement;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.List;
 
 
@@ -38,7 +36,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     private Context context;
     private List<PersonElement> persons;
     private MapActivity activity;
-    public SparseBooleanArray negativeStateMap = new SparseBooleanArray();
+    private SparseBooleanArray negativeStateMap = new SparseBooleanArray();
 
     public PersonAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<PersonElement> persons, MapActivity activity) {
         super(context, resource, persons);
@@ -51,24 +49,25 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
     @Override
     public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.right_slider_item, null);
+            convertView = LayoutInflater.from(context).inflate(R.layout.right_slider_item, parent, false);
         }
         final TextView addressView = (TextView) convertView.findViewById(R.id.right_slider_item_address);
         final TextView nameView = (TextView) convertView.findViewById(R.id.right_slider_item_name);
-        ImageView avatar = (ImageView) convertView.findViewById(R.id.right_slider_item_avatar);
-        avatar.setColorFilter(Color.GRAY);
+        final ImageView avatar = (ImageView) convertView.findViewById(R.id.right_slider_item_avatar);
         final ImageView favouriteStar = (ImageView) convertView.findViewById(R.id.right_slider_item_favouriteStar);
         final Switch personOnOff = (Switch) convertView.findViewById(R.id.right_slider_item_switch);
-        TextView distanceText = (TextView) convertView.findViewById(R.id.right_slider_item_distance);
+        final TextView distanceText = (TextView) convertView.findViewById(R.id.right_slider_item_distance);
+        final View touchField = convertView.findViewById(R.id.right_slider_item_container);
+        final PersonElement p = persons.get(position);
+
+        // init
+        avatar.setColorFilter(Color.GRAY);
         personOnOff.setChecked(true);
         if (negativeStateMap.get(position)) {
             personOnOff.setChecked(false);
         }
 
-        View touchField = convertView.findViewById(R.id.right_slider_item_container);
-
-        final PersonElement p = persons.get(position);
-
+        // set distance
         if (p.getDistanceToCurrentPlace() != 0) {
             RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(activity.getPixelsFromDp(40), activity.getPixelsFromDp(35));
             layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
@@ -91,14 +90,16 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             avatar.setLayoutParams(layoutParams);
             distanceText.setVisibility(View.GONE);
         }
+
+        // set name
         p.setId(position + 1);
         if (!p.getPosition().equals(activity.userLocation) && !activity.favouritePersons.contains(p)) {
-            p.setName("OSOBA " + (position + 1));
+            p.setName(activity.getString(R.string.person) + (position + 1));
         } else if (p.getPosition().equals(activity.userLocation)) {
             avatar.setColorFilter(Color.BLACK);
             favouriteStar.setVisibility(View.INVISIBLE);
-            p.setName("Ja");
-            p.getMarker().setTitle("Ja");
+            p.setName(activity.getString(R.string.me));
+            p.getMarker().setTitle(activity.getString(R.string.me));
         } else if (activity.favouritePersons.contains(p)) {
             if (p.getImageResId() != 0) {
                 avatar.setImageResource(p.getImageResId());
@@ -106,13 +107,14 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
                 avatar.clearColorFilter();
             }
         }
+
         addressView.setSelected(true);
         nameView.setSelected(true);
         addressView.setText(p.getAddress());
         nameView.setText(p.getName());
-
         favouriteStar.setImageResource(p.isFavourite() ? R.drawable.favourite_on : R.drawable.favourite_off);
 
+        // set on switch click listener
         personOnOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -129,6 +131,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             }
         });
 
+        // open menu on Long Click
         if (!p.getPosition().equals(activity.userLocation)) {
             touchField.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
@@ -139,7 +142,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
             });
         }
 
-
+        // go to person position on click
         touchField.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -198,11 +201,11 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
         final TextView title = new TextView(context);
         title.setGravity(Gravity.CENTER);
         title.setTextSize(20);
-        title.setText("Wpisz nazwę osoby");
+        title.setText(R.string.enter_person_name);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setCustomTitle(title);
         builder.setView(input);
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String name = input.getText().toString();
@@ -213,10 +216,10 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
                     }
                 }
                 if (name.equals("")) {
-                    Toast.makeText(context, "Nieprawidłowa nazwa.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.incorrect_name, Toast.LENGTH_SHORT).show();
                     askForName(p, favouriteStar);
                 } else if (exists) {
-                    Toast.makeText(context, "Osoba o takiej nazwie już istnieje.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, R.string.person_already_exists, Toast.LENGTH_SHORT).show();
                     askForName(p, favouriteStar);
                 } else {
                     p.setName(name);
@@ -224,7 +227,7 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
                     changeFavourite(p, favouriteStar);
                 }
             }
-        }).setNegativeButton("ANULUJ", new DialogInterface.OnClickListener() {
+        }).setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();

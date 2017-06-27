@@ -6,4 +6,11 @@
     <string name="open_now">OPEN</string>
     <string name="closed_now">CLOSED</string>
     <string name="footer_text">Liczba znalezionych miejsc: %d</string>
+    <string name="enter_person_name">Wpisz nazwę osoby</string>
+    <string name="incorrect_name">Nieprawidłowa nazwa.</string>
+    <string name="person_already_exists">Osoba o takiej nazwie już istnieje.</string>
+    <string name="cancel">ANULUJ</string>
+    <string name="ok">OK</string>
+    <string name="person">OSOBA</string>
+    <string name="me">Ja</string>
 </resources>

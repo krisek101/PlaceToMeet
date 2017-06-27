@@ -74,6 +74,11 @@ public class ListenerHelper {
                     case R.id.rankby_button:
                         parentActivity.updateMapElements();
                         break;
+                    case R.id.right_slider_add_new_person_container:
+                        if(!parentActivity.isAddingPerson) {
+                            parentActivity.onFloatingButtonClick();
+                        }
+                        break;
                 }
             }
         });

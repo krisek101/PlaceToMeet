@@ -9,6 +9,7 @@ import android.content.res.TypedArray;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -139,6 +140,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public Marker editMarker;
     public AutocompleteAdapter autocompleteAdapter;
     PersonElement user;
+    public RelativeLayout addNewPersonContainer;
 
     // Left slider
     public RelativeLayout leftSlider;
@@ -234,6 +236,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         loading = (pl.droidsonroids.gif.GifTextView) findViewById(R.id.loading);
         getMyLocationButton = (ImageView) findViewById(R.id.getMyLocationButton);
         rankByButton = (ToggleButton) findViewById(R.id.rankby_button);
+        addNewPersonContainer = (RelativeLayout) findViewById(R.id.right_slider_add_new_person_container);
     }
 
     void guide() {
@@ -242,7 +245,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         MaterialShowcaseSequence sequence = new MaterialShowcaseSequence(this, "showcase_id");
         sequence.setConfig(config);
         sequence.addSequenceItem((findViewById(R.id.left_handle)),
-                "Tutaj wybierasz interesujące Cię miejsca.", "Rozumiem");
+                "Tutaj wybierasz interesujące Cię kategorie.", "Rozumiem");
         sequence.addSequenceItem((findViewById(R.id.right_handle)),
                 "Tutaj znajduje się lista uczestników spotkania.", "Rozumiem");
         sequence.addSequenceItem((findViewById(R.id.floatingActionButton)),
@@ -265,7 +268,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 editMarker.remove();
                 editMarker = null;
                 lastPosition = null;
-//                editPerson.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
                 editPerson.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.default_person))));
                 personAdapter.notifyDataSetChanged();
                 updateMapElements();
@@ -287,7 +289,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 if (!exists) {
                     if (mGoogleMap != null) {
                         if (!person.equals(user)) {
-//                            person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
                             person.getMarker().setIcon(BitmapDescriptorFactory.fromBitmap(UsefulFunctions.buildMarkerIcon(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.default_person))));
                         }
                         persons.add(person);
@@ -337,6 +338,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         listenerHelper.setListener(radiusSeekBar, "seekBarChange");
         listenerHelper.setListener(getMyLocationButton, "click");
         listenerHelper.setListener(rankByButton, "click");
+        listenerHelper.setListener(addNewPersonContainer, "click");
     }
 
     void addLastChosenPerson(PersonElement personElement) {
@@ -849,6 +851,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                                 RequestToQueue placeDetailsRequest = new RequestToQueue(Constants.TAG_PLACE_DETAILS, "", MapActivity.this);
                                 placeDetailsRequest.setPlaceDetailsUrl(place);
                                 placeDetailsRequest.doRequest();
+                                break;
                             }
                         }
                     }
@@ -945,11 +948,14 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         ImageView exit = (ImageView) convertView.findViewById(R.id.place_details_exit);
         RelativeLayout openContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_open_container);
         pl.droidsonroids.gif.GifTextView loadingPhoto = (pl.droidsonroids.gif.GifTextView) convertView.findViewById(R.id.place_details_loading);
+        final RelativeLayout openingHoursContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_opening_hours_container);
         final boolean[] reviewsOpened = {false};
         final boolean[] hoursClicked = {false};
 
         final AlertDialog ad = placeInfoWindow.show();
-        ad.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if(ad.getWindow() != null) {
+            ad.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
         title.setText(place.getName());
         rating.setRating((float) place.getRate());
         rating_text.setText(String.valueOf(place.getRate()));
@@ -1045,7 +1051,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         reviewsOpened[0] = true;
                         reviewsList.setVisibility(View.VISIBLE);
                         reviewsList.setAdapter(reviewsAdapter);
-                        openingHours.setVisibility(View.GONE);
+                        openingHoursContainer.setVisibility(View.GONE);
                         hoursClicked[0] = false;
                     }
                 }
@@ -1101,11 +1107,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                 openNow.setTextColor(Color.parseColor("#FFA91E1E"));
             }
             final OpeningHoursAdapter adapter = new OpeningHoursAdapter(this, R.layout.place_details_hours, place.getOpenHours());
+
             openNow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     if (hoursClicked[0]) {
-                        openingHours.setVisibility(View.GONE);
+                        openingHoursContainer.setVisibility(View.GONE);
                         hoursClicked[0] = false;
                     } else {
                         if (place.getReviews() != null) {
@@ -1116,9 +1123,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                             reviewsList.setVisibility(View.GONE);
                             reviewsHandlerContainer.setBackground(ContextCompat.getDrawable(MapActivity.this, R.drawable.review_handler_rounded));
                         }
-                        openingHours.setVisibility(View.VISIBLE);
+                        openingHoursContainer.setVisibility(View.VISIBLE);
                         openingHours.setAdapter(adapter);
-                        openingHours.setSelection(getNumDayOfWeek());
+                        Calendar calendar = Calendar.getInstance();
+                        int day = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+                        openingHours.setSelection(day);
                         hoursClicked[0] = true;
                     }
                 }
@@ -1135,36 +1144,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         } else {
             photo.getLayoutParams().height = 0;
         }
-    }
-
-    public int getNumDayOfWeek() {
-        Calendar calendar = Calendar.getInstance();
-        int day = calendar.get(Calendar.DAY_OF_WEEK);
-        int num_day;
-        switch (day) {
-            case Calendar.TUESDAY:
-                num_day = 1;
-                break;
-            case Calendar.WEDNESDAY:
-                num_day = 2;
-                break;
-            case Calendar.THURSDAY:
-                num_day = 3;
-                break;
-            case Calendar.FRIDAY:
-                num_day = 4;
-                break;
-            case Calendar.SATURDAY:
-                num_day = 5;
-                break;
-            case Calendar.SUNDAY:
-                num_day = 6;
-                break;
-            default:
-                num_day = 0;
-                break;
-        }
-        return num_day;
     }
 
     public void updatePlaces(String category) throws JSONException {
