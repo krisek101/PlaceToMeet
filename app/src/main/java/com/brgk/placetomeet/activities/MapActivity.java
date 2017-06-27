@@ -35,6 +35,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -190,8 +191,40 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        preLocation();
+        Handler mainHandler = new Handler(this.getMainLooper());
+        mainHandler.post(new Runnable() {
 
-        //init
+            @Override
+            public void run() {
+                initUI();
+                setLoaders();
+                requestPermissions();
+                restoreData();
+                arrangeSliders();
+                setListeners();
+                setCategories();
+            }
+        });
+
+
+        ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
+        setupActionBar();
+        checkUsersSettingGPS();
+        guide();
+    }
+
+    // Design functions
+    void preLocation(){
+        if (checkPlayServices()) {
+            buildGoogleApiClient();
+            createLocationRequest();
+        } else {
+            Log.e("Google Play Services", "Unavailable");
+        }
+    }
+
+    void initUI(){
         footer = (TextView) findViewById(R.id.footer);
         internetInfoTextView = (TextView) findViewById(R.id.internet_info);
         radiusSeekBar = (SeekBar) findViewById(R.id.radius_seekbar);
@@ -201,28 +234,8 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         loading = (pl.droidsonroids.gif.GifTextView) findViewById(R.id.loading);
         getMyLocationButton = (ImageView) findViewById(R.id.getMyLocationButton);
         rankByButton = (ToggleButton) findViewById(R.id.rankby_button);
-
-        // location - preparation
-        if (checkPlayServices()) {
-            buildGoogleApiClient();
-            createLocationRequest();
-        } else {
-            Log.e("Google Play Services", "Unavailable");
-        }
-
-        setLoaders();
-        requestPermissions();
-        restoreData();
-        arrangeSliders();
-        setListeners();
-        setCategories();
-        ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMapAsync(this);
-        setupActionBar();
-        checkUsersSettingGPS();
-        guide();
     }
 
-    // Design functions
     void guide() {
         ShowcaseConfig config = new ShowcaseConfig();
         config.setDelay(200);
@@ -372,7 +385,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         footerTop = footer.getY();
         footerSlider = (LinearLayout) findViewById(R.id.footer_slider);
         footerSlider.setY(screenHeight - getActionBarHeight() - getStatusBarHeight());
-
+        footerSlider.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, screenHeight - getActionBarHeight() - getStatusBarHeight() - footer.getLayoutParams().height));
     }
 
     void setupActionBar() {
@@ -404,23 +417,25 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     autoCompletePersons.clear();
 
 
-                    // update list from favourites
-                    if (!favouritePersons.isEmpty()) {
-                        for (PersonElement favPerson : favouritePersons) {
-                            if ((favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase()) || favPerson.getName().toLowerCase().contains(s.toString().toLowerCase())) && !autoCompletePersons.contains(favPerson)) {
-                                favPerson.setId(persons.size() + 1);
-                                autoCompletePersons.add(favPerson);
+                    if(s.length()<=3) {
+                        // update list from favourites
+                        if (!favouritePersons.isEmpty()) {
+                            for (PersonElement favPerson : favouritePersons) {
+                                if ((favPerson.getAddress().toLowerCase().contains(s.toString().toLowerCase()) || favPerson.getName().toLowerCase().contains(s.toString().toLowerCase())) && !autoCompletePersons.contains(favPerson)) {
+                                    favPerson.setId(persons.size() + 1);
+                                    autoCompletePersons.add(favPerson);
+                                }
                             }
                         }
-                    }
 
-                    // update list from last selected
-                    if (!lastChosenPersons.isEmpty()) {
-                        for (PersonElement lastChosen : lastChosenPersons) {
-                            if (lastChosen.getAddress() != null) {
-                                if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
-                                    lastChosen.setId(persons.size() + 1);
-                                    autoCompletePersons.add(lastChosen);
+                        // update list from last selected
+                        if (!lastChosenPersons.isEmpty()) {
+                            for (PersonElement lastChosen : lastChosenPersons) {
+                                if (lastChosen.getAddress() != null) {
+                                    if (lastChosen.getAddress().toLowerCase().contains(s.toString().toLowerCase()) && !autoCompletePersons.contains(lastChosen)) {
+                                        lastChosen.setId(persons.size() + 1);
+                                        autoCompletePersons.add(lastChosen);
+                                    }
                                 }
                             }
                         }

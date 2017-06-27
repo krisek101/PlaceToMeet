@@ -236,8 +236,11 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
 
     private void changeFavourite(PersonElement p, ImageView favouriteStar) {
         if (!p.isFavourite()) {
-            if(activity.lastChosenPersons.contains(p)){
-                activity.lastChosenPersons.remove(p);
+            for (int i = 0; i < activity.lastChosenPersons.size(); i++) {
+                PersonElement personElement = activity.lastChosenPersons.get(i);
+                if (personElement.getAddress().equals(p.getAddress())) {
+                    activity.lastChosenPersons.remove(personElement);
+                }
             }
             activity.favouritePersons.add(p);
             favouriteStar.setImageResource(R.drawable.favourite_on);

@@ -103,6 +103,16 @@ public class RequestToQueue {
                     exists = true;
                 }
             }
+            for(PersonElement pe : mapActivity.lastChosenPersons){
+                if(pe.getAddress().equals(address)){
+                    exists = true;
+                }
+            }
+            for(PersonElement pe : mapActivity.favouritePersons){
+                if(pe.getAddress().equals(address)){
+                    exists = true;
+                }
+            }
             if(!exists) {
                 mapActivity.autoCompletePersons.add(new PersonElement(address, place_id));
             }
