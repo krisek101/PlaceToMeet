@@ -383,6 +383,14 @@ public class ListenerHelper {
                     }
                 });
                 break;
+            case R.id.right_container:
+                viewElement.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+                        return true;
+                    }
+                });
+                break;
         }
     }
 

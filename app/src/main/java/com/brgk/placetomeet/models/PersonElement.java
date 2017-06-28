@@ -19,7 +19,7 @@ public class PersonElement implements Parcelable {
     private int imageResId = 0;
     private int distanceToCurrentPlace = 0;
 
-    public PersonElement(String address, String addressID) {
+    PersonElement(String address, String addressID) {
         this.address = address;
         this.addressID = addressID;
     }
@@ -134,7 +134,7 @@ public class PersonElement implements Parcelable {
     }
 
     //PARCEL
-    protected PersonElement(Parcel in) {
+    private PersonElement(Parcel in) {
         address = in.readString();
         name = in.readString();
         id = in.readInt();

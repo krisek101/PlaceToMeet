@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PlaceToMeet</string>
+    <string name="app_title">PlaceToMeet</string>
+    <string name="cancel">CANCEL</string>
+    <string name="enter_person_name">Enter the name</string>
+    <string name="footer_text">Found places: %d</string>
+    <string name="incorrect_name">Unknown name.</string>
+    <string name="me">Me</string>
+    <string name="person">PERSON </string>
+    <string name="person_already_exists">Person already exists.</string>
+    <string name="search_field_hint">Search here…</string>
+    <string name="billiards">Billiards</string>
+    <string name="bowling">Bowling</string>
+    <string name="cafe">Cafe</string>
+    <string name="cinema">Cinema</string>
+    <string name="favorite">Favorite</string>
+    <string name="guide_1">Here you can select categories.</string>
+    <string name="guide_2">Here is list of members of the meeting</string>
+    <string name="guide_3">Add new people by plus or by long click on the map.</string>
+    <string name="hide_opinions">Hide opinions(%d)</string>
+    <string name="pool">Pool</string>
+    <string name="restaurant">Restaurant</string>
+    <string name="rink">Rink</string>
+    <string name="shopping_centre">Shopping centre</string>
+    <string name="show_opinions">Show opinions(%d)</string>
+    <string name="sports_hall">Sports hall</string>
+    <string name="tennis">Tennis</string>
+    <string name="understand">I understand</string>
+    <string name="unknown_address">Unknown address</string>
+    <string name="add_new_person">Add new person</string>
+    <string name="delete">delete</string>
+    <string name="favorite_list_is_empty">Favorite list is empty.</string>
+    <string name="favorite_persons">FAVORITE PEOPLE</string>
+</resources>

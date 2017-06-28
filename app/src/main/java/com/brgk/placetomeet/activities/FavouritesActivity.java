@@ -7,7 +7,6 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -31,7 +30,7 @@ import java.util.List;
 public class FavouritesActivity extends AppCompatActivity {
     public ArrayList<Integer> positions = new ArrayList<>();
     private ArrayList<Integer> toBeDeleted = new ArrayList<>();
-    private ArrayList<PersonElement> favs;
+    private ArrayList<PersonElement> favorite;
     private ListView l;
     private removeFavoriteAdapter removeAdapter;
     private TextView noFavInfo;
@@ -55,7 +54,7 @@ public class FavouritesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favourites);
 
-        favs = getIntent().getParcelableArrayListExtra("Fav");
+        favorite = getIntent().getParcelableArrayListExtra("Fav");
         positions = getIntent().getIntegerArrayListExtra("Added");
         noFavInfo = (TextView) findViewById(R.id.no_favourites_info);
         l = (ListView) findViewById(R.id.f);
@@ -68,11 +67,13 @@ public class FavouritesActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.favourites_activity_menu, menu);
         me = menu;
-        if(favs.isEmpty()) {
+        if(favorite.isEmpty()) {
             menu.getItem(0).setVisible(false);
         }
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle("Ulubione");
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+        getSupportActionBar().setTitle(R.string.favorite);
         return true;
     }
 
@@ -106,10 +107,10 @@ public class FavouritesActivity extends AppCompatActivity {
         @Override
         public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             if (convertView == null) {
-                convertView = getLayoutInflater().inflate(R.layout.remove_favourite_item, null);
+                convertView = getLayoutInflater().inflate(R.layout.remove_favourite_item, parent, false);
             }
             final CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.rf_checkBox);
-            checkBox.setText(favs.get(position).getName());
+            checkBox.setText(favorite.get(position).getName());
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -149,9 +150,9 @@ public class FavouritesActivity extends AppCompatActivity {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             if (item.getItemId() == R.id.contextual_delete) {
                 SparseBooleanArray checked = removeAdapter.getStates();
-                for (int i = favs.size() - 1; i >= 0; i--) {
+                for (int i = favorite.size() - 1; i >= 0; i--) {
                     if (checked.get(i)) {
-                        favs.remove(i);
+                        favorite.remove(i);
                         positions.remove((Integer) i);
                         for (int j = positions.size() - 1; j >= 0; j--) {
                             int value = positions.get(j);
@@ -179,7 +180,7 @@ public class FavouritesActivity extends AppCompatActivity {
     }
 
     void showNoFavInfo() {
-        if (!favs.isEmpty()) {
+        if (!favorite.isEmpty()) {
             noFavInfo.setVisibility(View.GONE);
         } else {
             noFavInfo.setVisibility(View.VISIBLE);
@@ -187,8 +188,8 @@ public class FavouritesActivity extends AppCompatActivity {
     }
 
     void setListDefaultAdapter() {
-        l.setAdapter(new FavouritePersonAdapter(this, R.layout.favourite_person_item, favs, this));
-        if(me != null && favs.isEmpty()) {
+        l.setAdapter(new FavouritePersonAdapter(this, R.layout.favourite_person_item, favorite, this));
+        if(me != null && favorite.isEmpty()) {
             me.getItem(0).setVisible(false);
             me.getItem(0).setEnabled(false);
         }

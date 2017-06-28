@@ -1,25 +1,14 @@
 package com.brgk.placetomeet.models;
 
 import android.content.Context;
-import android.location.Address;
-import android.location.Geocoder;
-import android.util.Log;
 
-import com.brgk.placetomeet.activities.MapActivity;
-import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.brgk.placetomeet.tasks.GeocoderTask;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 public class PlaceElement {
 
@@ -33,7 +22,6 @@ public class PlaceElement {
     private String category;
     private boolean openNow = false;
     private String address;
-    private Geocoder geocoder;
     private Context context;
     private boolean checked;
     private float distanceFromCenter;
@@ -43,7 +31,7 @@ public class PlaceElement {
     private String phoneNumber;
     private JSONArray reviews;
 
-    public PlaceElement(JSONObject place, String category, float distanceFromCenter) {
+    PlaceElement(JSONObject place, String category, float distanceFromCenter) {
         this.place = place;
         this.category = category;
         this.distanceFromCenter = distanceFromCenter;

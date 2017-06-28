@@ -22,15 +22,15 @@ import java.util.List;
 
 public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
     private Context context;
-    private List<PersonElement> favs;
+    private List<PersonElement> favorite;
     private FavouritesActivity parentActivity;
     private SparseBooleanArray stateMap = new SparseBooleanArray();
 
-    public FavouritePersonAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<PersonElement> favs, FavouritesActivity parentActivity) {
-        super(context, resource, favs);
+    public FavouritePersonAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<PersonElement> favorite, FavouritesActivity parentActivity) {
+        super(context, resource, favorite);
         this.context = context;
         this.parentActivity = parentActivity;
-        this.favs = favs;
+        this.favorite = favorite;
         for (Integer i : parentActivity.positions) {
             stateMap.put(i, true);
         }
@@ -46,14 +46,14 @@ public class FavouritePersonAdapter extends ArrayAdapter<PersonElement> {
         final ViewHolder holder;
 
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.favourite_person_item, null);
+            convertView = LayoutInflater.from(context).inflate(R.layout.favourite_person_item, parent, false);
             holder = new ViewHolder();
             holder.mSwitch = (Switch) convertView.findViewById(R.id.favourite_person_switch);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-        final PersonElement p = favs.get(position);
+        final PersonElement p = favorite.get(position);
         holder.mSwitch.setText(p.getName());
         holder.mSwitch.setChecked(false);
 

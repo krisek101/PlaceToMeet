@@ -6,6 +6,7 @@ import android.location.Geocoder;
 import android.os.AsyncTask;
 
 import com.brgk.placetomeet.activities.MapActivity;
+import com.brgk.placetomeet.contants.Constants;
 import com.brgk.placetomeet.contants.UsefulFunctions;
 import com.brgk.placetomeet.models.PersonElement;
 import com.brgk.placetomeet.models.PlaceElement;
@@ -18,11 +19,11 @@ import java.util.Locale;
 
 public class GeocoderTask extends AsyncTask<Void, Void, String>{
 
-    MapActivity mapActivity;
-    LatLng position;
-    String tag;
-    PersonElement personElement;
-    PlaceElement placeElement;
+    private MapActivity mapActivity;
+    private LatLng position;
+    private String tag;
+    private PersonElement personElement;
+    private PlaceElement placeElement;
 
     public GeocoderTask(MapActivity mapActivity, LatLng position, String tag){
         this.mapActivity = mapActivity;
@@ -46,12 +47,12 @@ public class GeocoderTask extends AsyncTask<Void, Void, String>{
 
     @Override
     protected String doInBackground(Void... voids) {
-        String address = "Adres nieznany";
+        String address = mapActivity.getString(Constants.UNKNOWN_ADDRESS);
         if(UsefulFunctions.isOnline(mapActivity)) {
             Geocoder geocoder = new Geocoder(mapActivity, Locale.getDefault());
             List<Address> addressArray = new ArrayList<>();
             int failed = 0;
-            while (address.equals("Adres nieznany") && failed < 2) {
+            while (address.equals(mapActivity.getString(Constants.UNKNOWN_ADDRESS)) && failed < 2) {
                 address = "";
                 try {
                     addressArray = geocoder.getFromLocation(position.latitude, position.longitude, 1);
@@ -68,12 +69,12 @@ public class GeocoderTask extends AsyncTask<Void, Void, String>{
                         }
                     }
                 } else {
-                    address = "Adres nieznany";
+                    address = mapActivity.getString(Constants.UNKNOWN_ADDRESS);
                     failed++;
                 }
             }
         }else{
-            address = "Adres nieznany";
+            address = mapActivity.getString(Constants.UNKNOWN_ADDRESS);
         }
         return address;
     }

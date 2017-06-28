@@ -37,7 +37,7 @@ public class AutocompleteAdapter extends ArrayAdapter<PersonElement> {
     @Override
     public View getView(final int position, @Nullable View convertView, @NonNull final ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.autocomplete_item, null);
+            convertView = LayoutInflater.from(context).inflate(R.layout.autocomplete_item, parent, false);
         }
 
         final PersonElement person = autocompletePersons.get(position);

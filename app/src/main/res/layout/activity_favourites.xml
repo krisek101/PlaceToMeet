@@ -16,7 +16,7 @@
         android:gravity="center"
         android:layout_margin="5dp"
         android:id="@+id/no_favourites_info"
-        android:text="Lista ulubionych osób jest pusta"
+        android:text="@string/favorite_list_is_empty"
         android:visibility="visible"/>
 
     <ListView

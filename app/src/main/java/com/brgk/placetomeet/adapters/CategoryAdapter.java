@@ -48,7 +48,7 @@ public class CategoryAdapter extends ArrayAdapter<CategoryElement> {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         final CategoryElement category = categories.get(position);
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.left_slider_item, null);
+            convertView = inflater.inflate(R.layout.left_slider_item, parent, false);
             holder = new ViewHolder();
         } else {
             holder = (ViewHolder) convertView.getTag();

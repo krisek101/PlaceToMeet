@@ -1,8 +1,5 @@
 package com.brgk.placetomeet.models;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class CategoryElement {
 
     private String name;

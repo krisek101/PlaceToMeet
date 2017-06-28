@@ -2,15 +2,41 @@
     <string name="app_name">PlaceToMeet</string>
     <string name="app_title">Znajdź idealne miejsce</string>
     <string name="search_field_hint">Szukaj tutaj…</string>
-    <string name="action_bar_add_btn">Add Button Action Bar</string>
-    <string name="open_now">OPEN</string>
-    <string name="closed_now">CLOSED</string>
+    <string name="action_bar_add_btn" translatable="false">Add Button Action Bar</string>
+    <string name="open_now" translatable="false">OPEN</string>
+    <string name="closed_now" translatable="false">CLOSED</string>
     <string name="footer_text">Liczba znalezionych miejsc: %d</string>
+    <string name="show_opinions">Pokaż opinie(%d)</string>
+    <string name="hide_opinions">Ukryj opinie(%d)</string>
     <string name="enter_person_name">Wpisz nazwę osoby</string>
     <string name="incorrect_name">Nieprawidłowa nazwa.</string>
     <string name="person_already_exists">Osoba o takiej nazwie już istnieje.</string>
     <string name="cancel">ANULUJ</string>
-    <string name="ok">OK</string>
-    <string name="person">OSOBA</string>
+    <string name="ok" translatable="false">OK</string>
+    <string name="person">OSOBA </string>
     <string name="me">Ja</string>
+    <string name="favorite">Ulubione</string>
+    <string name="guide_1">Tutaj wybierasz interesujące Cię kategorie.</string>
+    <string name="guide_2">Tutaj znajduje się lista uczestników spotkania.</string>
+    <string name="guide_3">Dodawaj nowe osoby za pomocą plusa lub poprzez przytrzymanie palca na mapie.</string>
+    <string name="understand">Rozumiem</string>
+    <string name="unknown_address">Adres nieznany</string>
+    <string name="restaurant">Restauracja</string>
+    <string name="kebab" translatable="false">Kebab</string>
+    <string name="pizza" translatable="false">Pizza</string>
+    <string name="bar" translatable="false">Bar</string>
+    <string name="cafe">Kawiarnia</string>
+    <string name="bowling">Kręgielnia</string>
+    <string name="rink">Lodowisko</string>
+    <string name="billiards">Bilard</string>
+    <string name="pool">Basen</string>
+    <string name="tennis">Tenis ziemny</string>
+    <string name="sports_hall">Hala sportowa</string>
+    <string name="park" translatable="false">Park</string>
+    <string name="cinema">Kino</string>
+    <string name="shopping_centre">Centrum handlowe</string>
+    <string name="add_new_person">Dodaj nową osobę</string>
+    <string name="favorite_persons">LISTA ULUBIONYCH OSÓB</string>
+    <string name="favorite_list_is_empty">Lista ulubionych osób jest pusta</string>
+    <string name="delete">usuń</string>
 </resources>

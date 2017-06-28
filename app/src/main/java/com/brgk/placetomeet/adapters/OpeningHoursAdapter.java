@@ -38,7 +38,6 @@ public class OpeningHoursAdapter extends ArrayAdapter<String> {
         final TextView hour = (TextView) convertView.findViewById(R.id.place_details_open_hour);
         Calendar calendar = Calendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK) - 2;
-        Log.i("DAY NUM", position + " , "+day);
         String hourElement = openingHours[position];
         hour.setText(hourElement);
 

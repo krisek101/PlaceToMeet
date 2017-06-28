@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Locale;
 
 public class RequestToQueue {
 
@@ -26,11 +27,13 @@ public class RequestToQueue {
     private String category;
     private PersonElement person;
     private PlaceElement place;
+    private String language;
 
     public RequestToQueue(String tag, String category, MapActivity mapActivity) {
         this.tag = tag;
         this.category = category;
         this.mapActivity = mapActivity;
+        language = Locale.getDefault().getLanguage();
     }
 
     public void doRequest() {
@@ -172,7 +175,7 @@ public class RequestToQueue {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        urlString.append("&language=pl&location=" + mapActivity.center.latitude + "," + mapActivity.center.longitude);
+        urlString.append("&language=" + language + "&location=" + mapActivity.center.latitude + "," + mapActivity.center.longitude);
         urlString.append("&key=" + Constants.API_KEY);
         if (byDistance) {
             urlString.append("&rankby=distance");
@@ -188,7 +191,7 @@ public class RequestToQueue {
     }
 
     public void setPlaceDetailsUrl(PlaceElement place) {
-        setLink("https://maps.googleapis.com/maps/api/place/details/json?language=pl&placeid=" + place.getId() + "&key=" + Constants.API_KEY);
+        setLink("https://maps.googleapis.com/maps/api/place/details/json?language=" + language + "&placeid=" + place.getId() + "&key=" + Constants.API_KEY);
         this.place = place;
     }
 
@@ -201,7 +204,7 @@ public class RequestToQueue {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        urlString.append("&language=pl&components=country:pl");
+        urlString.append("&language=" + language + "&components=country:pl");
         urlString.append("&key=" + Constants.API_KEY);
         setLink(urlString.toString());
     }

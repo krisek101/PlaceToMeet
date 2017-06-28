@@ -9,19 +9,10 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.location.Address;
-import android.location.Geocoder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import com.brgk.placetomeet.R;
-import com.brgk.placetomeet.activities.MapActivity;
-import com.google.android.gms.maps.model.LatLng;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 public class UsefulFunctions {
 

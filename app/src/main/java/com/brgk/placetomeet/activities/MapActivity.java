@@ -9,7 +9,6 @@ import android.content.res.TypedArray;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -245,11 +244,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         MaterialShowcaseSequence sequence = new MaterialShowcaseSequence(this, "showcase_id");
         sequence.setConfig(config);
         sequence.addSequenceItem((findViewById(R.id.left_handle)),
-                "Tutaj wybierasz interesujące Cię kategorie.", "Rozumiem");
+                getString(R.string.guide_1), getString(R.string.understand));
         sequence.addSequenceItem((findViewById(R.id.right_handle)),
-                "Tutaj znajduje się lista uczestników spotkania.", "Rozumiem");
+                getString(R.string.guide_2), getString(R.string.understand));
         sequence.addSequenceItem((findViewById(R.id.floatingActionButton)),
-                "Dodawaj nowe osoby za pomocą plusa lub poprzez przytrzymanie palca na mapie.", "Rozumiem");
+                getString(R.string.guide_3), getString(R.string.understand));
         sequence.start();
     }
 
@@ -339,10 +338,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         listenerHelper.setListener(getMyLocationButton, "click");
         listenerHelper.setListener(rankByButton, "click");
         listenerHelper.setListener(addNewPersonContainer, "click");
+        listenerHelper.setListener(rightSlider, "touch");
     }
 
     void addLastChosenPerson(PersonElement personElement) {
-        if (!personElement.getAddress().equals("Adres nieznany") && !lastChosenPersons.contains(personElement)) {
+        if (!personElement.getAddress().equals(getString(Constants.UNKNOWN_ADDRESS)) && !lastChosenPersons.contains(personElement)) {
             if (lastChosenPersons.size() > 10) {
                 lastChosenPersons.remove(0);
             }
@@ -586,7 +586,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             for (CategoryElement ce : categories) {
                 try {
                     if (checkedCategories.contains(ce.getName())) {
-                        deletePlaces(ce.getName(), false);
+                        deletePlaces(ce.getName());
                         ce.setChecked(false);
                     }
                 } catch (JSONException e) {
@@ -685,7 +685,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             for (int i = 0; i < checkedCategories.size(); i++) {
                 c = checkedCategories.get(i);
                 try {
-                    deletePlaces(c, true);
+                    deletePlaces(c);
                     updatePlaces(c);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -738,10 +738,11 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     private void setCategories() {
         ListView categoryList = (ListView) findViewById(R.id.list_places);
         categoryAdapter = new CategoryAdapter(this, R.layout.left_slider_item, categories, this);
-
+        String category;
         for (int i = 0; i < Constants.CATEGORIES.length; i++) {
-            categories.add(new CategoryElement(Constants.CATEGORIES[i], i, Constants.IMAGES[i]));
-            if (Constants.CATEGORIES[i].equals(Constants.DEFAULT_CATEGORY)) {
+            category = getString(Constants.CATEGORIES[i]);
+            categories.add(new CategoryElement(category, i, Constants.IMAGES[i]));
+            if (category.equals(getString(Constants.DEFAULT_CATEGORY))) {
                 categories.get(i).setChecked(true);
                 checkedCategories.add(categories.get(i).getName());
                 Log.v("CHECKED CATEGORIES: ", checkedCategories.toString());
@@ -773,7 +774,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (person != null) {
                 person.getMarker().remove();
             }
-            Marker m = mGoogleMap.addMarker(new MarkerOptions().position(position).title("OSOBA " + (persons.size() + 1)));
+            Marker m = mGoogleMap.addMarker(new MarkerOptions().position(position).title(getString(R.string.person) + (persons.size() + 1)));
             person = new PersonElement(address, m);
             person.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         }
@@ -904,7 +905,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     }
 
     public void addUser(String address){
-        user = new PersonElement(address, "Ja", userLocationMarker);
+        user = new PersonElement(address, getString(R.string.me), userLocationMarker);
         persons.add(user);
         personAdapter.notifyDataSetChanged();
         updateMapElements();
@@ -918,7 +919,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public void resetPersonsAddresses() {
         if (persons != null) {
             for (PersonElement p : persons) {
-                if (p.getAddress().equals("Adres nieznany")) {
+                if (p.getAddress().equals(getString(Constants.UNKNOWN_ADDRESS))) {
                     new GeocoderTask(this, p.getPosition(), "resetAddress", p).execute();
                 }
             }
@@ -943,6 +944,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         final RelativeLayout reviewsHandlerContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_reviews_handler_container);
         final ListView reviewsList = (ListView) convertView.findViewById(R.id.place_details_reviews);
         final TextView openNow = (TextView) convertView.findViewById(R.id.place_details_open_status);
+        final RelativeLayout ratingContainer = (RelativeLayout) convertView.findViewById(R.id.place_details_rating_container);
         ImageView call = (ImageView) convertView.findViewById(R.id.place_details_call_icon);
         ImageView website = (ImageView) convertView.findViewById(R.id.place_details_website_icon);
         ImageView exit = (ImageView) convertView.findViewById(R.id.place_details_exit);
@@ -1034,19 +1036,40 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             final ReviewsAdapter reviewsAdapter = new ReviewsAdapter(this, R.layout.place_details_review, reviews);
             reviewsArrow.setColorFilter(Color.WHITE);
             final int num_rev = place.getReviews().length();
-            reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+            reviewsHandler.setText(getString(R.string.show_opinions, num_rev));
             reviewsHandlerContainer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     if (reviewsOpened[0]) {
+                        reviewsHandlerContainer.setBackground(ContextCompat.getDrawable(MapActivity.this, R.drawable.review_handler_rounded));
                         reviewsArrow.animate().rotation(0).setDuration(100).start();
-                        reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+                        reviewsHandler.setText(getString(R.string.show_opinions, num_rev));
+                        reviewsOpened[0] = false;
+                        reviewsList.setVisibility(View.GONE);
+                    } else {
+                        reviewsArrow.animate().rotation(-90).setDuration(100).start();
+                        reviewsHandler.setText(getString(R.string.hide_opinions, num_rev));
+                        reviewsHandlerContainer.setBackgroundColor(Color.parseColor("#280c21"));
+                        reviewsOpened[0] = true;
+                        reviewsList.setVisibility(View.VISIBLE);
+                        reviewsList.setAdapter(reviewsAdapter);
+                        openingHoursContainer.setVisibility(View.GONE);
+                        hoursClicked[0] = false;
+                    }
+                }
+            });
+            ratingContainer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (reviewsOpened[0]) {
+                        reviewsArrow.animate().rotation(0).setDuration(100).start();
+                        reviewsHandler.setText(getString(R.string.show_opinions, num_rev));
                         reviewsOpened[0] = false;
                         reviewsHandlerContainer.setBackground(ContextCompat.getDrawable(MapActivity.this, R.drawable.review_handler_rounded));
                         reviewsList.setVisibility(View.GONE);
                     } else {
                         reviewsArrow.animate().rotation(-90).setDuration(100).start();
-                        reviewsHandler.setText("Ukryj opinie (" + num_rev + ")");
+                        reviewsHandler.setText(getString(R.string.hide_opinions, num_rev));
                         reviewsHandlerContainer.setBackgroundColor(Color.parseColor("#280c21"));
                         reviewsOpened[0] = true;
                         reviewsList.setVisibility(View.VISIBLE);
@@ -1118,7 +1141,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         if (place.getReviews() != null) {
                             int num_rev = place.getReviews().length();
                             reviewsArrow.animate().rotation(0).setDuration(100).start();
-                            reviewsHandler.setText("Pokaż opinie (" + num_rev + ")");
+                            reviewsHandler.setText(getString(R.string.show_opinions, num_rev));
                             reviewsOpened[0] = false;
                             reviewsList.setVisibility(View.GONE);
                             reviewsHandlerContainer.setBackground(ContextCompat.getDrawable(MapActivity.this, R.drawable.review_handler_rounded));
@@ -1159,7 +1182,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                     }
                 } else {
                     // delete places from one category
-                    deletePlaces(category, false);
+                    deletePlaces(category);
                 }
             } else {
                 if (isOnline()) {
@@ -1221,12 +1244,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         }
     }
 
-    public void deletePlaces(String category, boolean reset) throws JSONException {
-        if (!reset) {
-            if (queue != null) {
-                //queue.cancelAll(Constants.TAG_CATEGORY);
-            }
-        }
+    public void deletePlaces(String category) throws JSONException {
         Iterator<PlaceElement> i = places.iterator();
         while (i.hasNext()) {
             PlaceElement s = i.next();
@@ -1331,6 +1349,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                                         MapActivity.this,
                                         Constants.REQUEST_CHECK_SETTINGS);
                             } catch (IntentSender.SendIntentException e) {
+                                e.printStackTrace();
                             }
                             break;
                         case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
@@ -1390,7 +1409,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         if (!user.getPosition().equals(userLocation)) {
                             // on location changed
                             user.getMarker().remove();
-                            userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title("Ja"));
+                            userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title(getString(R.string.me)));
                             userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                             user.setMarker(userLocationMarker);
                             user.setPosition(userLocation);
@@ -1398,7 +1417,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
                         }
                     } else {
                         // if no location saved in Preferences
-                        userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title("Ja"));
+                        userLocationMarker = mGoogleMap.addMarker(new MarkerOptions().position(userLocation).title(getString(R.string.me)));
                         userLocationMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                         new GeocoderTask(this, userLocation, "userLocation").execute();
                     }
@@ -1432,14 +1451,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     // PERMISSIONS
     void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            //TODO: Permissions: any dangerous permissions here! :D
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                     checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
                 if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                         checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
                     if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
                             shouldShowRequestPermissionRationale(Manifest.permission.INTERNET)) {
-                        //TODO: Show ratinoale
                         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);
                     } else {
                         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, Constants.REQUEST_PERMISSIONS_CODE);

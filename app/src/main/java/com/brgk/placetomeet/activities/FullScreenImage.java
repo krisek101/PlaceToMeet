@@ -12,8 +12,6 @@ import com.brgk.placetomeet.R;
 
 public class FullScreenImage extends AppCompatActivity {
 
-    private ActionBar mActionBar;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,9 +43,11 @@ public class FullScreenImage extends AppCompatActivity {
     }
 
     public void showActionBar() {
-        mActionBar = getSupportActionBar();
-        mActionBar.setDisplayShowCustomEnabled(true);
-        mActionBar.setDisplayHomeAsUpEnabled(true);
-        mActionBar.setDisplayShowHomeEnabled(true);
+        ActionBar mActionBar = getSupportActionBar();
+        if(mActionBar != null) {
+            mActionBar.setDisplayShowCustomEnabled(true);
+            mActionBar.setDisplayHomeAsUpEnabled(true);
+            mActionBar.setDisplayShowHomeEnabled(true);
+        }
     }
 }
