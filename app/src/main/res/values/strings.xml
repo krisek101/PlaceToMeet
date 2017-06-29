@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">PlaceToMeet</string>
-    <string name="app_title">Znajdź idealne miejsce</string>
+    <string name="app_title">PlaceToMeet</string>
     <string name="search_field_hint">Szukaj tutaj…</string>
     <string name="action_bar_add_btn" translatable="false">Add Button Action Bar</string>
     <string name="open_now" translatable="false">OPEN</string>
@@ -16,9 +16,10 @@
     <string name="person">OSOBA </string>
     <string name="me">Ja</string>
     <string name="favorite">Ulubione</string>
+    <string name="welcome">Witaj w PlaceToMeet! Wybierz osoby, kategorie i znajdź idealne miejsce na spotkanie.</string>
     <string name="guide_1">Tutaj wybierasz interesujące Cię kategorie.</string>
-    <string name="guide_2">Tutaj znajduje się lista uczestników spotkania.</string>
-    <string name="guide_3">Dodawaj nowe osoby za pomocą plusa lub poprzez przytrzymanie palca na mapie.</string>
+    <string name="guide_2">Tutaj znajdują się uczestnicy spotkania.</string>
+    <string name="guide_3">Za pomocą plusa możesz dodawać kolejne osoby.</string>
     <string name="understand">Rozumiem</string>
     <string name="unknown_address">Adres nieznany</string>
     <string name="restaurant">Restauracja</string>
@@ -39,4 +40,5 @@
     <string name="favorite_persons">LISTA ULUBIONYCH OSÓB</string>
     <string name="favorite_list_is_empty">Lista ulubionych osób jest pusta</string>
     <string name="delete">usuń</string>
+    <string name="photos">Zdjęcia</string>
 </resources>

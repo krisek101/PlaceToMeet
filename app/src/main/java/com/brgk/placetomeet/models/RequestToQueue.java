@@ -91,6 +91,7 @@ public class RequestToQueue {
                 mapActivity.places.add(p);
             }
         }
+        Log.i("COUNT RESULTS", ja.length() + "(for category: " + category + ")");
         mapActivity.updateList(mapActivity.places);
     }
 

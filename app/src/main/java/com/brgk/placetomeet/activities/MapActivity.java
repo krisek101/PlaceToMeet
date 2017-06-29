@@ -102,8 +102,9 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
-import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
-import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
+import me.toptas.fancyshowcase.FancyShowCaseQueue;
+import me.toptas.fancyshowcase.FancyShowCaseView;
+import me.toptas.fancyshowcase.FocusShape;
 
 public class MapActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
 
@@ -139,7 +140,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
     public Marker editMarker;
     public AutocompleteAdapter autocompleteAdapter;
     PersonElement user;
-    public RelativeLayout addNewPersonContainer;
 
     // Left slider
     public RelativeLayout leftSlider;
@@ -235,21 +235,44 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         loading = (pl.droidsonroids.gif.GifTextView) findViewById(R.id.loading);
         getMyLocationButton = (ImageView) findViewById(R.id.getMyLocationButton);
         rankByButton = (ToggleButton) findViewById(R.id.rankby_button);
-        addNewPersonContainer = (RelativeLayout) findViewById(R.id.right_slider_add_new_person_container);
     }
 
     void guide() {
-        ShowcaseConfig config = new ShowcaseConfig();
-        config.setDelay(200);
-        MaterialShowcaseSequence sequence = new MaterialShowcaseSequence(this, "showcase_id");
-        sequence.setConfig(config);
-        sequence.addSequenceItem((findViewById(R.id.left_handle)),
-                getString(R.string.guide_1), getString(R.string.understand));
-        sequence.addSequenceItem((findViewById(R.id.right_handle)),
-                getString(R.string.guide_2), getString(R.string.understand));
-        sequence.addSequenceItem((findViewById(R.id.floatingActionButton)),
-                getString(R.string.guide_3), getString(R.string.understand));
-        sequence.start();
+        final FancyShowCaseView welcome = new FancyShowCaseView.Builder(this)
+                .title(getString(R.string.welcome))
+                .showOnce(getString(R.string.welcome))
+                .build();
+        final FancyShowCaseView categories = new FancyShowCaseView.Builder(this)
+                .title(getString(R.string.guide_1))
+                .focusOn(findViewById(R.id.left_handle))
+                .focusShape(FocusShape.ROUNDED_RECTANGLE)
+                .roundRectRadius(90)
+                .focusCircleRadiusFactor(1.5)
+                .disableFocusAnimation()
+                .showOnce(getString(R.string.guide_1))
+                .build();
+        final FancyShowCaseView people = new FancyShowCaseView.Builder(this)
+                .title(getString(R.string.guide_2))
+                .focusOn(findViewById(R.id.right_handle))
+                .focusShape(FocusShape.ROUNDED_RECTANGLE)
+                .roundRectRadius(90)
+                .focusCircleRadiusFactor(1.5)
+                .disableFocusAnimation()
+                .showOnce(getString(R.string.guide_2))
+                .build();
+        final FancyShowCaseView plus = new FancyShowCaseView.Builder(this)
+                .title(getString(R.string.guide_3))
+                .focusOn(findViewById(R.id.floatingActionButton))
+                .disableFocusAnimation()
+                .showOnce(getString(R.string.guide_3))
+                .build();
+
+        new FancyShowCaseQueue()
+                .add(welcome)
+                .add(categories)
+                .add(people)
+                .add(plus)
+                .show();
     }
 
     public void setLoaders(){
@@ -337,7 +360,6 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
         listenerHelper.setListener(radiusSeekBar, "seekBarChange");
         listenerHelper.setListener(getMyLocationButton, "click");
         listenerHelper.setListener(rankByButton, "click");
-        listenerHelper.setListener(addNewPersonContainer, "click");
         listenerHelper.setListener(rightSlider, "touch");
     }
 
@@ -745,12 +767,12 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
             if (category.equals(getString(Constants.DEFAULT_CATEGORY))) {
                 categories.get(i).setChecked(true);
                 checkedCategories.add(categories.get(i).getName());
-                Log.v("CHECKED CATEGORIES: ", checkedCategories.toString());
+                Log.v("CHECKED CATEGORIES", checkedCategories.toString());
                 categoryAdapter.notifyDataSetChanged();
                 try {
                     updatePlaces(categories.get(i).getName());
                 } catch (JSONException e) {
-                    Log.v("JSON Eception", e.toString());
+                    Log.v("JSON Exception", e.toString());
                 }
             }
         }
@@ -1197,7 +1219,7 @@ public class MapActivity extends AppCompatActivity implements GoogleApiClient.Co
 
     public void setJsonArray(String category) {
         RequestToQueue placesRequest = new RequestToQueue(Constants.TAG_CATEGORY, category, this);
-        Log.d("MACIEK_DEBUG", "rankby: " + (rankByButton.isChecked() ? "distance" : "popular"));
+        Log.d("RANKBY", (rankByButton.isChecked() ? "distance" : "popular"));
         placesRequest.setCategoryUrl(rankByButton.isChecked());
         placesRequest.doRequest();
     }

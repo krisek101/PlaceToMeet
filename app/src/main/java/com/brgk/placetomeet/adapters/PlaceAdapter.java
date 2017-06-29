@@ -48,7 +48,7 @@ public class PlaceAdapter extends ArrayAdapter<PlaceElement> {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         PlaceElement place = places.get(position);
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.footer_slider_item, parent, false);
+            convertView = inflater.inflate(R.layout.footer_slider_item, null);
             holder = new ViewHolder();
         } else {
             holder = new ViewHolder();

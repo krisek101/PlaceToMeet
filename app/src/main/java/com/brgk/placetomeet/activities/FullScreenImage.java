@@ -9,6 +9,8 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 
 import com.brgk.placetomeet.R;
+import com.github.chrisbanes.photoview.PhotoView;
+import com.github.chrisbanes.photoview.PhotoViewAttacher;
 
 public class FullScreenImage extends AppCompatActivity {
 
@@ -21,10 +23,9 @@ public class FullScreenImage extends AppCompatActivity {
         byte[] bytes = getIntent().getByteArrayExtra("imagebitmap");
         Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
-        ImageView imgDisplay;
+        PhotoView photoView = (PhotoView) findViewById(R.id.imgDisplay);
 
-        imgDisplay = (ImageView) findViewById(R.id.imgDisplay);
-        imgDisplay.setImageBitmap(bmp);
+        photoView.setImageBitmap(bmp);
 
         showActionBar();
     }

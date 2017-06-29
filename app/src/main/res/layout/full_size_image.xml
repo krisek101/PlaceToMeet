@@ -4,10 +4,9 @@
     android:layout_height="match_parent"
     android:background="#000">
 
-    <ImageView
+    <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/imgDisplay"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:scaleType="fitCenter" />
+        android:layout_height="fill_parent" />
 
 </RelativeLayout>

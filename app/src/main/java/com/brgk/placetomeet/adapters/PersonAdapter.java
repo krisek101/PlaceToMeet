@@ -156,7 +156,6 @@ public class PersonAdapter extends ArrayAdapter<PersonElement> {
                 activity.goToPerson(p);
             }
         });
-
         return convertView;
     }
 

@@ -16,8 +16,8 @@
     <string name="cinema">Cinema</string>
     <string name="favorite">Favorite</string>
     <string name="guide_1">Here you can select categories.</string>
-    <string name="guide_2">Here is list of members of the meeting</string>
-    <string name="guide_3">Add new people by plus or by long click on the map.</string>
+    <string name="guide_2">There are members of the meeting.</string>
+    <string name="guide_3">With plus you can add more people.</string>
     <string name="hide_opinions">Hide opinions(%d)</string>
     <string name="pool">Pool</string>
     <string name="restaurant">Restaurant</string>
@@ -32,4 +32,6 @@
     <string name="delete">delete</string>
     <string name="favorite_list_is_empty">Favorite list is empty.</string>
     <string name="favorite_persons">FAVORITE PEOPLE</string>
+    <string name="welcome">Welcome to the PlaceToMeet! Select people, categories and find perfect Place To Meet.</string>
+    <string name="photos">Photos</string>
 </resources>
